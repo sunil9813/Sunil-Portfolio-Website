@@ -1,0 +1,131 @@
+@use "../abstracts/variables" as *; // Import variables with 'as *' to use them directly
+
+.auth {
+  height: 100vh;
+  display: flex;
+  justify-content: start;
+  position: relative;
+  margin: auto;
+  overflow: hidden;
+  &_card {
+    position: relative;
+    height: auto;
+    width: 440px;
+    display: flex;
+    justify-content: start;
+    position: relative;
+    margin: auto;
+    flex-direction: column;
+
+    // background-image: radial-gradient(50% 50% at 50% 50%, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(210, 106, 58, 0) 92.5%);
+
+    .form {
+      position: relative;
+      width: 440px;
+      height: auto;
+      margin: auto;
+      padding: 40px 20px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 0 #0000, 0 0 #0000, 0px 4px 25px rgba(11, 13, 16, 0.8);
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 440px;
+        height: 100%;
+        background-image: url("../image/auth/auth-bg.jpg");
+        background-size: cover;
+        background-position: center;
+        z-index: -1;
+      }
+    }
+    .bg {
+      &::after {
+        content: "";
+        position: absolute;
+        top: -30%;
+        right: -30%;
+        width: 250px;
+        height: 350px;
+        background-color: #323fb9;
+        background: radial-gradient(circle, rgba(255, 255, 255, 1) 5%, rgba(50, 63, 185, 1) 53%);
+        filter: blur(50px);
+        border-radius: 100%;
+        z-index: -1;
+        transform: rotate(45deg);
+      }
+      &::before {
+        content: "";
+        position: absolute;
+        bottom: -20%;
+        left: -20%;
+        width: 200px;
+        height: 300px;
+        background-color: #5a47a7;
+        filter: blur(50px);
+        border-radius: 100%;
+        z-index: -1;
+        animation: smokeMove 6s infinite alternate ease-in-out;
+      }
+    }
+  }
+
+  .line1 {
+    background-image: linear-gradient(to right, #ffaa81 3.5%, #f79868 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+  }
+  .line2 {
+    background-image: linear-gradient(to left, #ffaa81 3.5%, #f79868 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+  }
+}
+@keyframes smokeMove {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(10px, -10px) scale(1.1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-10px, 10px) scale(1.2);
+    opacity: 0.4;
+  }
+}
+
+.logincode {
+  .input {
+    position: relative;
+    background: radial-gradient(128px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+    width: 50px;
+    padding: 5px;
+    height: 50px;
+    border-radius: 5px;
+    input {
+      border: none;
+      outline: none;
+      background: none;
+      width: 100%;
+      height: 100%;
+      font-size: 40px;
+      position: relative;
+      z-index: 50;
+      color: #fff;
+      font-weight: 600;
+      border-radius: 5px;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 48px;
+      height: 48px;
+      background-color: black;
+      z-index: 10;
+      border-radius: 5px;
+    }
+  }
+}

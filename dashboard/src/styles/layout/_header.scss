@@ -1,0 +1,18 @@
+header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  background-color: #22242b !important;
+}
+.search {
+  .input_glow {
+    background-color: #1a1c23 !important;
+    &_background {
+      background-color: #1a1c23 !important;
+    }
+  }
+}
+.search.input_glow {
+  height: 50px !important;
+}

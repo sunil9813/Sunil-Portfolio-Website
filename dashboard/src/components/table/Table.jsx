@@ -196,11 +196,7 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                               <td className={classes}>
                                 <div className="flex flex-col capitalize">
                                   <div className="w-max">
-                                    {item?.numOfViews ? (
-                                      <Chip variant="ghost" size="sm" value={item?.numOfViews} />
-                                    ) : (
-                                      <Chip variant="outlined" className="rounded-full border border-gray-600" size="sm" value="0" />
-                                    )}
+                                    <Chip variant="outlined" className="rounded-full border border-gray-600" size="sm" value={item?.likes?.length === 0 ? "0" : item?.likes?.length} />
                                   </div>
                                 </div>
                               </td>

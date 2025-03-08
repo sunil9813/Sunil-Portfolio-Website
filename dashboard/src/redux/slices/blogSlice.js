@@ -66,7 +66,14 @@ export const updateVisibility = createAsyncThunk("blog/updateVisibility", async 
     return thunkAPI.rejectWithValue(message);
   }
 });
-
+export const getBlogsByCategoryAndTag = createAsyncThunk("blogs/byCategoryAndTag", async ({ category, tag }, thunkAPI) => {
+  try {
+    return await blogService.getBlogsByCategoryAndTag(category, tag);
+  } catch (error) {
+    const message = (error.response && error.response.data && error.response.data.message) || error.message || "An error occurred";
+    return thunkAPI.rejectWithValue(message);
+  }
+});
 const blogSlice = createSlice({
   name: "blog",
   initialState,
@@ -192,6 +199,22 @@ const blogSlice = createSlice({
         state.isSuccess = false;
         state.isError = true;
         state.blog = null;
+        toast.error(action.payload);
+      })
+      .addCase(getBlogsByCategoryAndTag.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getBlogsByCategoryAndTag.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.blogs = action.payload.BlogList; // Store the BlogList array from the response
+      })
+      .addCase(getBlogsByCategoryAndTag.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.blogs = [];
         toast.error(action.payload);
       });
   },

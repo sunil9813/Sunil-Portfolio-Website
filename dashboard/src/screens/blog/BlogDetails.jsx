@@ -1,59 +1,79 @@
 import { DateFormatter } from "@/components/common/DateFormatter";
 import { getBlogPrivate, updateFeaturedStatus, updateVisibility } from "@/redux/slices/blogSlice";
-import { Loader, Wrapper } from "@/utils/Router";
+import { FavoriteButton, LikeButton, Loader, Wrapper } from "@/utils/Router";
 import { Chip, Switch } from "@material-tailwind/react";
 import { useEffect, useRef } from "react";
 import { AiFillLike } from "react-icons/ai";
 import { FaComments, FaUser } from "react-icons/fa";
 import { IoEye } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import parse from "html-react-parser";
 import hljs from "highlight.js";
-// import "highlight.js/styles/github.css"; // You can use any theme you like
+import { getUserFavorite } from "@/redux/slices/common/favoriteSlice";
 
 export const BlogDetails = () => {
   const { slug } = useParams();
   const dispatch = useDispatch();
-  const { blog, isLoading } = useSelector((state) => state.blog);
   const contentRef = useRef(null);
+  const navigate = useNavigate();
+
+  const { favoriteResource } = useSelector((state) => state.favorite);
+  const { blog, isLoading } = useSelector((state) => state.blog);
+  const { user } = useSelector((state) => state.auth);
+  const userId = user?._id;
 
   const description = blog?.description || "";
+  const isFavorited = favoriteResource?.Blog?.some((fav) => fav._id === blog?._id);
 
   useEffect(() => {
     dispatch(getBlogPrivate(slug));
   }, [slug, dispatch]);
 
-  // Update blog visibility
+  useEffect(() => {
+    dispatch(getUserFavorite(userId));
+  }, [dispatch, userId]);
+
   const handleVisibilityToggle = (blogId, visibility) => {
     dispatch(updateVisibility({ blogId, visibility }));
   };
 
-  // Update blog featured status
   const handleFeaturedToggle = (blogId, featured) => {
     dispatch(updateFeaturedStatus({ blogId, featured }));
   };
 
+  const handleFilterClick = (filterType, value) => {
+    if (filterType === "category") {
+      navigate(`/filter?category=${encodeURIComponent(value)}`);
+    } else if (filterType === "tag") {
+      navigate(`/filter?tag=${encodeURIComponent(value)}`);
+    }
+  };
+
   useEffect(() => {
     if (contentRef.current) {
-      // Find all code blocks and apply syntax highlighting
       const codeBlocks = contentRef.current.querySelectorAll("pre code");
       codeBlocks.forEach((block) => {
         hljs.highlightElement(block);
       });
     }
   }, [description]);
+
   return (
     <>
       {isLoading && <Loader />}
       <Wrapper className="p-5">
         <div className="h-96 relative">
           <img src={blog?.cover?.filePath} alt={blog?.cover?.fileName} className="w-full h-full object-cover rounded-xl" />
-          <div className="absolute bottom-0 right-0 bg-teal-700 text-white   p-2 m-3 h-10 rounded-lg">
+          <div className="absolute bottom-0 left-0 m-2 flex gap-2">
+            <LikeButton resourceType="blog" contentId={blog?._id} initialLikes={blog?.likes || []} />
+            <FavoriteButton resourceType="Blog" resourceId={blog?._id} initialFavorited={isFavorited} />
+          </div>
+          <div className="absolute bottom-0 right-0 bg-teal-700 text-white p-2 m-3 h-10 rounded-lg">
             <div className="flex justify-between items-center gap-5">
               <div>
                 <Switch
-                  id="visibility-switch" // Unique ID
+                  id="visibility-switch"
                   ripple={false}
                   className="h-full w-full checked:bg-[#2ec946]"
                   label={blog?.visibility === "public" ? "Public" : "Private"}
@@ -66,7 +86,7 @@ export const BlogDetails = () => {
               </div>
               <div>
                 <Switch
-                  id="featured-switch" // Unique ID
+                  id="featured-switch"
                   ripple={false}
                   className="h-full w-full checked:bg-[#2ec946]"
                   label={blog?.featured === true ? "Featured In Home" : "None"}
@@ -96,7 +116,7 @@ export const BlogDetails = () => {
             </div>
             <div className="flex items-center gap-2 capitalize text-gray-400">
               <AiFillLike />
-              <span className="text-sm">{blog?.likes?.length === 0 ? "0" : blog?.likes?.length}</span>
+              <span className="text-sm">{blog?.likes.length === 0 ? "0" : blog?.likes.length}</span>
             </div>
             <div className="flex items-center gap-2 capitalize text-gray-400">
               <FaComments />
@@ -104,13 +124,17 @@ export const BlogDetails = () => {
             </div>
           </div>
           <div className="flex justify-end gap-5">
-            <span className="uppercase text-sm">{blog?.category?.title}</span>
+            <span className="uppercase text-sm cursor-pointer" onClick={() => handleFilterClick("category", blog?.category?.title)}>
+              {blog?.category?.title}
+            </span>
           </div>
         </div>
         <h2 className="text-xl capitalize">{blog?.title}</h2>
         <div className="my-4 h-[1px] w-full self-stretch bg-white/40"></div>
         <div className="tags flex items-center gap-2">
-          {blog?.tags && blog?.tags?.length > 0 && blog?.tags?.map((tag) => <Chip key={tag?._id} variant="outlined" color="indigo" className="rounded-sm" value={tag.tag} />)}
+          {blog?.tags &&
+            blog?.tags?.length > 0 &&
+            blog?.tags?.map((tag) => <Chip key={tag?._id} variant="outlined" color="indigo" className="rounded-sm cursor-pointer" value={tag.tag} onClick={() => handleFilterClick("tag", tag.tag)} />)}
         </div>
         <p className="text-textcolor py-4">{blog?.metaDescription}</p>
         <div className="tiptap" ref={contentRef}>

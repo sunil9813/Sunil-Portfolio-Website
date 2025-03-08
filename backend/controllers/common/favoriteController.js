@@ -28,31 +28,22 @@ const toggleFavorite = asyncHandler(async (req, res) => {
     if (!favorite) {
       // Create a new favorite list if it doesn't exist for the resource type
       favorite = await FavoriteModel.create({ owner: req.user.id, items: [resourceId], itemType: resourceType });
+      return res.json({ status: "added" });
     } else {
       const existingIndex = favorite.items.indexOf(resourceId);
 
       if (existingIndex !== -1) {
-        // Resource is already in favorites, so we want to remove it
+        // Resource is already in favorites, so remove it
         favorite.items.splice(existingIndex, 1);
         await favorite.save();
-
-        // Remove the user's ID from the likes array in the resource
-        resource.likes.pull(req.user.id);
-        await resource.save();
-
         return res.json({ status: "removed" });
       } else {
-        // Resource is not in favorites, so we want to add it
+        // Resource is not in favorites, so add it
         favorite.items.push(resourceId);
         await favorite.save();
+        return res.json({ status: "added" });
       }
     }
-
-    // Add the user's ID to the likes array in the resource
-    resource.likes.addToSet(req.user.id);
-    await resource.save();
-
-    return res.json({ status: "added" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "An error occurred." });
@@ -61,7 +52,6 @@ const toggleFavorite = asyncHandler(async (req, res) => {
 
 const getUserFavorite = asyncHandler(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user.id);
-  const { limit = "20", pageNo = "0" } = req.query;
 
   try {
     const favorites = await FavoriteModel.aggregate([
@@ -91,7 +81,6 @@ const getUserFavorite = asyncHandler(async (req, res) => {
 
     return res.json(favoritesByItemType);
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ error: "An error occurred while fetching favorites" });
   }
 });

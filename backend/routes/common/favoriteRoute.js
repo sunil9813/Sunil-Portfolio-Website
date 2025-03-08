@@ -3,7 +3,7 @@ const { toggleFavorite, getUserFavorite } = require("../../controllers/common/fa
 const { protect, verified } = require("../../middleware/authMiddleware");
 const router = express.Router();
 
-router.post("/", protect, verified, toggleFavorite);
-router.get("/", protect, verified, getUserFavorite);
+router.get("/", protect, getUserFavorite);
+router.post("/", protect, toggleFavorite);
 
 module.exports = router;

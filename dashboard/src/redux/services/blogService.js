@@ -37,6 +37,17 @@ const updateVisibility = async (blogId, visibility) => {
   const response = await axios.patch(`${API_URL}${blogId}/visibility`, { visibility });
   return response.data;
 };
+
+// New function: Get blogs by category and tag
+const getBlogsByCategoryAndTag = async (category, tag) => {
+  // Build query string dynamically based on provided parameters
+  const query = new URLSearchParams();
+  if (category) query.append("category", category);
+  if (tag) query.append("tag", tag);
+
+  const response = await axios.get(`${API_URL}search?${query.toString()}`);
+  return response.data;
+};
 const blogService = {
   getallBlog,
   deleteBlog,
@@ -45,6 +56,7 @@ const blogService = {
   updateFeaturedStatus,
   updateVisibility,
   getBlogPrivate,
+  getBlogsByCategoryAndTag,
 };
 
 export default blogService;

@@ -5,6 +5,7 @@ const slugify = require("slugify");
 const BlogModel = require("../models/BlogModel");
 const { default: mongoose } = require("mongoose");
 const { default: ImageModel } = require("../models/ImageModel");
+const CategoryModel = require("../models/common/CategoryModel");
 
 const createBlog = asyncHandler(async (req, res) => {
   const { title, description, tags, category, metaDescription, visibility, groupId } = req.body;
@@ -182,7 +183,7 @@ const getBlogPrivate = asyncHandler(async (req, res) => {
   }
 
   // Check if the logged-in user is the creator or an admin
-  if (blog.user._id.toString() !== loggedInUser._id.toString() && !loggedInUser.isAdmin) {
+  if (blog.user.toString() !== loggedInUser._id.toString() && loggedInUser.role !== "admin" && loggedInUser.role !== "super admin") {
     res.status(403);
     throw new Error("You are not authorized to access this blog.");
   }
@@ -403,6 +404,58 @@ const updateVisibility = asyncHandler(async (req, res) => {
   }
 });
 
+const getBlogsByCategoryAndTag = asyncHandler(async (req, res) => {
+  const { category, tag } = req.query;
+
+  let query = {};
+
+  // Handle category (search by title and convert to ObjectId)
+  if (category) {
+    // Find the category by title (case-insensitive)
+    const categoryDoc = await CategoryModel.findOne({
+      title: { $regex: new RegExp(category, "i") },
+    });
+
+    if (!categoryDoc) {
+      res.status(404);
+      throw new Error(`Category "${category}" not found.`);
+    }
+
+    // Use the category's _id in the query
+    query["category"] = categoryDoc._id;
+  }
+
+  // Handle tag (search within the tags array of objects)
+  if (tag) {
+    query["tags.tag"] = { $regex: new RegExp(tag, "i") }; // Case-insensitive tag search
+  }
+
+  // Require at least one filter
+  if (!category && !tag) {
+    res.status(400);
+    throw new Error("Please provide at least a category or tag to search.");
+  }
+
+  // Find blogs matching the query
+  const Blogs = await BlogModel.find(query)
+    .sort("createdAt")
+    .populate({
+      path: "user",
+      select: "avatar name email",
+    })
+    .populate({
+      path: "category",
+      select: "title type",
+    });
+
+  if (!Blogs || Blogs.length === 0) {
+    res.status(404);
+    throw new Error("No blogs found matching the provided category or tag.");
+  }
+
+  res.status(200).json({ total: Blogs.length, BlogList: Blogs });
+});
+
 // from here to do
 const updateBlog = asyncHandler(async (req, res) => {
   const { title, description, tagsToAdd, category } = req.body;
@@ -495,23 +548,6 @@ const updateBlog = asyncHandler(async (req, res) => {
   res.json({ message: "Blog post updated successfully", data: updatedBlog });
 });
 
-const getBlogsByTag = asyncHandler(async (req, res) => {
-  const { tag } = req.params;
-
-  try {
-    const blogs = await BlogModel.find({ "tags.tag": tag }).exec();
-
-    if (!blogs || blogs.length === 0) {
-      return res.status(404).json({ message: "No blogs found with the specified tag" });
-    }
-
-    res.status(200).json({ totalPost: blogs.length, BlogList: blogs });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while fetching blogs by tag" });
-  }
-});
-
 module.exports = {
   createBlog,
   getAllBlog,
@@ -519,7 +555,7 @@ module.exports = {
   getBlogPrivate,
   deleteBlog,
   updateBlog,
-  getBlogsByTag,
   updateFeaturedStatus,
   updateVisibility,
+  getBlogsByCategoryAndTag,
 };

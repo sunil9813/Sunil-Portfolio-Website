@@ -25,8 +25,9 @@ const deleteBlog = async (postId) => {
   const response = await axios.delete(API_URL + "remove", { data: { id: postId } });
   return response.data.message;
 };
-const updateBlog = async (updateData) => {
-  const response = await axios.put(API_URL + updateData.id, updateData.formData, config);
+
+const updateBlog = async ({ slug, formData }) => {
+  const response = await axios.patch(`${API_URL}${slug}`, formData, config);
   return response.data;
 };
 const updateFeaturedStatus = async (blogId, featured) => {

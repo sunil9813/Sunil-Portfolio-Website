@@ -4,10 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { CiDark, CiStar } from "react-icons/ci";
 import { IoIosNotificationsOutline } from "react-icons/io";
-import { Menu, MenuHandler, MenuItem, MenuList } from "@material-tailwind/react";
+import { Avatar, Menu, MenuHandler, MenuItem, MenuList } from "@material-tailwind/react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { PrimaryButton } from "../customeUI/Button";
+import { generateItemColor } from "@/utils";
 
 export const Header = () => {
   const dispatch = useDispatch();
@@ -51,10 +52,21 @@ export const Header = () => {
               >
                 <MenuHandler>
                   <div className="flex items-center gap-3 cursor-pointer">
-                    <div className="w-10 h-10 rounded-full">
-                      {/* <img src="https://docs.material-tailwind.com/img/face-2.jpg" alt="avatar" className="w-full h-full rounded-full cursor-pointer" /> */}
+                    {/* <div className="w-10 h-10 rounded-full">
                       <img src={photo} alt="avatar" className="w-full h-full rounded-full cursor-pointer" />
-                    </div>
+                    </div> */}
+                    {user?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
+                      <div
+                        className="font-semibold capitalize w-10 h-10 rounded-full flex justify-center items-center text-white text-xl"
+                        style={{
+                          background: generateItemColor(username || "X"),
+                        }}
+                      >
+                        {username?.slice(0, 1) ?? "?"}
+                      </div>
+                    ) : (
+                      <Avatar src={photo} alt={user?.avatar?.publicId} size="sm" />
+                    )}
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-medium capitalize">{username}</h3>

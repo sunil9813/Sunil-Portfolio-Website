@@ -42,9 +42,9 @@ export const deleteBlog = createAsyncThunk("blogs/delete", async (id, thunkAPI) 
     return thunkAPI.rejectWithValue(message);
   }
 });
-export const updateBlog = createAsyncThunk("blogs/update", async (updateData, thunkAPI) => {
+export const updateBlog = createAsyncThunk("blogs/update", async ({ slug, formData }, thunkAPI) => {
   try {
-    return await blogService.updateBlog(updateData);
+    return await blogService.updateBlog({ slug, formData });
   } catch (error) {
     const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
     return thunkAPI.rejectWithValue(message);
@@ -154,11 +154,11 @@ const blogSlice = createSlice({
       .addCase(updateBlog.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(updateBlog.fulfilled, (state) => {
+      .addCase(updateBlog.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        toast.success("Image updated successfully!");
+        toast.success(action.payload);
       })
       .addCase(updateBlog.rejected, (state, action) => {
         state.isLoading = false;
@@ -221,5 +221,5 @@ const blogSlice = createSlice({
 });
 
 export const { RESOURCES_RESET } = blogSlice.actions;
-
+export const selectBlog = (state) => state.blog.blog;
 export default blogSlice.reducer;

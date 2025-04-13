@@ -35,7 +35,7 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
 
   return (
     <>
-      <Wrapper className="table">
+      <Wrapper className="common-table">
         <CardHeader floated={false} shadow={false} className="rounded-none bg-sidebarbg py-2">
           <div className="flex items-center justify-between gap-8">
             {/* <GradientWrapper className="w-72">
@@ -94,18 +94,19 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                           <td className={`${classes} w-20`}>{serialNumber}</td>
                           <td className={`${classes} w-56`}>
                             <div className="flex items-center gap-3">
-                              {item?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
+                              {item?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" || item?.user?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
                                 <div
                                   className="font-semibold capitalize w-10 h-10 rounded-full flex justify-center items-center text-white text-xl"
                                   style={{
-                                    background: generateItemColor(item?.user?.name || item?.name || "X"), // Unique background color with adjusted brightness
+                                    background: generateItemColor(item?.user?.name || item?.name || "X"), // Unique background color
                                   }}
                                 >
-                                  {(item?.user?.name?.slice(0, 1) || item?.name?.slice(0, 1)) ?? "?"}
+                                  {(item?.user?.name?.charAt(0) || item?.name?.charAt(0)) ?? "?"}
                                 </div>
                               ) : (
                                 <Avatar src={item?.user?.avatar?.url || item?.avatar?.url} alt={item?.user?.avatar?.publicId || item?.avatar?.publicId} size="sm" />
                               )}
+
                               <div className="flex flex-col">
                                 <Typography variant="small" className="font-normal capitalize">
                                   {item?.user?.name || item?.name}
@@ -237,7 +238,7 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                           <td className={`${classes}`}>
                             <div className=" flex justify-end">
                               <Tooltip className="bg-green-400 capitalize" content={`Edit ${type}`}>
-                                <NavLink to={`/${linktoupdate}/${item?._id}`}>
+                                <NavLink to={`/${linktoupdate}/${item?.slug}`}>
                                   <IconButton variant="text" color="green" size="sm">
                                     <CiEdit size={20} />
                                   </IconButton>

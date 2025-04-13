@@ -11,3 +11,10 @@ https://codepen.io/qogoist/pen/poBXdEG?anon=true&view=pen
 
 
 https://admin.pixelstrap.net/riho/template/index.html
+
+// comments 
+https://codepen.io/MisterCurtis/pen/doMQNM
+
+
+use this website for components 
+https://www.radix-ui.com/

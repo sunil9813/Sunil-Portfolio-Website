@@ -1,7 +1,10 @@
+export { Comments } from "@/components/comment/Comments";
+
+export { FavoriteCard } from "@/components/cards/FavoriteCard";
+export { Favorite } from "@/screens/profile/favorite/Favorite";
 export { FavoriteButton } from "@/components/FavoriteButton";
 
 export { LikeButton } from "@/components/LikeButton";
-
 export { FilterPage } from "@/pages/FilterPage";
 
 /* -----------  Common Design ----------- */

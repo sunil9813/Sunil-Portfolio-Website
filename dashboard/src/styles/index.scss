@@ -11,6 +11,7 @@
 @use "./components/table";
 @use "./components/navbar";
 @use "./components/form";
+@use "./components/comment";
 @use "./layout/footer";
 @use "./layout/grid";
 @use "./layout/header";
@@ -18,8 +19,8 @@
 @use "./pages/auth";
 @use "./pages/home";
 @use "./vendors/slick";
-@use "./vendors/tiptap";
 @use "./vendors/react-masonry-css";
+@use "./editor/buttonWithTooltip";
 
 @layer base {
   :root {
@@ -94,4 +95,12 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.reactjs-tiptap-editor .richtext-bg-background {
+  background-color: #22242b !important;
+}
+.richtext-outline-1,
+.richtext-outline {
+  outline: none !important;
 }

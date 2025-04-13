@@ -1,4 +1,4 @@
-import { FaUsers } from "react-icons/fa";
+import { FaRegUser, FaUsers } from "react-icons/fa";
 import { AiFillSetting, AiOutlineUser } from "react-icons/ai";
 import { RiDashboardFill } from "react-icons/ri";
 import { BiCategoryAlt, BiImage } from "react-icons/bi";
@@ -54,6 +54,10 @@ export const menu = [
         path: "/all-blog",
       },
       {
+        title: "Your Creation",
+        path: "/loginuser-blog",
+      },
+      {
         title: "create blog",
         path: "/create-blog",
       },
@@ -79,12 +83,26 @@ export const menu = [
     icon: <AiFillSetting size={20} />,
     childrens: [
       {
+        title: "Assets Limit",
+        path: "/assets-limit",
+      },
+    ],
+  },
+  {
+    title: "Profile",
+    icon: <FaRegUser size={20} />,
+    childrens: [
+      {
         title: "Profile",
         path: "/profile",
       },
       {
-        title: "Assets Limit",
-        path: "/assets-limit",
+        title: "Favorite",
+        path: "/favorite",
+      },
+      {
+        title: "Change Password",
+        path: "/change-password",
       },
     ],
   },

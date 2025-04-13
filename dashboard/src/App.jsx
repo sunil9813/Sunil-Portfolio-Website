@@ -6,6 +6,7 @@ import {
   CategoryList,
   CreateBlog,
   CreateUser,
+  Favorite,
   FilterPage,
   ForgotPassword,
   Home,
@@ -160,7 +161,7 @@ function App() {
       ),
     },
     {
-      path: "/update-blog/:id",
+      path: "/update-blog/:slug",
       element: (
         <Layout>
           <UpdateBlog />
@@ -172,6 +173,14 @@ function App() {
       element: (
         <Layout>
           <FilterPage />
+        </Layout>
+      ),
+    },
+    {
+      path: "/favorite",
+      element: (
+        <Layout>
+          <Favorite />
         </Layout>
       ),
     },

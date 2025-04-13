@@ -1,0 +1,146 @@
+.ProseMirror {
+  /* Ensure margin-left isn't being reset */
+  margin-left: inherit !important;
+}
+
+/* Optional: Add some visual feedback */
+.ProseMirror [style*="margin-left"] {
+  transition: margin-left 0.2s ease;
+}
+
+/* ------------ Math Formula Styles -------------- */
+.math-node {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.2em;
+  padding: 0.2em;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.math-node.is-display {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+  padding: 0.5em;
+}
+
+.math-node.has-error {
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 1px dashed red;
+}
+
+.math-error {
+  color: red;
+  font-family: monospace;
+}
+
+/* Ensure KaTeX renders properly */
+.katex {
+  font-size: 1.05em !important;
+}
+
+.katex-display {
+  margin: 0 !important;
+}
+
+/* Prevent selection of formula elements */
+.math-node * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ------------- for emoji -----------------*/
+.emoji {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.2em; /* Adjust size as needed */
+  cursor: pointer;
+  user-select: none;
+}
+.EmojiPickerReact {
+  background-color: #22242b !important;
+  border-color: #22242b !important;
+}
+
+/* ------------- for tasklist -----------------*/
+/* styles.css or equivalent */
+.task-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0; /* Remove default margin */
+}
+
+.task-item {
+  display: flex;
+  align-items: center; /* Inline checkbox and text */
+  margin-bottom: 4px; /* Small spacing between items */
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  appearance: none;
+  border: 2px solid #4caf50;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  position: relative;
+}
+
+.task-checkbox:checked {
+  background-color: #4caf50;
+}
+
+.task-checkbox:checked::after {
+  content: "✔";
+  color: white;
+  font-size: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.task-content {
+  flex: 1;
+}
+
+/* ------------- for column -----------------*/
+.column-container {
+  display: flex; /* Columns side by side */
+  gap: 16px; /* Space between columns */
+  width: 100%;
+  margin: 0; /* Remove vertical spacing around container */
+  padding: 0; /* Ensure no padding */
+  margin-bottom: 20px;
+}
+
+.column {
+  flex: 1; /* Equal width for each column */
+  min-width: 0; /* Prevent overflow */
+  margin: 0; /* Remove any margin */
+  padding: 0; /* Remove padding */
+  border-radius: 4px; /* Optional rounded corners */
+}
+
+/* Show border only in the editor */
+.ProseMirror .column {
+  border: 1px solid #e0e0e0; /* Visible in editor */
+  border-radius: 4px; /* Visible in editor */
+}
+
+/* Remove default margins from block elements inside columns */
+.column > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Ensure paragraphs have no margins */
+.column p {
+  margin: 0;
+}
+/* ------------- for grid -----------------*/
+
+/* ------------- for emoji -----------------*/

@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
 const initialState = {
-  favoriteResource: {}, // Stores favorite status for each resource
+  favoriteResource: [],
   isFavoriteLoading: false,
   isError: false,
   isSuccess: false,

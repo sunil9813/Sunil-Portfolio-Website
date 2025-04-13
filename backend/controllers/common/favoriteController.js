@@ -74,13 +74,19 @@ const getUserFavorite = asyncHandler(async (req, res) => {
 
       // Create a query to find items of the specific itemType
       const itemModel = mongoose.model(itemType);
-      const itemsData = await itemModel.find({ _id: { $in: items } });
+
+      // Fetch items and populate the `category` and `user` fields
+      const itemsData = await itemModel
+        .find({ _id: { $in: items } })
+        .populate("category", "title") // Populate category with only the `title` field
+        .populate("user", "name email"); // Populate user with `name` and `email` fields
 
       favoritesByItemType[itemType] = itemsData;
     }
 
     return res.json(favoritesByItemType);
   } catch (error) {
+    console.error("Error fetching favorites:", error);
     return res.status(500).json({ error: "An error occurred while fetching favorites" });
   }
 });

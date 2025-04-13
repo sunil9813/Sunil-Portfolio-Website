@@ -1,30 +1,35 @@
 import { DateFormatter } from "@/components/common/DateFormatter";
 import { getBlogPrivate, updateFeaturedStatus, updateVisibility } from "@/redux/slices/blogSlice";
-import { FavoriteButton, LikeButton, Loader, Wrapper } from "@/utils/Router";
-import { Chip, Switch } from "@material-tailwind/react";
-import { useEffect, useRef } from "react";
+import { getUserFavorite } from "@/redux/slices/common/favoriteSlice";
+import { Comments, FavoriteButton, LikeButton, Loader, Wrapper } from "@/utils/Router";
+import { useEffect, useRef, useMemo } from "react";
 import { AiFillLike } from "react-icons/ai";
 import { FaComments, FaUser } from "react-icons/fa";
 import { IoEye } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import parse from "html-react-parser";
+import parse, { domToReact } from "html-react-parser";
 import hljs from "highlight.js";
-import { getUserFavorite } from "@/redux/slices/common/favoriteSlice";
+import { Chip, Switch } from "@material-tailwind/react";
+import MathFormulaParser from "@/utils/MathFormulaParser";
 
 export const BlogDetails = () => {
   const { slug } = useParams();
   const dispatch = useDispatch();
-  const contentRef = useRef(null);
   const navigate = useNavigate();
+  const contentRef = useRef(null);
 
-  const { favoriteResource } = useSelector((state) => state.favorite);
   const { blog, isLoading } = useSelector((state) => state.blog);
+  const { favoriteResource } = useSelector((state) => state.favorite);
   const { user } = useSelector((state) => state.auth);
   const userId = user?._id;
 
-  const description = blog?.description || "";
-  const isFavorited = favoriteResource?.Blog?.some((fav) => fav._id === blog?._id);
+  const description = useMemo(() => blog?.description || "", [blog?.description]);
+  const isFavorited = useMemo(() => favoriteResource?.Blog?.some((fav) => fav._id === blog?._id), [favoriteResource, blog?._id]);
+  const likeCount = useSelector((state) => {
+    const count = state.like.likeCounts["blog"]?.[blog?._id] ?? blog?.likes?.length ?? 0;
+    return count;
+  });
 
   useEffect(() => {
     dispatch(getBlogPrivate(slug));
@@ -36,10 +41,12 @@ export const BlogDetails = () => {
 
   const handleVisibilityToggle = (blogId, visibility) => {
     dispatch(updateVisibility({ blogId, visibility }));
+    dispatch(getBlogPrivate(slug));
   };
 
   const handleFeaturedToggle = (blogId, featured) => {
     dispatch(updateFeaturedStatus({ blogId, featured }));
+    dispatch(getBlogPrivate(slug));
   };
 
   const handleFilterClick = (filterType, value) => {
@@ -58,6 +65,41 @@ export const BlogDetails = () => {
       });
     }
   }, [description]);
+
+  const parsedContent = parse(description, {
+    replace: (domNode) => {
+      if (domNode.attribs && domNode.attribs["data-type"] === "math-formula") {
+        return <MathFormulaParser formula={domNode.attribs["data-formula"]} display={domNode.attribs["data-display"] === "true"} />;
+      }
+      if (domNode.attribs && domNode.attribs["data-type"] === "emoji") {
+        const emoji = domNode.attribs["data-emoji"] || domNode.children[0]?.data || "😊";
+        return <span className="emoji">{emoji}</span>;
+      }
+      if (domNode.name === "img" && domNode.attribs.src && !domNode.attribs["data-type"]) {
+        return <img src={domNode.attribs.src} alt={domNode.attribs.alt || "Image"} className="editor-image" />;
+      }
+      if (domNode.attribs && domNode.attribs["data-type"] === "column-container") {
+        return <div className="column-container">{domToReact(domNode.children)}</div>;
+      }
+      if (domNode.attribs && domNode.attribs["data-type"] === "column") {
+        return <div className="column">{domToReact(domNode.children)}</div>;
+      }
+
+      /*------------ table ----------------*/
+
+      /*------------ work on it ----------------*/
+      if (domNode.attribs && domNode.attribs["data-type"] === "grid-box") {
+        return (
+          <div className="grid-box" data-column-count={domNode.attribs["data-column-count"]}>
+            {domToReact(domNode.children)}
+          </div>
+        );
+      }
+      if (domNode.attribs && domNode.attribs["data-type"] === "grid-cell") {
+        return <div className="grid-cell">{domToReact(domNode.children)}</div>;
+      }
+    },
+  });
 
   return (
     <>
@@ -116,7 +158,7 @@ export const BlogDetails = () => {
             </div>
             <div className="flex items-center gap-2 capitalize text-gray-400">
               <AiFillLike />
-              <span className="text-sm">{blog?.likes.length === 0 ? "0" : blog?.likes.length}</span>
+              <span className="text-sm">{likeCount === 0 ? "0" : likeCount}</span>
             </div>
             <div className="flex items-center gap-2 capitalize text-gray-400">
               <FaComments />
@@ -138,9 +180,10 @@ export const BlogDetails = () => {
         </div>
         <p className="text-textcolor py-4">{blog?.metaDescription}</p>
         <div className="tiptap" ref={contentRef}>
-          <div className="prose prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full text-white">{parse(description)}</div>
+          <div className="prose prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full text-white">{parsedContent}</div>
         </div>
       </Wrapper>
+      <Comments />
     </>
   );
 };

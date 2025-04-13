@@ -458,12 +458,29 @@ const getBlogsByCategoryAndTag = asyncHandler(async (req, res) => {
 
 // from here to do
 const updateBlog = asyncHandler(async (req, res) => {
-  const { title, description, tagsToAdd, category } = req.body;
+  // Normalize req.body keys by trimming whitespace
+  const normalizedBody = {};
+  for (const key in req.body) {
+    normalizedBody[key.trim()] = req.body[key];
+  }
+  const { title, description, tags, category, metaDescription } = normalizedBody;
+  const blogSlug = req.params.slug;
   const userId = req.user.id;
-  const blogId = req.params.id;
 
+  // Find the existing blog post
+  const blog = await BlogModel.findOne({ slug: blogSlug });
+  if (!blog) {
+    return res.status(404).json({ error: "Blog post not found." });
+  }
+
+  // Check authorization (user is the creator or admin)
+  if (blog.user.toString() !== userId && req.user.role !== "admin") {
+    return res.status(403).json({ error: "You are not authorized to update this blog." });
+  }
+
+  // Profanity filter
   const filter = new Filter();
-  const fieldsToCheck = [title, description, tagsToAdd, category];
+  const fieldsToCheck = [title, description, tags, category, metaDescription].filter(Boolean);
   for (const field of fieldsToCheck) {
     if (filter.isProfane(field)) {
       return res.status(400).json({
@@ -472,20 +489,9 @@ const updateBlog = asyncHandler(async (req, res) => {
     }
   }
 
-  const blog = await BlogModel.findById(blogId);
-
-  if (!blog) {
-    return res.status(404).json({ error: "Blog post not found." });
-  }
-
-  if (blog.user.toString() !== userId || blog.user.role !== "admin") {
-    return res.status(403).json({ error: "You do not have permission to update this blog post." });
-  }
-
-  // Handle the uploaded cover image, if provided
+  // Handle cover image update
   if (req.file) {
     const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg"];
-
     if (!allowedImageTypes.includes(req.file.mimetype)) {
       return res.status(400).json({ error: "Invalid image format. Supported formats: JPEG, PNG." });
     }
@@ -494,57 +500,104 @@ const updateBlog = asyncHandler(async (req, res) => {
       return res.status(400).json({ error: "Image size should not exceed 5 MB." });
     }
 
-    // Delete the previous image from cloudinary if it exists
+    // Delete the previous image from Cloudinary if it exists
     if (blog.cover && blog.cover.publicId) {
       try {
-        await cloudinary.uploader.destroy(blog.cover.publicId);
+        const result = await cloudinary.uploader.destroy(blog.cover.publicId);
+        if (result.result !== "ok") {
+          return res.status(500).json({ error: "Failed to delete previous cover image from Cloudinary." });
+        }
       } catch (error) {
-        // Handle error if needed
+        return res.status(500).json({ error: "Error deleting previous cover image from Cloudinary." });
       }
     }
 
-    let fileData = {};
+    // Upload the new image
     try {
-      uploadedFile = await cloudinary.uploader.upload(req.file.path, {
+      const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
         folder: "Sunil Portfolio/Blog",
       });
+      blog.cover = {
+        fileName: req.file.originalname,
+        filePath: uploadedFile.secure_url,
+        fileType: req.file.mimetype,
+        publicId: uploadedFile.public_id,
+      };
     } catch (error) {
-      res.status(500);
-      throw new Error("Image could not be uploaded");
+      return res.status(500).json({ error: "Image could not be uploaded." });
     }
-
-    fileData = {
-      fileName: req.file.originalname,
-      filePath: uploadedFile.secure_url,
-      fileType: req.file.mimetype,
-      publicId: uploadedFile.public_id,
-    };
-
-    // Update the cover image
-    blog.cover = fileData;
   }
 
-  // Handle tags, if provided
-  let tags = [];
-  if (tagsToAdd && Array.isArray(tagsToAdd)) {
-    const uniqueTags = [...new Set(tagsToAdd.map((tag) => tag.trim()))];
-    for (const newTag of uniqueTags) {
-      if (newTag.length > 250) {
-        res.status(400).json({ error: "Tag length should not exceed 250 characters." });
-        return;
+  // Generate new slug if title is updated
+  if (title && title !== blog.title) {
+    const originalSlug = slugify(title, {
+      lower: true,
+      remove: /[*+~.()'"!:@]/g,
+      strict: true,
+    });
+    let slug = originalSlug;
+    let suffix = 1;
+
+    while (await BlogModel.findOne({ slug, _id: { $ne: blog._id } })) {
+      slug = `${suffix}-${originalSlug}`;
+      suffix++;
+    }
+    blog.slug = slug;
+  }
+
+  // Handle tags update - Aligned with createBlog logic
+  if (tags !== undefined) {
+    let parsedTags = [];
+    // Parse tags if they are sent as a JSON string
+    if (typeof tags === "string") {
+      try {
+        parsedTags = JSON.parse(tags);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid tags format. Tags must be a valid JSON array of objects." });
       }
+    } else if (Array.isArray(tags)) {
+      parsedTags = tags;
+    } else {
+      return res.status(400).json({ error: "Tags must be an array of objects." });
     }
-    tags = uniqueTags.map((tag) => ({ tag }));
+
+    // Validate tag format and create formatted tags array
+    const formattedTags = parsedTags.map((tagObj) => {
+      if (typeof tagObj.tag !== "string" || tagObj.tag.trim() === "") {
+        return res.status(400).json({ error: "Each tag must be a valid string inside an object." });
+      }
+      return { tag: tagObj.tag.trim() };
+    });
+
+    // Replace all existing tags with the new ones (consistent with createBlog behavior)
+    blog.tags = formattedTags;
   }
 
-  // Update the blog post with the appropriate data
-  blog.title = title || blog.title;
-  blog.description = description || blog.description;
-  blog.category = category || blog.category;
-  blog.tags = tags.length > 0 ? tags : blog.tags;
+  // Update fields with new values or retain previous values
+  if (title !== undefined) blog.title = title;
+  if (description !== undefined) blog.description = description;
+  if (metaDescription !== undefined) blog.metaDescription = metaDescription;
+  if (category !== undefined) blog.category = category;
 
+  // Validate fields against schema constraints
+  if (blog.title.length > 250) {
+    return res.status(400).json({ error: "Title cannot exceed 250 characters." });
+  }
+  if (blog.metaDescription && blog.metaDescription.length > 160) {
+    return res.status(400).json({ error: "Meta description cannot exceed 160 characters." });
+  }
+
+  // Mark fields as modified to ensure Mongoose detects changes
+  blog.markModified("title");
+  blog.markModified("description");
+  blog.markModified("metaDescription");
+  blog.markModified("category");
+  blog.markModified("tags");
+  blog.markModified("cover");
+  blog.markModified("slug");
+
+  // Save the updated blog
   const updatedBlog = await blog.save();
-
   res.json({ message: "Blog post updated successfully", data: updatedBlog });
 });
 

@@ -19,7 +19,7 @@ const { createBlogValidation } = require("../utils/validations/PostsValidation")
 const router = express.Router();
 
 router.post("/", protect, upload.single("cover"), validation(createBlogValidation), createBlog);
-router.patch("/:id", protect, upload.single("cover"), updateBlog);
+
 router.get("/all", getAllBlog);
 
 router.get("/search", getBlogsByCategoryAndTag);
@@ -35,4 +35,5 @@ router.delete("/", protect, deleteBlog);
 router.patch("/:blogId/featured", protect, updateFeaturedStatus);
 router.patch("/:blogId/visibility", protect, updateVisibility);
 
+router.patch("/:slug", protect, upload.single("cover"), updateBlog);
 module.exports = router;

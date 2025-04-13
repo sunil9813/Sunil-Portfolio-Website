@@ -3,27 +3,26 @@ import { AiFillCaretDown } from "react-icons/ai";
 import { BsTypeStrikethrough, BsBraces, BsCode, BsListOl, BsListUl, BsTypeBold, BsTypeItalic, BsTypeUnderline, BsImageFill } from "react-icons/bs";
 import { RiDoubleQuotesL } from "react-icons/ri";
 import { getFocusedEditor } from "../utils/EditorUtils";
-import { DropDownOptions, DropDownHighLight, DropDownForFont } from "../common/DropDownOptions";
+import { DropDownOptions, DropDownHighLight, DropDownForFont, DropDownOptionsWithIcon } from "../common/DropDownOptions";
 import Button from "./Button";
 import EmbedYoutube from "./EmbedYoutube";
 import InsertLink from "../link/InsertLink";
-import Table from "../table/Table";
 import { PiHighlighterFill } from "react-icons/pi";
 import { IoColorPaletteOutline } from "react-icons/io5";
 import { FontFamilies, HighlightColors } from "../utils/Option";
-import { ImTable2 } from "react-icons/im";
-import { useState } from "react";
 import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatAlignRight } from "react-icons/md";
-import { BubbleMenu } from "@tiptap/react";
+import { TbIndentDecrease, TbIndentIncrease } from "react-icons/tb";
+import LineHeightDropdown from "../components/dropdown/LineHeightDropdown";
+import { DropDownTextFormat } from "../components/dropdown/DropDownTextFormat";
+import MathFormulaButton from "../components/MathFormulaInput";
+import EmojiButton from "../components/EmojiPicker";
+import GiftPicker from "../components/GiftPicker";
+import ColumnButton from "../components/ColumnButton";
+import GridBoxButton from "../components/GridBox/GridBoxButton";
+import { CustomTableButton } from "../components/table/CustomTableButton";
 
 const TollBar = ({ editor, onOpenImageClick }) => {
-  const [openTable, setopenTable] = useState(false);
   if (!editor) return null;
-
-  const handleTableButtonClick = () => {
-    // Toggle the table visibility
-    setopenTable((prev) => !prev);
-  };
 
   const getFontLabel = () => {
     if (editor.isActive("textStyle", { fontFamily: "Arial" })) return "Arial";
@@ -57,7 +56,7 @@ const TollBar = ({ editor, onOpenImageClick }) => {
 
   const FontHead = () => {
     return (
-      <div className="flex items-center gap-3 text-textcolor">
+      <div className="flex items-center gap-1  hover:bg-green-400 h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition">
         <p>{getFontLabel()}</p>
         <AiFillCaretDown size={20} />
       </div>
@@ -84,7 +83,7 @@ const TollBar = ({ editor, onOpenImageClick }) => {
 
   const Head = () => {
     return (
-      <div className="flex items-center gap-3 text-textcolor">
+      <div className="flex items-center gap-1  hover:bg-green-400 h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition">
         <p>{getLabel()}</p>
         <AiFillCaretDown />
       </div>
@@ -116,6 +115,51 @@ const TollBar = ({ editor, onOpenImageClick }) => {
     editor.chain().focus().setYoutubeVideo({ src: url }).run();
   };
 
+  /* ---------- for alignment ------------- */
+  // Get current alignment for display
+  const getCurrentAlignmentIcon = () => {
+    if (editor.isActive({ textAlign: "center" })) return <MdFormatAlignCenter />;
+    if (editor.isActive({ textAlign: "right" })) return <MdFormatAlignRight />;
+    if (editor.isActive({ textAlign: "justify" })) return <MdFormatAlignJustify />;
+    return <MdFormatAlignLeft />; // Default to left
+  };
+
+  const alignmentOptions = [
+    {
+      icon: <MdFormatAlignLeft />,
+      onClick: () => editor.chain().focus().setTextAlign("left").run(),
+      active: editor.isActive({ textAlign: "left" }),
+      tooltip: "Align Left",
+    },
+    {
+      icon: <MdFormatAlignCenter />,
+      onClick: () => editor.chain().focus().setTextAlign("center").run(),
+      active: editor.isActive({ textAlign: "center" }),
+      tooltip: "Align Center",
+    },
+    {
+      icon: <MdFormatAlignRight />,
+      onClick: () => editor.chain().focus().setTextAlign("right").run(),
+      active: editor.isActive({ textAlign: "right" }),
+      tooltip: "Align Right",
+    },
+    {
+      icon: <MdFormatAlignJustify />,
+      onClick: () => editor.chain().focus().setTextAlign("justify").run(),
+      active: editor.isActive({ textAlign: "justify" }),
+      tooltip: "Justify Text",
+    },
+  ];
+
+  const AlignHead = () => {
+    return (
+      <div className="flex items-center gap-1  hover:bg-green-400 h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition">
+        {getCurrentAlignmentIcon()}
+        <AiFillCaretDown />
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="flex items-center flex-wrap">
@@ -126,15 +170,33 @@ const TollBar = ({ editor, onOpenImageClick }) => {
           }))}
           head={<FontHead />}
         />
-        <div className="h-4 w-[1px] bg-white/20  mx-8" />
+        <div className="h-4 w-[1px] bg-white/20  mx-5" />
         {/* paragraph, heading 1, 2, 3 */}
         <DropDownOptions options={options} head={<Head />} />
 
-        <div className="h-4 w-[1px] bg-white/20  mx-8" />
+        <div className="h-4 w-[1px] bg-white/20  mx-5" />
 
-        <div className="flex items-center space-x-3">
-          {editor && (
-            <BubbleMenu className="bubble-menu bg-black p-2 rounded-md flex gap-2" tippyOptions={{ duration: 100 }} editor={editor}>
+        <div className="flex items-center space-x-1.5">
+          {/*   {editor && (
+            <BubbleMenu
+              className="bubble-menu bg-black p-2 rounded-md flex gap-2"
+              tippyOptions={{ duration: 100 }}
+              editor={editor}
+              shouldShow={({ editor, from, to }) => {
+                // Only show when text is selected (not empty selection)
+                if (from === to) return false;
+
+                // Don't show when an image or other node is selected
+                const { selection } = editor.state;
+                const { $from, $to } = selection;
+
+                // Check if selection spans multiple nodes or contains non-text nodes
+                if ($from.parent !== $to.parent) return false;
+                if ($from.parent.isTextblock === false) return false;
+
+                return true;
+              }}
+            >
               <Button active={editor.isActive("bold")} onClick={() => getFocusedEditor(editor).toggleBold().run()}>
                 <BsTypeBold />
               </Button>
@@ -148,18 +210,18 @@ const TollBar = ({ editor, onOpenImageClick }) => {
                 <BsTypeStrikethrough />
               </Button>
             </BubbleMenu>
-          )}
+          )} */}
 
-          <Button active={editor.isActive("bold")} onClick={() => getFocusedEditor(editor).toggleBold().run()}>
+          <Button active={editor.isActive("bold")} onClick={() => getFocusedEditor(editor).toggleBold().run()} tooltip="Bold (Ctrl+B)">
             <BsTypeBold />
           </Button>
-          <Button active={editor.isActive("italic")} onClick={() => getFocusedEditor(editor).toggleItalic().run()}>
+          <Button active={editor.isActive("italic")} onClick={() => getFocusedEditor(editor).toggleItalic().run()} tooltip="Italic (Ctrl+I)">
             <BsTypeItalic />
           </Button>
-          <Button active={editor.isActive("underline")} onClick={() => getFocusedEditor(editor).toggleUnderline().run()}>
+          <Button active={editor.isActive("underline")} onClick={() => getFocusedEditor(editor).toggleUnderline().run()} tooltip="Underline (Ctrl + U)">
             <BsTypeUnderline />
           </Button>
-          <Button active={editor.isActive("strike")} onClick={() => getFocusedEditor(editor).toggleStrike().run()}>
+          <Button active={editor.isActive("strike")} onClick={() => getFocusedEditor(editor).toggleStrike().run()} tooltip="Strike">
             <BsTypeStrikethrough />
           </Button>
 
@@ -224,25 +286,31 @@ const TollBar = ({ editor, onOpenImageClick }) => {
           />
         </div>
 
-        <div className="h-4 w-[1px] bg-white/20  mx-8" />
-        <div className="flex items-center space-x-3">
-          <Button active={editor.isActive({ textAlign: "left" })} onClick={() => getFocusedEditor(editor).setTextAlign("left").run()}>
-            <MdFormatAlignLeft />
+        <div className="h-4 w-[1px] bg-white/20  mx-5" />
+        <div className="flex items-center space-x-1.5">
+          <DropDownOptionsWithIcon options={alignmentOptions} head={<AlignHead />} customClasses="min-w-[120px]" />
+          <Button onClick={() => editor.chain().focus().indent().run()} disabled={!editor.can().indent()} tooltip="Indent (Tab)">
+            <TbIndentIncrease />
           </Button>
-          <Button active={editor.isActive({ textAlign: "center" })} onClick={() => getFocusedEditor(editor).setTextAlign("center").run()}>
-            <MdFormatAlignCenter />
+          <Button onClick={() => editor.chain().focus().outdent().run()} disabled={!editor.can().outdent()} tooltip="Outdent (Shift+Tab)">
+            <TbIndentDecrease />
           </Button>
-          <Button active={editor.isActive({ textAlign: "right" })} onClick={() => getFocusedEditor(editor).setTextAlign("right").run()}>
-            <MdFormatAlignRight />
-          </Button>
-          <Button active={editor.isActive({ textAlign: "justify" })} onClick={() => getFocusedEditor(editor).setTextAlign("justify").run()}>
-            <MdFormatAlignJustify />
-          </Button>
+          <LineHeightDropdown editor={editor} />
+          <DropDownTextFormat editor={editor} />
         </div>
+        <div className="h-4 w-[1px] bg-white/20  mx-5" />
 
-        <div className="h-4 w-[1px] bg-white/20  mx-8" />
+        <div className="flex items-center space-x-1.5">
+          <MathFormulaButton editor={editor} />
+          <EmojiButton editor={editor} />
+          <GiftPicker editor={editor} />
+          <ColumnButton editor={editor} />
+          <GridBoxButton editor={editor} />
+          <CustomTableButton editor={editor} />
+        </div>
+        <div className="h-4 w-[1px] bg-white/20  mx-5" />
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-1.5">
           <Button active={editor.isActive("blockquote")} onClick={() => getFocusedEditor(editor).toggleBlockquote().run()}>
             <RiDoubleQuotesL />
           </Button>
@@ -266,9 +334,9 @@ const TollBar = ({ editor, onOpenImageClick }) => {
           </Button>
         </div>
 
-        <div className="h-4 w-[1px] bg-white/20  mx-8" />
+        <div className="h-4 w-[1px] bg-white/20  mx-5" />
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-1.5">
           <EmbedYoutube onSubmit={handleEmbedYoutube} />
           <Button onClick={onOpenImageClick}>
             <BsImageFill />
@@ -276,12 +344,11 @@ const TollBar = ({ editor, onOpenImageClick }) => {
           {/*  <Button active={editor.isActive("horizontalRule")} onClick={() => getFocusedEditor(editor).setHorizontalRule().run()}>
             <FaGripLines />
           </Button> */}
-          <Button active={editor.isActive("table")} onClick={handleTableButtonClick}>
+          {/*    <Button active={editor.isActive("table")} onClick={handleTableButtonClick}>
             <ImTable2 />
-          </Button>
+          </Button> */}
         </div>
       </div>
-      {openTable && <Table editor={editor} />}
     </>
   );
 };

@@ -1,5 +1,4 @@
 import { createBlog, getallBlog } from "@/redux/slices/blogSlice";
-import Editor from "@/textEditor/Editor";
 import { BreadcrumbsComponent, InputCard, Loader, UseMouseMoveEffect, Wrapper } from "@/utils/Router";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +10,7 @@ import { CommonClassForInput } from "@/utils";
 import { CategoryDropDown } from "@/components/common/DropDown";
 import { Button } from "@material-tailwind/react";
 import { v4 as uuidv4 } from "uuid";
+import Editor from "@/textEditor/Editor";
 
 const initialState = {
   title: "",

@@ -1,19 +1,23 @@
 // Media Query Mixin
 @mixin media-query($breakpoint) {
-  @if $breakpoint == "sm" {
+  @if $breakpoint == "xs" {
     @media (max-width: 576px) {
       @content;
     }
-  } @else if $breakpoint == "md" {
+  } @else if $breakpoint == "sm" {
     @media (max-width: 768px) {
       @content;
     }
-  } @else if $breakpoint == "lg" {
+  } @else if $breakpoint == "md" {
     @media (max-width: 992px) {
       @content;
     }
-  } @else if $breakpoint == "xl" {
+  } @else if $breakpoint == "lg" {
     @media (max-width: 1200px) {
+      @content;
+    }
+  } @else if $breakpoint == "xl" {
+    @media (max-width: 1550px) {
       @content;
     }
   }

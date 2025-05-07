@@ -31,19 +31,6 @@ export const FontFamilies = [
   { label: "Moon Dance", font: "'Moon Dance', cursive" },
 ];
 
-export const HighlightColors = [
-  { label: "None", color: "" },
-  { label: "Black", color: "#000" }, // Darker orange
-  { label: "White", color: "#fff" }, // Darker orange
-  { label: "Orange", color: "#ff9f43" }, // Darker orange
-  { label: "Green", color: "#4CAF50" }, // Rich green
-  { label: "Blue", color: "#1E88E5" }, // Bright blue
-  { label: "Purple", color: "#8E44AD" }, // Deep purple
-  { label: "Red", color: "#E74C3C" }, // Vibrant red
-  { label: "Pink", color: "#D81B60" }, // Dark pink
-  { label: "Yellow", color: "#FBC02D" }, // Warm yellow
-  { label: "Teal", color: "#00897B" }, // Muted teal
-];
 export const taskIcon = [
   {
     icon: <MdFormatIndentDecrease />,

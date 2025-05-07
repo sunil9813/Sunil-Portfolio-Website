@@ -29,4 +29,4 @@ export const truncateText = (text, maxLength) => {
   return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 };
 
-export const CommonClassForInput = "w-full h-full p-2 rounded-lg bg-blue-gray-600/10 border-[1px] border-white/20";
+export const CommonClassForInput = "w-full h-full p-2 rounded-lg highlightbg textColor text-xs 3xl:text-sm";

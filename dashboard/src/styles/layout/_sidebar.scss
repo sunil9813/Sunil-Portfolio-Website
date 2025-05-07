@@ -30,9 +30,8 @@
   }
 
   .active .sidebar-title {
-    background-color: #1a1c23;
     position: relative;
-    box-shadow: rgba(22, 22, 24, 0.2) 0px 7px 29px 0px;
+    //  box-shadow: rgba(22, 22, 24, 0.2) 0px 7px 29px 0px;
   }
 
   .sidebar-title span .icon {
@@ -44,11 +43,6 @@
     display: block;
     opacity: 1;
     transition: opacity 0.5s ease-in-out;
-  }
-
-  .active .sidebar-item .icon,
-  .active .sidebar-item .title {
-    color: #fff;
   }
 
   .sidebars::-webkit-scrollbar {
@@ -225,5 +219,25 @@
       opacity: 0;
       transform: translateY(20px); /* Moves upwards */
     }
+  }
+}
+.light {
+  .active .sidebar-title {
+    background-color: #f9f9f9;
+    box-shadow: 0px 5px 1.5px -4px #08080817, 0px 6px 4px -4px #0808080d;
+  }
+  .active .sidebar-item .icon,
+  .active .sidebar-item .title {
+    color: #000;
+  }
+}
+.dark {
+  .active .sidebar-title {
+    background-color: #222222;
+    box-shadow: 0px 5px 1.5px -4px #08080817, 0px 6px 4px -4px #0808080d;
+  }
+  .active .sidebar-item .icon,
+  .active .sidebar-item .title {
+    color: #fff;
   }
 }

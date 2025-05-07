@@ -32,8 +32,8 @@ router.get("/:slug", getBlog);
 router.delete("/:id", protect, deleteBlog);
 router.delete("/", protect, deleteBlog);
 
-router.patch("/:blogId/featured", protect, updateFeaturedStatus);
-router.patch("/:blogId/visibility", protect, updateVisibility);
+router.patch("/featured/:blogId", protect, updateFeaturedStatus);
+router.patch("/visibility/:blogId", protect, updateVisibility);
 
 router.patch("/:slug", protect, upload.single("cover"), updateBlog);
 module.exports = router;

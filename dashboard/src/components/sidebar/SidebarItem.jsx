@@ -31,9 +31,10 @@ export const SidebarItem = ({ item, isOpenState, onSubMenuToggle }) => {
         <div className="sidebar-title" onClick={onSubMenuToggle}>
           <span className="cursor-pointer">
             {item.icon && <div className="icon">{item.icon}</div>}
-            <div className="title">{item.title}</div>
+            {/* this nav list parent */}
+            <div className="title xl:text-xs">{item.title}</div>
           </span>
-          <MdKeyboardArrowRight size={25} className={`arrow-icon ${expandMenu ? "rotate" : ""}`} />
+          <MdKeyboardArrowRight size={20} className={`arrow-icon ${expandMenu ? "rotate" : ""}`} />
         </div>
         <div
           ref={menuContentRef}
@@ -45,11 +46,12 @@ export const SidebarItem = ({ item, isOpenState, onSubMenuToggle }) => {
         >
           {item.childrens.map((child, index) => {
             return (
+              // this is dropdown nav
               <div key={index} className="s-child">
                 <NavLink to={child.path} className={activeSublink}>
                   <div className="sidebar-item">
                     <div className="sidebar-title">
-                      <span>{<div className="title">{child.title}</div>}</span>
+                      <span>{<div className="title xl:text-xs">{child.title}</div>}</span>
                     </div>
                   </div>
                 </NavLink>
@@ -66,7 +68,7 @@ export const SidebarItem = ({ item, isOpenState, onSubMenuToggle }) => {
           <div className="sidebar-title">
             <span>
               {item.icon && <div className="icon">{item.icon}</div>}
-              <div className="title">{item.title}</div>
+              <div className="title  xl:text-sm">{item.title}</div>
             </span>
           </div>
         </div>

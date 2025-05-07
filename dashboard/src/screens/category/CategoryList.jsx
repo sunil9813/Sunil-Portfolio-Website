@@ -1,6 +1,6 @@
 import { GlitterCards } from "@/components/cards/GlowCard";
 import { deleteCategory, getallCategory } from "@/redux/slices/resources/categorySlice";
-import { BreadcrumbsComponent, Table } from "@/utils/Router";
+import { BreadcrumbsComponent, Table, Wrapper } from "@/utils/Router";
 import { Avatar } from "@material-tailwind/react";
 import PropTypes from "prop-types";
 import { useEffect } from "react";
@@ -10,7 +10,7 @@ import { FaFacebookF } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import "react-confirm-alert/src/react-confirm-alert.css";
 
-const TABLE_HEAD = ["S.N", "User", "Title", "Cover", "Type", "Posts", "Created"];
+const TABLE_HEAD = ["S.N", "Created By", "Title", "Cover", "Type", "Posts", "Created"];
 
 export const CategoryList = () => {
   const dispatch = useDispatch();
@@ -43,8 +43,10 @@ export const CategoryList = () => {
   };
   return (
     <>
-      <section className="category-list">
-        <BreadcrumbsComponent text="categories" />
+      <Wrapper className="category-list">
+        <div className="px-5 pt-5">
+          <BreadcrumbsComponent currentPage="All Categories" space={true} />
+        </div>
         <Table
           head={TABLE_HEAD}
           rowData={categoryList}
@@ -57,7 +59,7 @@ export const CategoryList = () => {
           comp={<CategoryListCard rowData={categoryList} />}
           type="category"
         />
-      </section>
+      </Wrapper>
     </>
   );
 };

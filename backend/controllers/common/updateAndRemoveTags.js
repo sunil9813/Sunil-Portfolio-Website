@@ -1,9 +1,10 @@
 const asyncHandler = require("express-async-handler");
 const CoursesModel = require("../../models/notes/CoursesModel");
-const PostsModel = require("../../models/posts/PostsModel");
+const ProjectModel = require("../../models/project/ProjectModel");
 const { ChapterModel } = require("../../models/notes/AcademicComponentsModel");
 const BlogModel = require("../../models/BlogModel");
 
+/************* --------- Not used upto now ------********** */
 const updateTags = async (req, res, Model) => {
   try {
     const entityId = req.params.id;
@@ -147,7 +148,7 @@ const getRelatedPostByTags = async (req, res, model) => {
 
 // To Update tags
 exports.updatePostTags = asyncHandler(async (req, res) => {
-  await updateTags(req, res, PostsModel);
+  await updateTags(req, res, ProjectModel);
 });
 exports.updateCourseTags = asyncHandler(async (req, res) => {
   await updateTags(req, res, CoursesModel);
@@ -161,7 +162,7 @@ exports.updateBlogTags = asyncHandler(async (req, res) => {
 
 // To Delete tags
 exports.DeletePostTags = asyncHandler(async (req, res) => {
-  await deleteTags(req, res, PostsModel);
+  await deleteTags(req, res, ProjectModel);
 });
 exports.DeleteCourseTags = asyncHandler(async (req, res) => {
   await deleteTags(req, res, CoursesModel);
@@ -175,7 +176,7 @@ exports.DeleteBlogTags = asyncHandler(async (req, res) => {
 
 //  Get Post by tags
 exports.getItemsByTagOfPosts = asyncHandler(async (req, res) => {
-  await getItemsByTag(req, res, PostsModel);
+  await getItemsByTag(req, res, ProjectModel);
 });
 exports.getItemsByTagOfCourses = asyncHandler(async (req, res) => {
   await getItemsByTag(req, res, CoursesModel);
@@ -189,7 +190,7 @@ exports.getItemsByTagOfBlog = asyncHandler(async (req, res) => {
 
 //  Get Post mosts match tags
 exports.getPostsofMostMatchTagsPost = asyncHandler(async (req, res) => {
-  await getRelatedPostByTags(req, res, PostsModel);
+  await getRelatedPostByTags(req, res, ProjectModel);
 });
 exports.getPostsofMostMatchTagsCourses = asyncHandler(async (req, res) => {
   await getRelatedPostByTags(req, res, CoursesModel);

@@ -9,17 +9,17 @@ import { CiImageOn } from "react-icons/ci";
 export const menu = [
   {
     title: "Dashboard",
-    icon: <RiDashboardFill size={20} />,
+    icon: <RiDashboardFill size={17} />,
     path: "/",
   },
   /*  {
     title: "Users",
-    icon: <FaUsers size={20} />,
+    icon: <FaUsers size={17} />,
     path: "/users",
   }, */
   {
     title: "Users",
-    icon: <FaUsers size={20} />,
+    icon: <FaUsers size={17} />,
     childrens: [
       {
         title: "all user",
@@ -33,7 +33,7 @@ export const menu = [
   },
   {
     title: "Category",
-    icon: <MdOutlineCategory size={20} />,
+    icon: <MdOutlineCategory size={17} />,
     childrens: [
       {
         title: "all category",
@@ -47,7 +47,7 @@ export const menu = [
   },
   {
     title: "Blog",
-    icon: <CiImageOn size={20} />,
+    icon: <CiImageOn size={17} />,
     childrens: [
       {
         title: "all blog",
@@ -65,22 +65,26 @@ export const menu = [
   },
   {
     title: "project",
-    icon: <BsImageAlt size={20} />,
+    icon: <BsImageAlt size={17} />,
     childrens: [
       {
         title: "projects",
-        path: "/projects",
+        path: "/all-project",
       },
       {
-        title: "category",
-        path: "/category",
+        title: "Your Creation",
+        path: "/users-create-project",
+      },
+      {
+        title: "create project",
+        path: "/create-project",
       },
     ],
   },
 
   {
     title: "Setting",
-    icon: <AiFillSetting size={20} />,
+    icon: <AiFillSetting size={17} />,
     childrens: [
       {
         title: "Assets Limit",
@@ -90,7 +94,7 @@ export const menu = [
   },
   {
     title: "Profile",
-    icon: <FaRegUser size={20} />,
+    icon: <FaRegUser size={17} />,
     childrens: [
       {
         title: "Profile",
@@ -111,44 +115,44 @@ export const menu = [
 export const menus = [
   {
     title: "Dashboard",
-    icon: <RiDashboardFill size={20} />,
+    icon: <RiDashboardFill size={17} />,
     path: "/",
   },
   {
     title: "Users",
-    icon: <FaUsers size={20} />,
+    icon: <FaUsers size={17} />,
     path: "/users",
   },
   {
     title: "project",
-    icon: <BsImageAlt size={20} />,
+    icon: <BsImageAlt size={17} />,
     childrens: [
       {
         title: "projects",
         path: "/projects",
-        icon: <BiCategoryAlt size={20} />,
+        icon: <BiCategoryAlt size={17} />,
       },
       {
         title: "category",
         path: "/category",
-        icon: <BiCategoryAlt size={20} />,
+        icon: <BiCategoryAlt size={17} />,
       },
     ],
   },
 
   {
     title: "Setting",
-    icon: <AiFillSetting size={20} />,
+    icon: <AiFillSetting size={17} />,
     childrens: [
       {
         title: "Profile",
         path: "/profile",
-        icon: <AiOutlineUser size={20} />,
+        icon: <AiOutlineUser size={17} />,
       },
       {
         title: "Assets Limit",
         path: "/assets-limit",
-        icon: <BiImage size={20} />,
+        icon: <BiImage size={17} />,
       },
     ],
   },

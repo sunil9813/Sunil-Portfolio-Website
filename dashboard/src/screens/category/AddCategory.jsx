@@ -13,7 +13,7 @@ export const AddCategory = () => {
   const [title, setTitle] = useState("");
   const [type, setType] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
-  const { isLoading } = useSelector((state) => state.category);
+  const { isLoading } = useSelector((state) => state?.category);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -66,9 +66,10 @@ export const AddCategory = () => {
   return (
     <>
       {isLoading && <Loader />}
-      <section className="content">
-        <BreadcrumbsComponent text="Create Category" />
-
+      <Wrapper className="category-list">
+        <div className="px-5 pt-5">
+          <BreadcrumbsComponent currentPage="Create Category" space={false} />
+        </div>
         <div className="flex justify-between gap-5">
           <form className="w-2/5">
             <Wrapper>
@@ -124,7 +125,7 @@ export const AddCategory = () => {
             <ListItemCategory />
           </Wrapper>
         </div>
-      </section>
+      </Wrapper>
     </>
   );
 };

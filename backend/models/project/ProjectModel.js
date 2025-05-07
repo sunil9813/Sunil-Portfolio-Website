@@ -7,58 +7,54 @@ const projectSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
-    title: { type: String, require: true },
-    slug: {
-      type: String,
-      unique: true,
-      index: true,
-    },
+    groupId: { type: String },
+    title: { type: String, required: true, trim: true, maxLength: 250 },
+    slug: { type: String, unique: true },
     description: { type: String, require: true },
+    metaDescription: { type: String, required: true, trim: true, maxLength: 160 },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    downloadCount: { type: Number, default: 0 },
+    numOfViews: { type: Number, default: 0 },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     layout: { type: String, require: true },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-    },
-    numOfViews: {
-      type: Number,
-      default: 0,
-    },
-    assets: {
-      type: Object,
-      default: {},
-    },
-    features: [
-      {
-        title: {
-          type: String,
-          required: true,
+    urllink: { type: String },
+    visibility: { type: String, enum: ["public", "private"], default: "private" },
+    featured: { type: Boolean, default: false },
+    tags: [{ tag: { type: String, maxLength: 500, trim: true } }],
+    // code that are use here
+    formats: [{ format: { type: String, trim: true } }],
+    highlights: [{ highlight: { type: String, trim: true } }],
+
+    price: { type: Number, default: 0 },
+    discount: { type: Number, default: 0 },
+    discountDate: { type: Date, default: null },
+    discountShow: { type: Boolean, default: false },
+
+    assets: { type: Object, default: {} },
+    thumbnail: { type: Object },
+    resourceFile: {
+      type: {
+        type: String,
+        enum: ["url", "file", null],
+        default: null,
+      },
+      url: {
+        type: String,
+        trim: true,
+        match: [/^https?:\/\/[^\s$.?#].[^\s]*$/, "Please provide a valid URL"],
+        required: function () {
+          return this.resourceFile?.type === "url";
         },
       },
-    ],
-    tags: [
-      {
-        name: {
-          type: String,
-          required: true,
+      file: {
+        type: Object,
+        required: function () {
+          return this.resourceFile?.type === "file";
         },
       },
-    ],
-    format: [
-      {
-        name: {
-          type: String,
-          required: true,
-        },
-        icon: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
-    ratings: {
-      type: Number,
-      default: 0,
     },
+
+    ratings: { type: Number, default: 0 },
     reviews: [
       {
         user: {
@@ -80,10 +76,6 @@ const projectSchema = mongoose.Schema(
         },
       },
     ],
-    price: {
-      type: Number,
-      default: 0,
-    },
   },
   {
     timestamps: true,

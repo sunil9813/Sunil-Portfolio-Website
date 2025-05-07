@@ -2,7 +2,7 @@ const { default: mongoose } = require("mongoose");
 const BlogModel = require("../../models/BlogModel");
 const { ChapterModel } = require("../../models/notes/AcademicComponentsModel");
 const CoursesModel = require("../../models/notes/CoursesModel");
-const PostsModel = require("../../models/posts/PostsModel");
+const ProjectModel = require("../../models/project/ProjectModel");
 
 const toggleLike = async (req, res, model) => {
   const userId = req.user.id;
@@ -39,7 +39,7 @@ const likeCourse = async (req, res) => {
   return toggleLike(req, res, CoursesModel);
 };
 const likeProject = async (req, res) => {
-  return toggleLike(req, res, PostsModel);
+  return toggleLike(req, res, ProjectModel);
 };
 const likeChapter = async (req, res) => {
   return toggleLike(req, res, ChapterModel);

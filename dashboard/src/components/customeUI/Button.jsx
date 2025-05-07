@@ -1,5 +1,20 @@
 import PropTypes from "prop-types";
 
+export const GhostButton = ({ children, onClick, className, type }) => {
+  return (
+    <button className={`button !px-7 h-10 3xl:h-12 ${className}`} onClick={onClick} type={type}>
+      {children}
+    </button>
+  );
+};
+export const TertiaryButton = ({ children, onClick, className, type }) => {
+  return (
+    <button className={`tertiary-button px-7 h-10 3xl:h-12 capitalize textSizeSm ${className}`} onClick={onClick} type={type}>
+      {children}
+    </button>
+  );
+};
+
 export const PrimaryButton = ({ text, onclick }) => {
   const handleMouseMove = (e) => {
     const button = e.currentTarget;
@@ -50,6 +65,18 @@ SecondaryButton.propTypes = {
   children: PropTypes.any,
   className: PropTypes.any,
   onClick: PropTypes.any,
+};
+TertiaryButton.propTypes = {
+  children: PropTypes.any,
+  className: PropTypes.any,
+  onClick: PropTypes.any,
+  type: PropTypes.any,
+};
+GhostButton.propTypes = {
+  children: PropTypes.any,
+  className: PropTypes.any,
+  onClick: PropTypes.any,
+  type: PropTypes.any,
 };
 IconButton.propTypes = {
   icon: PropTypes.any,

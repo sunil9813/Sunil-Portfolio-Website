@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const { HomeSlider, HomeFeature, ContactInfo } = require("../../models/settings/SettingModel");
 const { isValidObjectId } = require("mongoose");
-const PostsModel = require("../../models/posts/PostsModel");
+const ProjectModel = require("../../models/project/ProjectModel");
 const cloudinary = require("cloudinary").v2;
 
 const createHomeSlider = asyncHandler(async (req, res) => {
@@ -218,7 +218,7 @@ const toggleHomeFeature = asyncHandler(async (req, res) => {
 
   if (!isValidObjectId(resourceId)) return res.status(422).json({ error: "Post id is invalid!" });
 
-  const resource = await PostsModel.findById(resourceId);
+  const resource = await ProjectModel.findById(resourceId);
   if (!resource) return res.status(404).json({ error: "Post not found!" });
 
   // resource is already in fav

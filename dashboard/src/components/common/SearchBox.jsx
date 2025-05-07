@@ -1,30 +1,13 @@
-import { AiOutlineSearch } from "react-icons/ai";
+import { FiSearch } from "react-icons/fi";
 
 export const SearchBox = () => {
-  const handleMouseMove = (e) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    card.style.setProperty("--mouse-x", `${x}px`);
-    card.style.setProperty("--mouse-y", `${y}px`);
-  };
   return (
     <>
-      <div className="input_glow search" onMouseMove={handleMouseMove}>
-        <div className="input_glow_background">
-          <div className="input_glow_background-glow bg-transparent"></div>
-        </div>
-
-        <div className="input_glow_background_filed">
-          <div className="icon relative z-50 flex items-center justify-center w-12 bg-transparent h-12 text-gray-100/30">
-            <AiOutlineSearch size={25} />
-          </div>
-          <div className="pl-8">
-            <input className="p-2 w-full text-xs rounded-md text-gray-500 px-12" placeholder="Search here..." />
-          </div>
-        </div>
+      <div className="search-box relative">
+        <form className="h-7 2xl:h-9 3xl:h-12 bg-light-surface2 dark:bg-dark-surface2 rounded-full flexC">
+          <FiSearch size={18} className="absolute top-2.5 3xl:top-4 left-3 z-10 text-light-text-primary/40 dark:text-dark-text-primary/40" />
+          <input className="w-full h-full px-5 pl-9 text-xs 3xl:text-sm text-textcolor" placeholder="Search anything...." />
+        </form>
       </div>
     </>
   );

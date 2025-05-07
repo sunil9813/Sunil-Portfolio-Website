@@ -1,6 +1,6 @@
+import projectService from "@/redux/services/projectService";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
-import resourceService from "../../services/resources/resourceService";
 
 const initialState = {
   assetLimit: null,
@@ -10,17 +10,17 @@ const initialState = {
   message: "",
 };
 
-export const addPostConfig = createAsyncThunk("asset/limit", async (formData, thunkAPI) => {
+export const addAssetsLimit = createAsyncThunk("asset/limit", async (formData, thunkAPI) => {
   try {
-    return await resourceService.addPostConfig(formData);
+    return await projectService.addAssetsLimit(formData);
   } catch (error) {
     const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
     return thunkAPI.rejectWithValue(message);
   }
 });
-export const getPostConfig = createAsyncThunk("asset-get/limit", async (_, thunkAPI) => {
+export const getAssetsLimit = createAsyncThunk("asset-get/limit", async (_, thunkAPI) => {
   try {
-    return await resourceService.getPostConfig();
+    return await projectService.getAssetsLimit();
   } catch (error) {
     const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
     return thunkAPI.rejectWithValue(message);
@@ -41,33 +41,33 @@ const assetsLimitSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(addPostConfig.pending, (state) => {
+      .addCase(addAssetsLimit.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(addPostConfig.fulfilled, (state, action) => {
+      .addCase(addAssetsLimit.fulfilled, (state, action) => {
         state.isLoading = true;
         state.isSuccess = true;
         state.isError = false;
         state.message = action.payload;
         toast.success(action.payload);
       })
-      .addCase(addPostConfig.rejected, (state, action) => {
+      .addCase(addAssetsLimit.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
         state.message = action.payload;
         toast.error(action.payload);
       })
-      .addCase(getPostConfig.pending, (state) => {
+      .addCase(getAssetsLimit.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(getPostConfig.fulfilled, (state, action) => {
+      .addCase(getAssetsLimit.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
         state.assetLimit = action.payload;
       })
-      .addCase(getPostConfig.rejected, (state, action) => {
+      .addCase(getAssetsLimit.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;

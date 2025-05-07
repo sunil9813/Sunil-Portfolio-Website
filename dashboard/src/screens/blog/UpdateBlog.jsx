@@ -146,92 +146,85 @@ export const UpdateBlog = () => {
 
   return (
     <>
-      <section className="content">
-        <BreadcrumbsComponent text="Update blog" />
-        <Wrapper className="p-5">
-          <div id="inputcards" className="inputcards flex flex-col gap-5">
-            <div className="mt-3">
-              <span className="text-gray-400 block text-sm mb-2">Description</span>
+      <Wrapper className="p-5">
+        <BreadcrumbsComponent currentPage="Update Blogs" space={false} />
+        <div id="inputcards" className="inputcards flex flex-col gap-5 mt-4">
+          <div>
+            <span className="text-gray-400 block text-sm mb-2">Title (250 characters)</span>
+            <InputCard>
+              <input type="text" name="title" className={`${CommonClassForInput} pb-10`} value={title} onChange={handleTitleChange} />
+              <p className="absolute bottom-3 right-3 text-primary-dark dark:text-primary text-sm">{title?.length || 0}/250</p>
+            </InputCard>
+            {titleError && <p className="text-red-500 text-sm mt-1">{titleError}</p>}
+          </div>
+
+          <div>
+            <span className="text-gray-400 block text-sm mb-2">Tags</span>
+            <InputCard>
+              <TagsInput className={`${CommonClassForInput}`} value={tags} onChange={handleTagChange} />
+            </InputCard>
+            {tagError && <p className="text-red-500 text-sm mt-1">{tagError}</p>}
+          </div>
+
+          <div className="flex justify-between gap-5">
+            <div className="w-full">
+              <span className="text-gray-400 block text-sm mb-2">Category</span>
               <InputCard>
-                <div className="px-4 py-2.5 bg-blue-gray-600/10 border-[1px] border-white/20 outline-none rounded-lg text-textcolor text-sm w-full">
-                  <Editor
-                    key={slug} // Force re-render on slug change
-                    customId={groupId}
-                    value={description || ""} // Ensure value is always a string
-                    onChange={(newValue) => {
-                      setDescription(newValue);
-                    }}
-                    folderName="blog/description"
-                    folder="blog"
-                    subfolder="description"
-                  />
-                </div>
+                <CategoryDropDown type="blog" value={category} onChange={(selectedOption) => setBlog({ ...blog, category: selectedOption })} />
               </InputCard>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block text-sm mb-2">Title (250 characters)</span>
-              <InputCard>
-                <input type="text" name="title" className={`${CommonClassForInput} pb-10`} value={title} onChange={handleTitleChange} />
-                <p className="absolute bottom-3 right-3 text-primary-dark dark:text-primary text-sm">{title?.length || 0}/250</p>
-              </InputCard>
-              {titleError && <p className="text-red-500 text-sm mt-1">{titleError}</p>}
-            </div>
-
-            <div>
-              <span className="text-gray-400 block text-sm mb-2">Tags</span>
-              <InputCard>
-                <TagsInput className={`${CommonClassForInput}`} value={tags} onChange={handleTagChange} />
-              </InputCard>
-              {tagError && <p className="text-red-500 text-sm mt-1">{tagError}</p>}
-            </div>
-
-            <div className="flex justify-between gap-5">
-              <div className="w-full">
-                <span className="text-gray-400 block text-sm mb-2">Category</span>
-                <InputCard>
-                  <CategoryDropDown type="blog" value={category} onChange={(selectedOption) => setBlog({ ...blog, category: selectedOption })} />
-                </InputCard>
-              </div>
-            </div>
-
-            <div>
-              <span className="text-gray-400 block text-sm mb-2">Thumbnail</span>
-              <InputCard>
-                <input
-                  className="relative m-0 block w-full min-w-0 flex-auto cursor-pointer rounded-lg bg-blue-gray-600/10 border border-white/20 text-primary bg-clip-padding px-3 py-[0.32rem] font-normal leading-[2.15] text-textcolor transition duration-300 ease-in-out file:-mx-3 file:-my-[0.32rem] file:cursor-pointer file:overflow-hidden file:rounded-none file:border-0 file:border-solid file:border-inherit file:bg-neutral-100 file:px-3 file:py-[0.32rem] file:text-neutral-700 file:transition file:duration-150 file:ease-in-out file:[border-inline-end-width:1px] file:[margin-inline-end:0.75rem] hover:file:bg-neutral-200 focus:border-primarybg focus:text-neutral-700 focus:outline-none"
-                  id="formFileLg"
-                  type="file"
-                  name="cover"
-                  onChange={handleImageChange}
-                />
-              </InputCard>
-              {imagePreviews && (
-                <div className="mt-3">
-                  <img src={imagePreviews} alt="imagePreviews" className="w-56 h-32 rounded-lg object-contain" />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <span className="text-gray-400 block text-sm mb-2">Meta description (160 characters)</span>
-              <InputCard>
-                <input type="text" name="metaDescription" className={`${CommonClassForInput} pb-10`} placeholder="Meta description" value={metaDescription} onChange={handleMetaDescriptionChange} />
-                <p className="absolute bottom-3 right-3 text-primary-dark dark:text-primary text-sm">{metaDescription?.length || 0}/160</p>
-              </InputCard>
-              {metaDescError && <p className="text-red-500 text-sm mt-1">{metaDescError}</p>}
-            </div>
-
-            {/* Put description box here  */}
-
-            <div className="w-56">
-              <Button color="indigo" type="submit" onClick={handleUpdate}>
-                Update
-              </Button>
             </div>
           </div>
-        </Wrapper>
-      </section>
+
+          <div>
+            <span className="text-gray-400 block text-sm mb-2">Thumbnail</span>
+            <InputCard>
+              <input
+                className="relative m-0 block w-full text-xs 3xl:text min-w-0 flex-auto cursor-pointer rounded-lg textColor highlightbg bg-clip-padding px-3 py-[8px] font-normal leading-[2.15] transition duration-300 ease-in-out file:-mx-3 file:-my-[8px] file:cursor-pointer file:overflow-hidden file:rounded-none file:border-0 file:border-solid file:border-inherit file:bg-neutral-100 file:px-3 file:py-[8px] file:text-neutral-700 file:transition file:duration-150 file:ease-in-out file:[border-inline-end-width:1px] file:[margin-inline-end:0.75rem] hover:file:bg-neutral-200 focus:border-primarybg focus:text-neutral-700 focus:outline-none"
+                id="formFileLg"
+                type="file"
+                name="cover"
+                onChange={handleImageChange}
+              />
+            </InputCard>
+            {imagePreviews && (
+              <div className="mt-3">
+                <img src={imagePreviews} alt="imagePreviews" className="w-56 h-32 rounded-lg object-contain" />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <span className="text-gray-400 block text-sm mb-2">Meta description (160 characters)</span>
+            <InputCard>
+              <input type="text" name="metaDescription" className={`${CommonClassForInput} pb-10`} placeholder="Meta description" value={metaDescription} onChange={handleMetaDescriptionChange} />
+              <p className="absolute bottom-3 right-3 text-primary-dark dark:text-primary text-sm">{metaDescription?.length || 0}/160</p>
+            </InputCard>
+            {metaDescError && <p className="text-red-500 text-sm mt-1">{metaDescError}</p>}
+          </div>
+
+          {/* Put description box here  */}
+          <div className="mt-3">
+            <span className="text-gray-400 block text-sm mb-2">Description</span>
+            <div className="p-2 border-[1px] !bg-transparent border-white/20 outline-none rounded-lg textColor text-xs 3xl:text-sm w-full">
+              <Editor
+                key={slug} // Force re-render on slug change
+                customId={groupId}
+                value={description || ""} // Ensure value is always a string
+                onChange={(newValue) => {
+                  setDescription(newValue);
+                }}
+                folderName="blog/description"
+                folder="blog"
+                subfolder="description"
+              />
+            </div>
+          </div>
+
+          <Button color="indigo" className="w-32" type="submit" onClick={handleUpdate}>
+            Update
+          </Button>
+        </div>
+      </Wrapper>
     </>
   );
 };

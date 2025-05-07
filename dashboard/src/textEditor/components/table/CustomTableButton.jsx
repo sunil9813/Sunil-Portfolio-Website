@@ -5,8 +5,8 @@ import { useState } from "react";
 
 export const CustomTableButton = ({ editor }) => {
   const [showGrid, setShowGrid] = useState(false);
-  const [selectedRows, setSelectedRows] = useState(0);
-  const [selectedCols, setSelectedCols] = useState(0);
+  const [selectedRows, setSelectedRows] = useState(2);
+  const [selectedCols, setSelectedCols] = useState(2);
   const maxRows = 10;
   const maxCols = 10;
 
@@ -29,7 +29,6 @@ export const CustomTableButton = ({ editor }) => {
       if (tables.length > 0) {
         const newTable = tables[tables.length - 1];
         const pos = editor.view.posAtDOM(newTable, 0);
-        console.log("Table position in editor:", pos);
         if (pos !== null) {
           editor.chain().focus().setNodeSelection(pos).run();
         }
@@ -53,14 +52,14 @@ export const CustomTableButton = ({ editor }) => {
       </Button>
 
       {showGrid && (
-        <div className="absolute top-full mt-2 left-0 z-[9999] bg-white border border-gray-200 rounded-lg p-2 shadow-lg" onMouseLeave={() => setShowGrid(false)}>
+        <div className="absolute top-full mt-2 left-0 z-[9999] bg-primarybg rounded-lg p-2 shadow-lg" onMouseLeave={() => setShowGrid(false)}>
           <div className="grid gap-1">
             {Array.from({ length: maxRows }).map((_, row) => (
               <div key={row} className="flex gap-1">
                 {Array.from({ length: maxCols }).map((_, col) => (
                   <div
                     key={col}
-                    className={`w-4 h-4 border cursor-pointer ${row < selectedRows && col < selectedCols ? "bg-blue-500 border-blue-500" : "bg-white border-gray-300"}`}
+                    className={`w-6 h-6 border rounded-sm cursor-pointer ${row < selectedRows && col < selectedCols ? "bg-white" : "border-gray-700/20"}`}
                     onMouseEnter={() => handleMouseEnter(row, col)}
                     onClick={insertTable}
                   />

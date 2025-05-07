@@ -1,15 +1,14 @@
-import { CardHeader, Typography, Button, Avatar, IconButton, Tooltip, Switch, Chip } from "@material-tailwind/react";
+import { Avatar, IconButton, Tooltip, Switch } from "@material-tailwind/react";
 import PropTypes from "prop-types";
 import { CiEdit, CiGrid2H, CiGrid41, CiLink, CiTrash } from "react-icons/ci";
 import { FaPlus } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
-import { SearchBox, Wrapper } from "@/utils/Router";
 import { useState } from "react";
 import { Pagination } from "../Pagination";
 import { DateFormatter } from "../common/DateFormatter";
 import { generateItemColor, truncateText } from "@/utils";
 
-export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, deleteFun, rowsPerPageNumber = 5, type, linktoupdate, handleVisibilityToggle, handleFeaturedToggle }) => {
+export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, deleteFun, rowsPerPageNumber = 5, type, linktoupdate, handleVisibilityToggle, handleFeaturedToggle, hidden }) => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("table");
   // Model
@@ -35,241 +34,285 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
 
   return (
     <>
-      <Wrapper className="common-table">
-        <CardHeader floated={false} shadow={false} className="rounded-none bg-sidebarbg py-2">
-          <div className="flex items-center justify-between gap-8">
-            {/* <GradientWrapper className="w-72">
-              <input type="text" className="bg-none outline-none h-12 px-3 w-full" placeholder="Search here..." />
-            </GradientWrapper> */}
-            <div className="search-box w-2/5">
-              <SearchBox />
-            </div>
-            <div className="flex items-center gap-3">
-              <IconButton color="teal" size="md" onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}>
-                {viewMode === "table" ? <CiGrid2H size={20} className="text-white" /> : <CiGrid41 size={20} className="text-white" />}
-              </IconButton>
-              <Button className="flex items-center gap-3 text-white/70" size="md" color="teal" onClick={() => navigate(`/${linktocreate}`)}>
-                <FaPlus size={18} /> {btntext}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-
+      <section className="relative">
+        <div className="flex items-center gap-2 absolute -top-8 right-4 z-10">
+          <button className="button !w-auto !px-3 flex items-center gap-2" onClick={() => navigate(`/${linktocreate}`)}>
+            <FaPlus size={10} /> <span className="!text-xs">{btntext}</span>
+          </button>
+          <button className="button !w-auto !px-2" onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}>
+            {viewMode === "table" ? <CiGrid2H size={15} className="text-black dark:text-white" /> : <CiGrid41 size={15} className="text-black dark:text-white" />}
+          </button>
+        </div>
         {viewMode === "table" ? (
           <div className="w-full">
             {rowData?.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <Typography variant="h6">No data available.</Typography>
-              </div>
+              <h2 className="capitalize p-14 text-center  text-xl 3xl:text-2xl font-semibold textColor">No data available.</h2>
             ) : (
-              <table className="mt-4 w-full min-w-max table-auto text-left">
-                <thead>
-                  <tr>
-                    {head &&
-                      head.map((list) => (
-                        <th key={list} className="border-y border-gray-50/10 bg-primarybg p-4">
-                          <Typography variant="small" className="font-normal leading-none text-white">
-                            {list}
-                          </Typography>
+              <>
+                <div className="common-table relative">
+                  <table className="mt-3 w-full min-w-max table-auto text-left overflow-hidden">
+                    <thead>
+                      <tr>
+                        {head &&
+                          head.map((list) => (
+                            <th key={list} className="bg-[#03363d] p-2 3xl:p-3">
+                              <span className="font-normal text-xs 3xl:text-sm text-white">{list}</span>
+                            </th>
+                          ))}
+                        <th className="bg-[#03363d] p-2 3xl:p-3 text-white text-right px-5 w-10">
+                          <span className="font-normal text-xs 3xl:text-sm text-white">Action</span>
                         </th>
-                      ))}
-                    <th className="border-y border-gray-50/10 bg-primarybg p-4 text-white text-right px-5 w-52">
-                      <Typography variant="small" className="font-normal leading-none text-white">
-                        Action
-                      </Typography>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="text-textcolor">
-                  {currentRows &&
-                    currentRows.map((item, index) => {
-                      const isLast = index === rowData?.length - 1;
-                      const classes = isLast ? "p-4" : "p-4 border-b border-gray-50/10";
+                      </tr>
+                    </thead>
+                    <tbody className="text-textcolor">
+                      {currentRows &&
+                        currentRows.map((item, index) => {
+                          const isLast = index === rowData?.length - 1;
+                          const classes = isLast ? "p-2 3xl:p-3" : "p-2 3xl:p-3 border-b border-gray-50/10";
+                          const spanClass = "font-normal text-textColor capitalize text-xs 3xl:text-sm";
 
-                      // Calculate dynamic serial number based on the current page
-                      const serialNumber = (currentPage - 1) * rowsPerPage + index + 1;
+                          // Calculate dynamic serial number based on the current page
+                          const serialNumber = (currentPage - 1) * rowsPerPage + index + 1;
 
-                      return (
-                        <tr key={`${item._id}-${serialNumber}`} className="even:bg-blue-gray-900/30 hover:bg-gray-900 transition-colors duration-300">
-                          <td className={`${classes} w-20`}>{serialNumber}</td>
-                          <td className={`${classes} w-56`}>
-                            <div className="flex items-center gap-3">
-                              {item?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" || item?.user?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
-                                <div
-                                  className="font-semibold capitalize w-10 h-10 rounded-full flex justify-center items-center text-white text-xl"
-                                  style={{
-                                    background: generateItemColor(item?.user?.name || item?.name || "X"), // Unique background color
-                                  }}
-                                >
-                                  {(item?.user?.name?.charAt(0) || item?.name?.charAt(0)) ?? "?"}
-                                </div>
-                              ) : (
-                                <Avatar src={item?.user?.avatar?.url || item?.avatar?.url} alt={item?.user?.avatar?.publicId || item?.avatar?.publicId} size="sm" />
+                          return (
+                            <tr key={`${item._id}-${serialNumber}`} className="transition-colors duration-300">
+                              <td className={`${classes} ${spanClass} px-5 w-12`}>{serialNumber}</td>
+                              {!hidden && (
+                                <td className={`${classes}  ${type === "project" ? "w-auto" : "w-56"}`}>
+                                  <div className="flex items-center gap-3">
+                                    {item?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" || item?.user?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
+                                      <div
+                                        className="font-semibold capitalize w-8 h-8 3xl:w-10 3xl:h-10 rounded-full flex justify-center items-center text-white text-xl"
+                                        style={{
+                                          background: generateItemColor(item?.user?.name || item?.name || "X"), // Unique background color
+                                        }}
+                                      >
+                                        {(item?.user?.name?.charAt(0) || item?.name?.charAt(0)) ?? "?"}
+                                      </div>
+                                    ) : (
+                                      <div className="w-8 h-8 3xl:w-10 3xl:h-10 rounded-full">
+                                        <img
+                                          src={item?.user?.avatar?.url || item?.avatar?.url}
+                                          alt={item?.user?.avatar?.publicId || item?.avatar?.publicId}
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                      </div>
+                                    )}
+                                    <div className="flex flex-col">
+                                      <span className={spanClass}>{item?.user?.name || item?.name}</span>
+                                      {hidden && <span className="font-normal opacity-70 text-xs 3xl:text-sm">{item?.user?.email || item?.email}</span>}
+                                    </div>
+                                  </div>
+                                </td>
+                              )}
+                              {/* Users List */}
+                              {type === "users" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.role}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>Do it</span>
+                                  </td>
+                                </>
                               )}
 
-                              <div className="flex flex-col">
-                                <Typography variant="small" className="font-normal capitalize">
-                                  {item?.user?.name || item?.name}
-                                </Typography>
-                                <Typography variant="small" className="font-normal opacity-70">
-                                  {item?.user?.email || item?.email}
-                                </Typography>
-                              </div>
-                            </div>
-                          </td>
+                              {/* Cateory List */}
+                              {type === "category" && (
+                                <>
+                                  <td className={classes}>
+                                    <div className="flex flex-col">
+                                      <span className={`${spanClass} !uppercase`}>{item?.title}</span>
+                                    </div>
+                                  </td>
+                                  <td className={classes}>
+                                    <div className="flex items-center gap-3">
+                                      <Avatar src={item?.cover?.filePath} alt={item?.cover?.publicId} size="sm" className="!rounded-md" />
+                                    </div>
+                                  </td>
+                                  <td className={classes}>
+                                    <div className="flex flex-col capitalize">
+                                      <span className={`${spanClass}`}>{item?.type}</span>
+                                    </div>
+                                  </td>
+                                  <td className={classes}>
+                                    <div className="flex flex-col">
+                                      <span className={`${spanClass}`}>258 (TODO)</span>
+                                    </div>
+                                  </td>
+                                </>
+                              )}
 
-                          {/* Users List */}
-                          {type === "users" && (
-                            <>
-                              <td className={classes}>
-                                <div className="flex flex-col">
-                                  <Typography variant="small" className="font-normal capitalize">
-                                    {item?.role}
-                                  </Typography>
-                                </div>
-                              </td>
-                              <td className={classes}>
-                                <div className="flex flex-col">
-                                  <Typography variant="small" className="font-normal">
-                                    Do it
-                                  </Typography>
-                                </div>
-                              </td>
-                            </>
-                          )}
+                              {/* Blog List */}
+                              {type === "blog" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{truncateText(item?.title, 30)}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <button className="w-8 h-8 3xl:w-10 3xl:h-10 rounded-md">
+                                      <img src={item?.cover?.filePath} alt={item?.cover?.publicId} className="w-full h-full object-cover rounded-md" />
+                                    </button>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-teal-400/20 text-teal-500 dark:bg-teal-300/20 dark:text-teal-300 rounded-full text-xs px-3 py-1">
+                                        {item?.numOfViews === 0 ? "0" : item?.numOfViews}
+                                      </div>
+                                    </div>
+                                  </td>
 
-                          {/* Cateory List */}
-                          {type === "category" && (
-                            <>
-                              <td className={classes}>
-                                <div className="flex flex-col">
-                                  <Typography variant="small" className="font-normal uppercase">
-                                    {item?.title}
-                                  </Typography>
-                                </div>
-                              </td>
-                              <td className={classes}>
-                                <div className="flex items-center gap-3">
-                                  <Avatar src={item?.cover?.filePath} alt={item?.cover?.publicId} size="sm" variant="square" />
-                                </div>
-                              </td>
-                              <td className={classes}>
-                                <div className="flex flex-col capitalize">
-                                  <Typography variant="small" className="font-normal">
-                                    {item?.type}
-                                  </Typography>
-                                </div>
-                              </td>
-                              <td className={classes}>
-                                <div className="flex flex-col">
-                                  <Typography variant="small" className="font-normal">
-                                    258 (TODO)
-                                  </Typography>
-                                </div>
-                              </td>
-                            </>
-                          )}
+                                  {/* number of likes  to do */}
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-yellow-400/20 text-yellow-800 dark:bg-yellow-300/20 dark:text-yellow-300 rounded-full text-xs px-3 py-1">
+                                        {item?.likes?.length === 0 ? "0" : item?.likes?.length}
+                                      </div>
+                                    </div>
+                                  </td>
 
-                          {/* Blog List */}
-                          {type === "blog" && (
-                            <>
-                              <td className={classes}>
-                                <div className="flex flex-col">
-                                  <Typography variant="small" className="font-normal uppercase">
-                                    {truncateText(item?.title, 45)}
-                                  </Typography>
-                                </div>
-                              </td>
-                              <td className={classes}>
-                                <button className="flex items-center gap-3">
-                                  <Avatar src={item?.cover?.filePath} alt={item?.cover?.publicId} size="sm" variant="rounded" />
-                                </button>
-                              </td>
-                              <td className={classes}>
-                                <div className="flex flex-col capitalize">
-                                  <div className="w-max">
-                                    <Chip variant="outlined" className="rounded-full border border-gray-600" size="sm" value={item?.numOfViews === 0 ? "0" : item?.numOfViews} />
-                                  </div>
-                                </div>
-                              </td>
+                                  <td className={classes}>
+                                    <span className={`${spanClass} !uppercase`}>{item?.category?.title}</span>
+                                  </td>
 
-                              {/* number of likes  to do */}
-                              <td className={classes}>
-                                <div className="flex flex-col capitalize">
-                                  <div className="w-max">
-                                    <Chip variant="outlined" className="rounded-full border border-gray-600" size="sm" value={item?.likes?.length === 0 ? "0" : item?.likes?.length} />
-                                  </div>
+                                  <td className={classes}>
+                                    <Switch
+                                      className="h-full w-full checked:bg-deep-purple-500"
+                                      circleProps={{ className: "border-none" }}
+                                      defaultChecked={item?.visibility === "public"}
+                                      onChange={() => handleVisibilityToggle(item?._id, item?.visibility === "public" ? "private" : "public")}
+                                    />
+                                  </td>
+
+                                  <td className={classes}>
+                                    <Switch
+                                      className="h-full w-full checked:bg-deep-purple-500"
+                                      circleProps={{ className: "border-none" }}
+                                      defaultChecked={item?.featured === true}
+                                      onChange={() => handleFeaturedToggle(item?._id, !item?.featured)}
+                                    />
+                                  </td>
+                                </>
+                              )}
+
+                              {/* Project List */}
+                              {type === "project" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{truncateText(item?.title, 22)}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>${item?.price}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    {!item?.thumbnail || !item?.thumbnail?.filePath ? (
+                                      <div className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
+                                    ) : (
+                                      <button className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md">
+                                        <img src={item.thumbnail.filePath} alt={item.thumbnail.publicId || "thumbnail"} className="w-full h-full object-cover rounded-md" />
+                                      </button>
+                                    )}
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-green-400/20 text-green-800 dark:bg-green-300/20 dark:text-green-300 rounded-full text-xs px-3 py-1">
+                                        {item?.assets?.length === 0 ? "0" : item?.assets?.length}
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-teal-400/20 text-teal-500 dark:bg-teal-300/20 dark:text-teal-300 rounded-full text-xs px-3 py-1">
+                                        {item?.numOfViews === 0 ? "0" : item?.numOfViews}
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  {/* number of likes  to do */}
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-yellow-400/20 text-yellow-800 dark:bg-yellow-300/20 dark:text-yellow-300 rounded-full text-xs px-3 py-1">
+                                        {item?.likes?.length === 0 ? "0" : item?.likes?.length}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-purple-400/20 text-purple-800 dark:bg-purple-300/20 dark:text-purple-300 rounded-full text-xs px-3 py-1">{item?.ratings}</div>
+                                    </div>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-pink-400/20 text-pink-800 dark:bg-pink-300/20 dark:text-pink-300 rounded-full text-xs px-3 py-1">{item?.downloadCount}</div>
+                                    </div>
+                                  </td>
+
+                                  <td className={classes}>
+                                    <span className={`${spanClass} !uppercase`}>{item?.category?.title}</span>
+                                  </td>
+
+                                  <td className={classes}>
+                                    <Switch
+                                      className="h-full w-full checked:bg-deep-purple-500"
+                                      circleProps={{ className: "border-none" }}
+                                      defaultChecked={item?.visibility === "public"}
+                                      onChange={() => handleVisibilityToggle(item?._id, item?.visibility === "public" ? "private" : "public")}
+                                    />
+                                  </td>
+
+                                  <td className={classes}>
+                                    <Switch
+                                      className="h-full w-full checked:bg-deep-purple-500"
+                                      circleProps={{ className: "border-none" }}
+                                      defaultChecked={item?.featured === true}
+                                      onChange={() => handleFeaturedToggle(item?._id, !item?.featured)}
+                                    />
+                                  </td>
+                                </>
+                              )}
+
+                              <td className={`${classes}`}>
+                                <div className={spanClass}>
+                                  <DateFormatter date={item?.createdAt} />
                                 </div>
                               </td>
-
-                              <td className={classes}>
-                                <div className="flex flex-col uppercase">
-                                  <Typography variant="small" className="font-normal">
-                                    {item?.category?.title}
-                                  </Typography>
+                              <td className={`${classes}`}>
+                                <div className=" flex justify-end">
+                                  <Tooltip className="bg-green-400 capitalize" content={`Edit ${type}`}>
+                                    <NavLink to={`/${linktoupdate}/${item?.slug}`}>
+                                      <IconButton variant="text" color="green" size="sm" className="text-md 3xl:text-xl">
+                                        <CiEdit />
+                                      </IconButton>
+                                    </NavLink>
+                                  </Tooltip>
+                                  <Tooltip className="bg-red-400 capitalize" content={`Delete ${type}`}>
+                                    <IconButton variant="text" color="red" size="sm" className="text-md 3xl:text-xl" onClick={() => deleteFun(item?._id)}>
+                                      <CiTrash />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip className="bg-blue-400 capitalize" content={`View ${type}`}>
+                                    <IconButton variant="text" color="blue" size="sm" className="text-md 3xl:text-xl" onClick={() => navigate(`/${linktoview}/${item?.slug}`)}>
+                                      <CiLink />
+                                    </IconButton>
+                                  </Tooltip>
                                 </div>
                               </td>
-
-                              <td className={classes}>
-                                <div className="flex flex-col">
-                                  <Switch
-                                    className="h-full w-full checked:bg-green-500"
-                                    defaultChecked={item?.visibility === "public"}
-                                    onChange={() => handleVisibilityToggle(item?._id, item?.visibility === "public" ? "private" : "public")}
-                                  />
-                                </div>
-                              </td>
-
-                              <td className={classes}>
-                                <div className="flex flex-col">
-                                  <Switch className="h-full w-full checked:bg-green-500" defaultChecked={item?.featured === true} onChange={() => handleFeaturedToggle(item?._id, !item?.featured)} />
-                                </div>
-                              </td>
-                            </>
-                          )}
-
-                          <td className={classes}>
-                            <div className="flex flex-col">
-                              <Typography variant="small" className="font-normal">
-                                <DateFormatter date={item?.createdAt} />
-                              </Typography>
-                            </div>
-                          </td>
-                          <td className={`${classes}`}>
-                            <div className=" flex justify-end">
-                              <Tooltip className="bg-green-400 capitalize" content={`Edit ${type}`}>
-                                <NavLink to={`/${linktoupdate}/${item?.slug}`}>
-                                  <IconButton variant="text" color="green" size="sm">
-                                    <CiEdit size={20} />
-                                  </IconButton>
-                                </NavLink>
-                              </Tooltip>
-                              <Tooltip className="bg-red-400 capitalize" content={`Delete ${type}`}>
-                                <IconButton variant="text" color="red" size="sm" onClick={() => deleteFun(item?._id)}>
-                                  <CiTrash size={20} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip className="bg-blue-400 capitalize" content={`View ${type}`}>
-                                <IconButton variant="text" color="blue" size="sm" onClick={() => navigate(`/${linktoview}/${item?.slug}`)}>
-                                  <CiLink size={20} />
-                                </IconButton>
-                              </Tooltip>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                  {/* Pagination Footer */}
+                  <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+                </div>
+              </>
             )}
           </div>
         ) : (
           comp
         )}
-
-        {/* Pagination Footer */}
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
-      </Wrapper>
+      </section>
     </>
   );
 };
@@ -285,6 +328,7 @@ Table.propTypes = {
   rowsPerPageNumber: PropTypes.number,
   type: PropTypes.string,
   deleteFun: PropTypes.any,
+  hidden: PropTypes.any,
   handleVisibilityToggle: PropTypes.any,
   handleFeaturedToggle: PropTypes.any,
 };

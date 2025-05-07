@@ -10,6 +10,7 @@ import { ColorPickerDropdown } from "@/textEditor/common/ColorPickerDropdown";
 import PropTypes from "prop-types";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { TableDesign } from "./design/TableDesign";
+import { DropdownWrapper } from "@/textEditor/common/DropdownWrapper";
 
 const RECENT_COLORS_KEY = "tableEditorRecentColors";
 
@@ -32,11 +33,11 @@ export const TableActionPopup = ({ editor }) => {
   const [showCellColorDropdown, setShowCellColorDropdown] = useState(false);
   const [borderStyle, setBorderStyle] = useState("solid");
   const [borderWidth, setBorderWidth] = useState(1);
-  const [borderColor, setBorderColor] = useState("#ccc");
+  const [borderColor, setBorderColor] = useState("#ffffff");
   const [padding, setPadding] = useState(10);
   const [borderRadius, setBorderRadius] = useState(0);
   const [recentlyUsedColors, setRecentlyUsedColors] = useState(getRecentColors());
-  const [customColor, setCustomColor] = useState("#000000");
+  const [customColor, setCustomColor] = useState("#ffffff");
 
   const popupRef = useRef(null);
 
@@ -352,59 +353,55 @@ export const TableActionPopup = ({ editor }) => {
           <Button onClick={() => setShowCellColorDropdown(!showCellColorDropdown)} tooltip="Cell Background Colors">
             <FaPalette />
           </Button>
-          {showCellColorDropdown && (
+          <DropdownWrapper isOpen={showCellColorDropdown} onClose={() => setShowCellColorDropdown(false)} className="shadow-lg">
             <ColorPickerDropdown recentlyUsedColors={recentlyUsedColors} customColor={customColor} onColorSelect={handleCellBackgroundColor} onCustomColorChange={setCustomColor} />
-          )}
+          </DropdownWrapper>
         </div>
 
         <div className="relative">
           <Button onClick={() => setShowBorderDropdown(!showBorderDropdown)} tooltip="Border Properties">
             <FaBorderAll />
           </Button>
-          {showBorderDropdown && (
-            <div className="absolute top-10 left-0 bg-blue-gray-900 rounded-xl p-4 z-50 w-72">
-              <div className="mb-4">
-                <label className="block mb-2">Border Style</label>
-                <select value={borderStyle} onChange={(e) => handleAction("set-border-style", e.target.value)} className="w-full p-2 bg-blue-gray-800 text-white rounded">
-                  {["solid", "dashed", "dotted", "double", "none"].map((style) => (
-                    <option key={style} value={style} className="capitalize">
-                      {style}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block mb-2">Border Width: {borderWidth.toFixed(0)}px</label>
-                <Slider value={borderWidth.toFixed(0)} onChange={({ target: { value } }) => handleAction("set-border-width", Number(value))} color="green" />
-              </div>
-              <div className="mb-4">
-                <label className="block mb-2">Border Color</label>
-                <input type="color" value={borderColor} onChange={(e) => handleAction("set-border-color", e.target.value)} className="w-full h-10 rounded cursor-pointer outline-none border-none" />
-              </div>
-              <div>
-                <label className="block mb-2">Border Radius: {borderRadius}px</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={50}
-                  value={borderRadius}
-                  onChange={(e) => handleAction("set-border-radius", Number(e.target.value))}
-                  className="w-full p-2 bg-blue-gray-800 text-white rounded"
-                />
-              </div>
+          <DropdownWrapper isOpen={showBorderDropdown} onClose={() => setShowBorderDropdown(false)} className="shadow-lg">
+            <div className="mb-4">
+              <label className="block mb-2">Border Style</label>
+              <select value={borderStyle} onChange={(e) => handleAction("set-border-style", e.target.value)} className="w-full p-2 bg-blue-gray-800 text-white rounded">
+                {["solid", "dashed", "dotted", "double", "none"].map((style) => (
+                  <option key={style} value={style} className="capitalize">
+                    {style}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
+            <div className="mb-4">
+              <label className="block mb-2">Border Width: {borderWidth.toFixed(0)}px</label>
+              <Slider value={borderWidth.toFixed(0)} onChange={({ target: { value } }) => handleAction("set-border-width", Number(value))} color="green" />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2">Border Color</label>
+              <input type="color" value={borderColor} onChange={(e) => handleAction("set-border-color", e.target.value)} className="w-full h-10 rounded cursor-pointer outline-none border-none" />
+            </div>
+            <div>
+              <label className="block mb-2">Border Radius: {borderRadius}px</label>
+              <input
+                type="number"
+                min={0}
+                max={50}
+                value={borderRadius}
+                onChange={(e) => handleAction("set-border-radius", Number(e.target.value))}
+                className="w-full p-2 bg-blue-gray-800 text-white rounded"
+              />
+            </div>
+          </DropdownWrapper>
         </div>
         <div className="relative">
           <Button onClick={() => setShowPaddingDropdown(!showPaddingDropdown)} tooltip="Padding">
             <FaSquare />
           </Button>
-          {showPaddingDropdown && (
-            <div className="absolute top-10 left-0 bg-blue-gray-900 rounded-xl p-4 z-50 w-72">
-              <label className="block mb-2">Cell Padding: {padding.toFixed(0)}px</label>
-              <Slider value={padding.toFixed(0)} onChange={({ target: { value } }) => handleAction("set-padding", Number(value))} color="green" />
-            </div>
-          )}
+          <DropdownWrapper isOpen={showPaddingDropdown} onClose={() => setShowPaddingDropdown(false)} className="shadow-lg">
+            <label className="block mb-2">Cell Padding: {padding.toFixed(0)}px</label>
+            <Slider value={padding.toFixed(0)} onChange={({ target: { value } }) => handleAction("set-padding", Number(value))} color="green" />
+          </DropdownWrapper>
         </div>
 
         <div className="relative">

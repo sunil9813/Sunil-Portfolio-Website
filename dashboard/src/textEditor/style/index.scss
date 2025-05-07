@@ -1,0 +1,11 @@
+@use "./image";
+@use "./extensions";
+@use "./table/table";
+
+.react-colorful {
+  height: 150px !important;
+  width: 100% !important;
+}
+.react-colorful__saturation {
+  border-radius: 4px 4px 0 0;
+}

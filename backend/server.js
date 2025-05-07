@@ -8,7 +8,7 @@ const { PORT } = require("./utils/variables");
 
 const { NotFound, ErrorHanlder } = require("./middleware/ErrorHandler");
 const userRoute = require("./routes/users/UserRoute");
-const postsRoute = require("./routes/posts/PostsRoute");
+const projectRoute = require("./routes/Project/ProjectRoute");
 const favoriteRoute = require("./routes/common/favoriteRoute");
 const categoryRoute = require("./routes/common/categoryRoute");
 const contactRoute = require("./routes/ContactRoute");
@@ -28,7 +28,7 @@ const testimonialRoute = require("./routes/about/TestimonialRoute");
 
 // Setting routes
 const settingRoute = require("./routes/settings/SettingRoute");
-const AssetLimitConfigRoute = require("./routes/posts/AssetLimitConfigRoute");
+const AssetLimitConfigRoute = require("./routes/Project/AssetLimitConfigRoute");
 const tagRoute = require("./routes/common/updateTags");
 const blogRoute = require("./routes/BlogRoute");
 const likeRoute = require("./routes/common/likeRoute");
@@ -61,7 +61,7 @@ app.use(
 app.use("/api/v1/images", textEditorRoute);
 app.use("/api/v1/auth", userRoute);
 
-app.use("/api/v1/posts", postsRoute);
+app.use("/api/v1/project", projectRoute);
 app.use("/api/v1/favorite", favoriteRoute);
 app.use("/api/v1/asset-limit", AssetLimitConfigRoute);
 app.use("/api/v1/category", categoryRoute);

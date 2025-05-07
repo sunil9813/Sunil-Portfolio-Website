@@ -1,7 +1,5 @@
-import { IconButton } from "@/components/customeUI/Button";
-import { HeadingTwo, InputFiled, InputPassword, Logo, PrimaryButton } from "@/utils/Router";
+import { InputFiled, InputPassword, Logo, PrimaryButton } from "@/utils/Router";
 import { FaGithub } from "react-icons/fa";
-import { FaGoogle } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,6 +8,8 @@ import { BsCheckAll } from "react-icons/bs";
 import { toast } from "react-toastify";
 import { validateEmail } from "@/redux/services/authService";
 import { register, RESET, sendVerificationEmail } from "@/redux/slices/authSlice";
+import { AuthUserInfo } from "./Login";
+import { FcGoogle } from "react-icons/fc";
 
 const initialSate = {
   name: "",
@@ -32,7 +32,7 @@ export const Signup = () => {
   const { name, password, email, confirmPassword } = formData;
 
   const wrongIcon = <BsCheckAll size={18} />;
-  const checkIcon = <BsCheckAll size={18} className="text-gray-300" />;
+  const checkIcon = <BsCheckAll size={18} className="text-green-500" />;
 
   const switchIcon = (condition) => {
     if (condition) {
@@ -99,83 +99,97 @@ export const Signup = () => {
 
   useEffect(() => {
     if (isSuccess && isLoggedIn) {
-      navigate("/ ");
+      navigate("/");
     }
 
     dispatch(RESET());
   }, [dispatch, isLoggedIn, isSuccess, navigate]);
   return (
     <>
-      <section className="auth">
-        <div className="auth_card">
-          <div className="bg"></div>
-          <form className="form" onSubmit={registerUser}>
-            <Logo size="small" />
-            <HeadingTwo className="text-shine mb-5">Create new account</HeadingTwo>
-            <div className="flex gap-3">
-              <div className="w-full">
-                <InputFiled fieldName="Username" type="text" value={name} name="name" onChange={handleInputChange} placeholder="John Doe" />
-              </div>
-              <div className="w-full">
-                <InputFiled fieldName="Email" type="email" value={email} name="email" onChange={handleInputChange} placeholder="example@gmail.com" />
-              </div>
+      <section className="auth-section">
+        <div className="auth-section_container 3xl:-mt-16 2xl:!w-[450px] 3xl:!w-[500px]">
+          <div className="auth-section_container_content">
+            <div className="auth-section_container_content_line"></div>
+            <div className="flexC pb-2">
+              <Logo />
             </div>
-            <div className="flex gap-3 mt-3">
-              <div className="w-full">
-                <InputPassword fieldName="Password" name="password" value={password} onChange={handleInputChange} placeholder="*******" />
+            <h1 className="text-3xl font-semibold xl:text-2xl text-black dark:text-white">Sign in to Bento</h1>
+            <form className="inputs flex flex-col mt-6 xl:mt-3" onSubmit={registerUser}>
+              <div className="flex gap-3">
+                <div className="w-full">
+                  <InputFiled fieldNameType={false} type="text" value={name} name="name" onChange={handleInputChange} placeholder="John Doe" />
+                </div>
+                <div className="w-full">
+                  <InputFiled fieldNameType={false} type="email" value={email} name="email" onChange={handleInputChange} placeholder="example@gmail.com" />
+                </div>
               </div>
-              <div className="w-full">
-                <InputPassword
-                  fieldName="Confirm Password"
-                  name="confirmPassword"
-                  value={confirmPassword}
-                  onChange={handleInputChange}
-                  onPaste={(e) => {
-                    e.preventDefault();
-                    toast.error("Cannot paste into input field");
-                    return false;
-                  }}
-                  placeholder="*******"
-                />
+              <div className="flex gap-3 mt-3">
+                <div className="w-full">
+                  <InputPassword fieldNameType={false} name="password" value={password} onChange={handleInputChange} placeholder="*******" />
+                </div>
+                <div className="w-full">
+                  <InputPassword
+                    fieldNameType={false}
+                    name="confirmPassword"
+                    value={confirmPassword}
+                    onChange={handleInputChange}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      toast.error("Cannot paste into input field");
+                      return false;
+                    }}
+                    placeholder="*******"
+                  />
+                </div>
               </div>
-            </div>
 
-            <PrimaryButton text="create account" />
+              <PrimaryButton text="create account" />
 
-            <ul className="box my-3 border border-gray-300/20 p-3 rounded-lg">
-              <li className={`text-[12px] ${upperCase ? "text-gray-300" : "text-gray-500"} flex items-center gap-2`}>
-                {switchIcon(upperCase)}
-                Lowercase & Uppercase
-              </li>
-              <li className={`text-[12px] ${number ? "text-gray-300" : "text-gray-500"} flex items-center gap-2`}>
-                {switchIcon(number)}
-                Number (0-9)
-              </li>
-              <li className={`text-[12px] ${specialChar ? "text-gray-300" : "text-gray-500"} flex items-center gap-2`}>
-                {switchIcon(specialChar)}
-                Special Character (!@#$%^&*)
-              </li>
-              <li className={`text-[12px] ${passwordLength ? "text-gray-300" : "text-gray-500"} flex items-center gap-2`}>
-                {switchIcon(passwordLength)}
-                At least 8 Character
-              </li>
-            </ul>
-            <div className="flex justify-between items-center my-5 gap-3">
+              <ul className="box my-3 border border-gray-200 dark:border-gray-300/20 p-3 rounded-lg">
+                <li className={`text-[12px] ${upperCase ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
+                  {switchIcon(upperCase)}
+                  Lowercase & Uppercase
+                </li>
+                <li className={`text-[12px] ${number ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
+                  {switchIcon(number)}
+                  Number (0-9)
+                </li>
+                <li className={`text-[12px] ${specialChar ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
+                  {switchIcon(specialChar)}
+                  Special Character (!@#$%^&*)
+                </li>
+                <li className={`text-[12px] ${passwordLength ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
+                  {switchIcon(passwordLength)}
+                  At least 8 Character
+                </li>
+              </ul>
+            </form>
+            <div className="flexC my-3 gap-3">
               <div className="auth-line line1 w-full h-[1px] rounded-full"></div>
-              <span className="text-white">OR</span>
+              <span className="text-textcolor dark:text-white">OR</span>
               <div className="auth-line line2 w-full h-[1px] rounded-full"></div>
             </div>
-            <div className="other-login flex justify-center items-center gap-3">
-              <IconButton icon={<FaGoogle size={18} />} text="Sign up with Google" className="w-full" />
-              <IconButton icon={<FaGithub size={18} />} text="Sign up with GitHub" className="w-full" />
+
+            <div className="flex gap-1">
+              <button className="button flex items-center gap-2">
+                <FcGoogle size={20} />
+                <span className="font-normal xl:text-xs">Sign in with Google</span>
+              </button>
+              <button className="button flex items-center gap-2">
+                <FaGithub size={20} />
+                <span className="font-normal xl:text-xs">Sign in with Github</span>
+              </button>
             </div>
-          </form>
-          <p className="text-gray-400 text-sm text-center pt-5">
-            Already have an account?
-            <NavLink to="/login" className="text-white px-0.5">
-              Sign in
-            </NavLink>
-          </p>
+            <p className="text-gray-400 text-xs text-center pt-3">
+              Already have an account?
+              <NavLink to="/login" className="text-black dark:text-white px-0.5">
+                Sign in
+              </NavLink>
+            </p>
+          </div>
+        </div>
+        <div className="absolute bottom-5 flex flex-col items-center gap-5">
+          <AuthUserInfo />
         </div>
       </section>
     </>

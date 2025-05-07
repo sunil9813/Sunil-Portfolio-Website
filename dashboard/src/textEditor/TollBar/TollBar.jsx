@@ -3,13 +3,13 @@ import { AiFillCaretDown } from "react-icons/ai";
 import { BsTypeStrikethrough, BsBraces, BsCode, BsListOl, BsListUl, BsTypeBold, BsTypeItalic, BsTypeUnderline, BsImageFill } from "react-icons/bs";
 import { RiDoubleQuotesL } from "react-icons/ri";
 import { getFocusedEditor } from "../utils/EditorUtils";
-import { DropDownOptions, DropDownHighLight, DropDownForFont, DropDownOptionsWithIcon } from "../common/DropDownOptions";
+import { DropDownOptions, DropDownForFont, DropDownOptionsWithIcon } from "../common/DropDownOptions";
 import Button from "./Button";
 import EmbedYoutube from "./EmbedYoutube";
 import InsertLink from "../link/InsertLink";
 import { PiHighlighterFill } from "react-icons/pi";
 import { IoColorPaletteOutline } from "react-icons/io5";
-import { FontFamilies, HighlightColors } from "../utils/Option";
+import { FontFamilies } from "../utils/Option";
 import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatAlignRight } from "react-icons/md";
 import { TbIndentDecrease, TbIndentIncrease } from "react-icons/tb";
 import LineHeightDropdown from "../components/dropdown/LineHeightDropdown";
@@ -18,10 +18,18 @@ import MathFormulaButton from "../components/MathFormulaInput";
 import EmojiButton from "../components/EmojiPicker";
 import GiftPicker from "../components/GiftPicker";
 import ColumnButton from "../components/ColumnButton";
-import GridBoxButton from "../components/GridBox/GridBoxButton";
 import { CustomTableButton } from "../components/table/CustomTableButton";
+import GalleryPickerComponent from "../components/GalleryPickerComponent";
+import { ColorPickerDropdown } from "../common/ColorPickerDropdown";
+import { useState } from "react";
+import { DropdownWrapper } from "../common/DropdownWrapper";
 
 const TollBar = ({ editor, onOpenImageClick }) => {
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [recentlyUsedColors, setRecentlyUsedColors] = useState([]);
+  const [recentlyUsedHighlights, setRecentlyUsedHighlights] = useState([]);
+  const [customColor, setCustomColor] = useState("#ffffff");
+  const [customHighlight, setCustomHighlight] = useState("#ffffff");
   if (!editor) return null;
 
   const getFontLabel = () => {
@@ -56,15 +64,16 @@ const TollBar = ({ editor, onOpenImageClick }) => {
 
   const FontHead = () => {
     return (
-      <div className="flex items-center gap-1  hover:bg-green-400 h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition">
-        <p>{getFontLabel()}</p>
-        <AiFillCaretDown size={20} />
+      <div className="flex items-center gap-1 bg-white dark:bg-black/20 hover:bg-green-400 h-6 3xl:h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition">
+        <p className="text-xs">{getFontLabel()}</p>
+        <AiFillCaretDown />
       </div>
     );
   };
 
   const handleFontChange = (font) => {
     editor.chain().focus().setFontFamily(font).run();
+    setActiveDropdown(null);
   };
 
   const options = [
@@ -81,29 +90,27 @@ const TollBar = ({ editor, onOpenImageClick }) => {
     return "Paragraph";
   };
 
-  const Head = () => {
-    return (
-      <div className="flex items-center gap-1  hover:bg-green-400 h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition">
-        <p>{getLabel()}</p>
-        <AiFillCaretDown />
-      </div>
-    );
-  };
+  const Head = () => (
+    <div
+      className="flex items-center gap-1 bg-white dark:bg-black/20 hover:bg-green-400 h-6 3xl:h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition"
+      onClick={() => setActiveDropdown(activeDropdown === "heading" ? null : "heading")}
+    >
+      <p className="text-xs">{getLabel()}</p>
+      <AiFillCaretDown />
+    </div>
+  );
 
-  const HighlightHead = () => {
-    return (
-      <Button>
-        <PiHighlighterFill />
-      </Button>
-    );
-  };
-  const ColortHead = () => {
-    return (
-      <Button>
-        <IoColorPaletteOutline />
-      </Button>
-    );
-  };
+  const HighlightHead = () => (
+    <Button onClick={() => setActiveDropdown(activeDropdown === "highlight" ? null : "highlight")}>
+      <PiHighlighterFill />
+    </Button>
+  );
+
+  const ColorHead = () => (
+    <Button onClick={() => setActiveDropdown(activeDropdown === "color" ? null : "color")}>
+      <IoColorPaletteOutline />
+    </Button>
+  );
 
   const handleLinkSubmit = ({ url, openInNewTab }) => {
     const { commands } = editor;
@@ -151,18 +158,41 @@ const TollBar = ({ editor, onOpenImageClick }) => {
     },
   ];
 
-  const AlignHead = () => {
-    return (
-      <div className="flex items-center gap-1  hover:bg-green-400 h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition">
-        {getCurrentAlignmentIcon()}
-        <AiFillCaretDown />
-      </div>
-    );
+  const AlignHead = () => (
+    <div
+      className="flex items-center gap-1 bg-white dark:bg-black/20 hover:bg-green-400 h-6 3xl:h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition"
+      onClick={() => setActiveDropdown(activeDropdown === "align" ? null : "align")}
+    >
+      <p className="text-xs">{getCurrentAlignmentIcon()}</p>
+      <AiFillCaretDown />
+    </div>
+  );
+
+  const handleColorSelect = (color) => {
+    const focusedEditor = getFocusedEditor(editor);
+    if (color === "transparent") {
+      focusedEditor.unsetColor().run();
+    } else {
+      focusedEditor.setColor(color).run();
+      setRecentlyUsedColors((prev) => [color, ...prev.filter((c) => c !== color)].slice(0, 10));
+    }
+    setActiveDropdown(null); // Close dropdown after selection
+  };
+
+  const handleHighlightSelect = (color) => {
+    const focusedEditor = getFocusedEditor(editor);
+    if (color === "transparent") {
+      focusedEditor.unsetHighlight().run();
+    } else {
+      focusedEditor.toggleHighlight({ color }).run();
+      setRecentlyUsedHighlights((prev) => [color, ...prev.filter((c) => c !== color)].slice(0, 10));
+    }
+    setActiveDropdown(null); // Close dropdown after selection
   };
 
   return (
     <>
-      <div className="flex items-center flex-wrap">
+      <div className="flex items-center flex-wrap gap-1 w-full">
         <DropDownForFont
           options={FontFamilies.map(({ label, font }) => ({
             label,
@@ -170,11 +200,11 @@ const TollBar = ({ editor, onOpenImageClick }) => {
           }))}
           head={<FontHead />}
         />
-        <div className="h-4 w-[1px] bg-white/20  mx-5" />
+        <div className="h-4 w-[1px] bg-white/20  mx-2" />
         {/* paragraph, heading 1, 2, 3 */}
         <DropDownOptions options={options} head={<Head />} />
 
-        <div className="h-4 w-[1px] bg-white/20  mx-5" />
+        <div className="h-4 w-[1px] bg-white/20 mx-2" />
 
         <div className="flex items-center space-x-1.5">
           {/*   {editor && (
@@ -225,68 +255,34 @@ const TollBar = ({ editor, onOpenImageClick }) => {
             <BsTypeStrikethrough />
           </Button>
 
-          <DropDownHighLight
-            options={[
-              {
-                label: "Custom",
-                color: "",
-                component: (
-                  <input
-                    type="color"
-                    onInput={(event) => editor.chain().focus().setColor(event.target.value).run()}
-                    value={editor.getAttributes("textStyle").color || "#000000"}
-                    className="w-8 h-8 rounded-sm cursor-pointer outline-none border-none"
-                  />
-                ),
-              },
-              ...HighlightColors.map(({ label, color }) => ({
-                label,
-                color,
-                onClick: () => {
-                  const focusedEditor = getFocusedEditor(editor);
-                  if (label === "None") {
-                    focusedEditor.unsetHighlight().run();
-                  } else {
-                    focusedEditor.toggleHighlight({ color }).run();
-                  }
-                },
-              })),
-            ]}
-            head={<HighlightHead />}
-          />
+          <div className="relative">
+            <HighlightHead />
+            <DropdownWrapper isOpen={activeDropdown === "highlight"} onClose={() => setActiveDropdown(null)} className="shadow-lg">
+              <ColorPickerDropdown
+                recentlyUsedColors={recentlyUsedHighlights}
+                customColor={customHighlight}
+                onColorSelect={handleHighlightSelect}
+                onCustomColorChange={setCustomHighlight}
+                onClose={() => setActiveDropdown(null)}
+              />
+            </DropdownWrapper>
+          </div>
 
-          <DropDownHighLight
-            options={[
-              {
-                label: "Custom",
-                color: "",
-                component: (
-                  <input
-                    type="color"
-                    onInput={(event) => editor.chain().focus().setColor(event.target.value).run()}
-                    value={editor.getAttributes("textStyle").color || "#000000"}
-                    className="w-8 h-8 rounded-sm cursor-pointer outline-none border-none"
-                  />
-                ),
-              },
-              ...HighlightColors.map(({ label, color }) => ({
-                label,
-                color,
-                onClick: () => {
-                  const focusedEditor = getFocusedEditor(editor);
-                  if (label === "None") {
-                    focusedEditor.unsetColor().run();
-                  } else {
-                    focusedEditor.setColor(color).run();
-                  }
-                },
-              })),
-            ]}
-            head={<ColortHead />}
-          />
+          <div className="relative">
+            <ColorHead />
+            <DropdownWrapper isOpen={activeDropdown === "color"} onClose={() => setActiveDropdown(null)} className="shadow-lg">
+              <ColorPickerDropdown
+                recentlyUsedColors={recentlyUsedColors}
+                customColor={customColor}
+                onColorSelect={handleColorSelect}
+                onCustomColorChange={setCustomColor}
+                onClose={() => setActiveDropdown(null)}
+              />
+            </DropdownWrapper>
+          </div>
         </div>
 
-        <div className="h-4 w-[1px] bg-white/20  mx-5" />
+        <div className="h-4 w-[1px] bg-white/20  mx-2" />
         <div className="flex items-center space-x-1.5">
           <DropDownOptionsWithIcon options={alignmentOptions} head={<AlignHead />} customClasses="min-w-[120px]" />
           <Button onClick={() => editor.chain().focus().indent().run()} disabled={!editor.can().indent()} tooltip="Indent (Tab)">
@@ -298,17 +294,17 @@ const TollBar = ({ editor, onOpenImageClick }) => {
           <LineHeightDropdown editor={editor} />
           <DropDownTextFormat editor={editor} />
         </div>
-        <div className="h-4 w-[1px] bg-white/20  mx-5" />
+        <div className="h-4 w-[1px] bg-white/20  mx-2" />
 
         <div className="flex items-center space-x-1.5">
           <MathFormulaButton editor={editor} />
           <EmojiButton editor={editor} />
           <GiftPicker editor={editor} />
           <ColumnButton editor={editor} />
-          <GridBoxButton editor={editor} />
           <CustomTableButton editor={editor} />
+          <GalleryPickerComponent editor={editor} />
         </div>
-        <div className="h-4 w-[1px] bg-white/20  mx-5" />
+        <div className="h-4 w-[1px] bg-white/20  mx-2" />
 
         <div className="flex items-center space-x-1.5">
           <Button active={editor.isActive("blockquote")} onClick={() => getFocusedEditor(editor).toggleBlockquote().run()}>
@@ -334,19 +330,13 @@ const TollBar = ({ editor, onOpenImageClick }) => {
           </Button>
         </div>
 
-        <div className="h-4 w-[1px] bg-white/20  mx-5" />
+        <div className="h-4 w-[1px] bg-white/20  mx-2" />
 
         <div className="flex items-center space-x-1.5">
           <EmbedYoutube onSubmit={handleEmbedYoutube} />
           <Button onClick={onOpenImageClick}>
             <BsImageFill />
           </Button>
-          {/*  <Button active={editor.isActive("horizontalRule")} onClick={() => getFocusedEditor(editor).setHorizontalRule().run()}>
-            <FaGripLines />
-          </Button> */}
-          {/*    <Button active={editor.isActive("table")} onClick={handleTableButtonClick}>
-            <ImTable2 />
-          </Button> */}
         </div>
       </div>
     </>

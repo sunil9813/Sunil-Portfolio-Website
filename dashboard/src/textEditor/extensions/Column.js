@@ -1,10 +1,8 @@
-// extensions/Column/Column.js
 import { Node } from "@tiptap/core";
 
 // Column Container (wrapper for columns)
 export const ColumnContainer = Node.create({
   name: "columnContainer",
-
   group: "block",
   content: "column+", // One or more columns
   isolating: true, // Prevents content from breaking out

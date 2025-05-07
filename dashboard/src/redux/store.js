@@ -7,9 +7,13 @@ import blogReducer from "./slices/blogSlice";
 import imageReducer from "./slices/imageSlice";
 import likeReducer from "./slices/common/likeSlice";
 import favoriteReducer from "./slices/common/favoriteSlice";
+import themeReducer from "./slices/themeSlice";
+import projectReducer from "./slices/projectSlice";
+import assetLimitReducer from "./slices/settings/AssestLimitSlice";
 
 export const store = configureStore({
   reducer: {
+    theme: themeReducer,
     auth: authReducer,
     email: emailReducer,
     resource: resourceReducer,
@@ -18,5 +22,7 @@ export const store = configureStore({
     image: imageReducer,
     like: likeReducer,
     favorite: favoriteReducer,
+    project: projectReducer,
+    assetlimit: assetLimitReducer,
   },
 });

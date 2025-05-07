@@ -1,27 +1,49 @@
+@use "../abstracts/mixins" as *;
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-background-clip: text;
-  -webkit-text-fill-color: #cacaca;
-  transition: background-color 5000s ease-in-out 0s;
-  box-shadow: inset 0 0 20px 20px #23232329;
+  -webkit-text-fill-color: #000 !important; // while default value select for that color
+  transition: background-color 5000s ease-in-out 0s !important;
+  box-shadow: inset 0 0 20px 20px #ffffff29 !important;
+  .dark & {
+    -webkit-text-fill-color: #fff !important; // while default value select for that color
+    box-shadow: inset 0 0 20px 20px #23232329 !important;
+  }
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 .input_glow {
   position: relative;
-  border-radius: 5px;
-  height: 40px;
-  // background-color: hsla(265, 95%, 10%, 1);
-  transition: cubic-bezier(0.3, 0.8, 0.5, 0.5) all 0.2s;
-  // background-image: radial-gradient(hsla(265, 95%, 3%, 1) 20%, transparent 20%);
-  background-position: 0 0;
-  box-shadow: 0px 0px 0px 4px hsla(265, 95%, 5%, 0);
+  width: 100%;
+  height: 52px;
+  background: rgba(0, 0, 0, 0.08);
+  color: hsla(0, 0%, 0%, 0.76);
+  .dark & {
+    background: hsla(0, 0%, 97%, 0.05);
+    color: hsla(0, 0%, 97%, 0.76);
+  }
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
 
+  transition: all 0.2s;
+  transition: cubic-bezier(0.3, 0.8, 0.5, 0.5) all 0.2s;
+  box-shadow: 0px 0px 0px 4px hsla(265, 95%, 5%, 0);
+  overflow: hidden;
+  @include media-query("xl") {
+    height: 40px;
+  }
   .input-box {
     position: relative;
     z-index: 1111;
-    color: #fff;
   }
   textarea,
   input {
@@ -31,10 +53,15 @@ input:-webkit-autofill:active {
     border: none;
     outline: none;
     background: none;
-    height: 40px;
-    color: #fff;
+    color: #000 !important;
     &::placeholder {
-      color: #838383;
+      color: #2c2c2c;
+    }
+    .dark & {
+      color: #fff !important;
+      &::placeholder {
+        color: #838383;
+      }
     }
   }
 
@@ -42,7 +69,10 @@ input:-webkit-autofill:active {
     position: absolute;
     border-radius: inherit;
     inset: 1px;
-    background: #1a1c23; // chnage this color to change background-color: ;
+    background: #fdfdfd; // chnage this color to change background-color: ;
+    .dark & {
+      background: #3e3e41; // chnage this color to change background-color: ;
+    }
   }
 
   &:hover &_background-glow {
@@ -81,5 +111,20 @@ input:-webkit-autofill:active {
 }
 
 .auth .input_glow .input_glow_background {
-  background-color: #000 !important;
+  background-color: #fff !important;
+  .dark & {
+    background-color: #000 !important;
+  }
+}
+
+.form-input {
+  &_background {
+    position: absolute;
+    border-radius: inherit;
+    inset: 1px;
+    background: #fdfdfd; // chnage this color to change background-color: ;
+    .dark & {
+      background: #222222; // chnage this color to change background-color: ;
+    }
+  }
 }

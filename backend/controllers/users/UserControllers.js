@@ -12,7 +12,7 @@ const { OAuth2Client } = require("google-auth-library");
 const UserModel = require("../../models/users/UserModel");
 const BlogModel = require("../../models/BlogModel");
 const CoursesModel = require("../../models/notes/CoursesModel");
-const PostsModel = require("../../models/posts/PostsModel");
+const ProjectModel = require("../../models/project/ProjectModel");
 const { default: mongoose } = require("mongoose");
 const SocialMediaModel = require("../../models/users/SocialMediaModel");
 const Resume = require("../../models/about/resumeModel");
@@ -842,7 +842,7 @@ const getUserProfileforPublicUser = asyncHandler(async (req, res) => {
     const socialMediaLinks = await SocialMediaModel.findOne({ user: userId });
     const resume = await Resume.findOne({ user: userId });
     const blogs = await BlogModel.find({ user: userId, visibility: "public" });
-    const posts = await PostsModel.find({ user: userId, visibility: "public" });
+    const posts = await ProjectModel.find({ user: userId, visibility: "public" });
     const followers = await UserModel.find({ _id: { $in: user.followers } }).select("name avatar");
     const following = await UserModel.find({ _id: { $in: user.following } });
 

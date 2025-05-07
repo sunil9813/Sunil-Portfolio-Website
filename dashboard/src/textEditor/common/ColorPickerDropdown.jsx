@@ -1,6 +1,10 @@
 import { CiLocationOff } from "react-icons/ci";
 import PropTypes from "prop-types";
+import { useState } from "react";
+import { HexColorPicker, HexColorInput, RgbaStringColorPicker } from "react-colorful";
+import { rgbaToHex, isValidHex } from "../utils/colorUtils";
 
+// Default color swatches
 const tailwindColors = {
   gray: ["#f9fafb", "#f3f4f6", "#e5e7eb", "#d1d5db", "#9ca3af", "#6b7280", "#4b5563", "#374151", "#1f2937", "#111827"],
   red: ["#fef2f2", "#fee2e2", "#fecaca", "#fca5a5", "#f87171", "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d"],
@@ -13,67 +17,113 @@ const tailwindColors = {
 
 const defaultColors = Object.values(tailwindColors).flat();
 
-export const ColorPickerDropdown = ({ recentlyUsedColors, customColor, onColorSelect, onCustomColorChange }) => {
+export const ColorPickerDropdown = ({ recentlyUsedColors = [], customColor = "#ffffff", onColorSelect, onCustomColorChange, onClose }) => {
+  const [showAdvancedPicker, setShowAdvancedPicker] = useState(false);
+  const [colorMode, setColorMode] = useState("hex"); // 'hex' or 'rgba'
+  const [color, setColor] = useState(customColor);
+
+  // Handle color change
+  const handleColorChange = (newColor) => {
+    setColor(newColor);
+    if (colorMode === "hex") {
+      onCustomColorChange(newColor);
+    } else {
+      onCustomColorChange(newColor);
+    }
+  };
+
+  // Apply the selected color
+  const applyColor = () => {
+    onColorSelect(color);
+    onClose();
+  };
+
+  // Convert color format based on mode
+  const displayColor = colorMode === "hex" ? (isValidHex(color) ? color : rgbaToHex(color)) : color;
+
   return (
-    <div className="absolute top-10 left-0 p-3 bg-blue-gray-900 rounded-xl z-50">
-      <div className="color-section">
-        <button className="flex items-center gap-2 p-1 text-sm rounded-sm mb-2 bg-primarybg w-full" onClick={() => onColorSelect("transparent")}>
-          <CiLocationOff size={18} />
-          <span>No Fill</span>
-        </button>
-        <div className="w-60 flex flex-wrap">
-          {defaultColors.map((color) => (
-            <div
-              key={color}
-              className="h-4 w-4 rounded color-swatch hover:scale-110 transition-transform m-0.5"
-              style={{ backgroundColor: color, border: `1px solid ${color}` }}
-              onClick={() => onColorSelect(color)}
-              title={color}
-            />
+    <div className="w-72">
+      <button
+        className="flex items-center gap-2 w-full p-2 text-sm rounded bg-blue-gray-800 text-white"
+        onClick={() => {
+          onColorSelect("transparent");
+          onClose();
+        }}
+      >
+        <CiLocationOff size={16} />
+        <span>No Color</span>
+      </button>
+
+      <div className="my-3">
+        <div className="text-xs text-gray-300 mb-2">Color Swatches</div>
+        <div className="grid grid-cols-10 gap-1">
+          {defaultColors.map((swatch) => (
+            <button key={swatch} className="w-6 h-6 rounded hover:scale-110 transition-transform" style={{ backgroundColor: swatch }} onClick={() => handleColorChange(swatch)} title={swatch} />
           ))}
         </div>
       </div>
 
       {recentlyUsedColors.length > 0 && (
-        <div className="color-section mt-3">
-          <div className="text-xs text-gray-300 mb-1">Recently Used</div>
-          <div className="w-60 flex flex-wrap">
-            {recentlyUsedColors.map((color) => (
-              <div
-                key={color}
-                className="h-4 w-4 rounded color-swatch hover:scale-110 transition-transform m-0.5"
-                style={{ backgroundColor: color, border: `1px solid ${color}` }}
-                onClick={() => onColorSelect(color)}
-                title={color}
-              />
+        <div className="mb-3">
+          <div className="text-xs text-gray-300 mb-2">Recently Used</div>
+          <div className="grid grid-cols-8 gap-1">
+            {recentlyUsedColors.map((swatch) => (
+              <button key={swatch} className="w-6 h-6 rounded hover:scale-110 transition-transform" style={{ backgroundColor: swatch }} onClick={() => handleColorChange(swatch)} title={swatch} />
             ))}
           </div>
         </div>
       )}
 
-      <div className="mt-3">
-        <div className="text-xs text-gray-300 mb-1">More Colors</div>
-        <div className="flex items-center gap-2 p-1">
-          <input
-            type="color"
-            value={customColor}
-            onChange={(e) => {
-              const color = e.target.value;
-              onCustomColorChange(color);
-              onColorSelect(color);
-            }}
-            className="w-full h-5 rounded cursor-pointer outline-none border-none"
-          />
-          <div className="text-xs text-gray-300">{customColor.toUpperCase()}</div>
-        </div>
+      <button className="text-indigo-500 font-semibold pb-2" onClick={() => setShowAdvancedPicker(!showAdvancedPicker)}>
+        {showAdvancedPicker ? "Hide Color Picker" : "More Colors"}
+      </button>
+
+      {showAdvancedPicker && (
+        <>
+          <div className="flex justify-between items-center mb-3">
+            <div className="text-sm font-medium text-white">Color Picker</div>
+            <div className="flex gap-2">
+              <button className={`text-xs px-2 py-1 rounded ${colorMode === "hex" ? "bg-indigo-500 text-white" : "bg-gray-700 text-gray-300"}`} onClick={() => setColorMode("hex")}>
+                HEX
+              </button>
+              <button className={`text-xs px-2 py-1 rounded ${colorMode === "rgba" ? "bg-indigo-500 text-white" : "bg-gray-700 text-gray-300"}`} onClick={() => setColorMode("rgba")}>
+                RGBA
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            {colorMode === "hex" ? <HexColorPicker color={displayColor} onChange={handleColorChange} /> : <RgbaStringColorPicker color={displayColor} onChange={handleColorChange} />}
+          </div>
+
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex-1">
+              {colorMode === "hex" ? (
+                <HexColorInput color={displayColor} onChange={handleColorChange} prefixed alpha className="w-full bg-blue-gray-800 text-white h-8 px-2 rounded text-sm" />
+              ) : (
+                <input type="text" value={displayColor} onChange={(e) => handleColorChange(e.target.value)} className="bg-blue-gray-800 text-white px-2 py-1 rounded text-sm" />
+              )}
+            </div>
+            <div className="w-8 h-8 rounded" style={{ backgroundColor: displayColor }} />
+          </div>
+        </>
+      )}
+      <div className="flex justify-end gap-2 mt-1">
+        <button className="px-3 py-1 text-sm bg-red-700 hover:bg-gray-600 rounded text-white" onClick={onClose}>
+          Cancel
+        </button>
+        <button className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-500 rounded text-white" onClick={applyColor}>
+          Apply
+        </button>
       </div>
     </div>
   );
 };
 
 ColorPickerDropdown.propTypes = {
-  recentlyUsedColors: PropTypes.arrayOf(PropTypes.string).isRequired,
-  customColor: PropTypes.string.isRequired,
+  recentlyUsedColors: PropTypes.arrayOf(PropTypes.string),
+  customColor: PropTypes.string,
   onColorSelect: PropTypes.func.isRequired,
   onCustomColorChange: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };

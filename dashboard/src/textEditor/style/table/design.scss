@@ -1,26 +1,77 @@
-/* Base styles for all custom tables */
-.custom-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0 auto;
+/* In your CSS file (e.g., styles.css or within a <style> tag) */
+
+/* Ensure the table wrapper doesn't clip the resize handles */
+.custom-table-wrapper {
+  overflow: hidden;
+  border-radius: var(--table-border-radius, 5px);
+  position: relative; /* Added to ensure z-index works if needed */
 }
 
-/* Default Design */
+/* Style the resize handle */
+.resize-handle {
+  position: absolute;
+  right: -5px;
+  top: 0;
+  width: 10px;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2); /* Semi-transparent for visibility */
+  cursor: col-resize;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+  background-color: rgba(0, 0, 0, 0.4); /* Darker on hover */
+}
+
+/* Ensure table headers have relative positioning */
+.custom-table th {
+  position: relative;
+}
+
+/* ------------- Default Table Design - Styled Table ------------- */
 .table-design-default {
-  border: 1px solid #ccc;
-  border-radius: 0px;
-}
-.table-design-default th,
-.table-design-default td {
-  border: 1px solid #ccc;
-  padding: 10px;
-  text-align: left;
-}
-.table-design-default th {
-  background-color: #7691ab;
-  font-weight: bold;
-}
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  border-radius: var(--table-border-radius, 8px) !important;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
 
+  th {
+    background: #009879 !important;
+    color: #ffffff;
+    transition: background-color 0.3s ease;
+  }
+
+  tr {
+    border-bottom: 1px solid #dddddd;
+    transition: all 0.3s ease;
+    &:nth-of-type(even) {
+      background: #f3f3f3;
+      color: #000;
+    }
+    &:nth-of-type(odd) {
+      background: #0f0f0f;
+      color: #fff;
+    }
+
+    &:last-of-type {
+      border-bottom: 2px solid #009879;
+    }
+
+    &:hover {
+      color: #009879;
+      background: rgba(0, 152, 122, 0.1);
+      cursor: pointer;
+    }
+  }
+}
+/* ------------- Default Table Design - Styled Table ------------- */
+
+/* Ensure wrapper handles border-radius */
+.custom-table-wrapper {
+  overflow: hidden;
+  border-radius: var(--table-border-radius, 5px);
+}
 /* Minimal Design */
 .table-design-minimal {
   border: none;
@@ -48,6 +99,7 @@
   border: none;
   padding: 12px;
   text-align: left;
+  color: #000;
 }
 .table-design-modern th {
   background-color: #007bff;
@@ -68,10 +120,12 @@
 }
 .table-design-striped tr:nth-child(even) {
   background-color: #f9f9f9;
+  color: #000;
 }
 .table-design-striped th {
   background-color: #e9ecef;
   font-weight: bold;
+  color: #000;
 }
 
 /* Grid Design */
@@ -127,7 +181,6 @@
 
 /* Vibrant Design */
 .table-design-vibrant {
-  border: 3px solid #ff6f61;
   border-radius: 10px;
   background-color: #fff3e0;
 }
@@ -136,6 +189,7 @@
   border: 1px dashed #ff6f61;
   padding: 10px;
   text-align: left;
+  color: #000;
 }
 .table-design-vibrant th {
   background-color: #ff6f61;
@@ -158,6 +212,7 @@
 .table-design-compact th {
   background-color: #e9ecef;
   font-weight: bold;
+  color: #000;
 }
 
 /* Elegant Design */
@@ -171,6 +226,7 @@
   border-bottom: 2px solid #ced4da;
   padding: 14px;
   text-align: left;
+  color: #000;
 }
 .table-design-elegant th {
   background-color: #343a40;
@@ -189,6 +245,7 @@
   border: 1px solid #8b008b;
   padding: 10px;
   text-align: left;
+  color: #000;
 }
 .table-design-retro th {
   background-color: #8b008b;
@@ -210,6 +267,7 @@
 .table-design-clean th {
   background-color: #e9ecef;
   font-weight: bold;
+  color: #000;
 }
 
 /* Gradient Design */
@@ -242,6 +300,7 @@
   padding: 10px;
   text-align: left;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  color: #000;
 }
 .table-design-shadowed th {
   background-color: #f4f4f4;
@@ -259,13 +318,9 @@
   text-align: left;
   border-radius: 8px;
   background-color: #fff;
+  color: #000;
 }
 .table-design-rounded-cells th {
   background-color: #e9ecef;
   font-weight: bold;
-}
-
-/* Ensure wrapper handles border-radius */
-.custom-table-wrapper {
-  overflow: hidden;
 }

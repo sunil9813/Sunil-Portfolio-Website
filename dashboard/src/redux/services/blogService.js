@@ -31,11 +31,11 @@ const updateBlog = async ({ slug, formData }) => {
   return response.data;
 };
 const updateFeaturedStatus = async (blogId, featured) => {
-  const response = await axios.patch(`${API_URL}${blogId}/featured`, { featured });
+  const response = await axios.patch(`${API_URL}featured/${blogId}`, { featured });
   return response.data;
 };
 const updateVisibility = async (blogId, visibility) => {
-  const response = await axios.patch(`${API_URL}${blogId}/visibility`, { visibility });
+  const response = await axios.patch(`${API_URL}visibility/${blogId}`, { visibility });
   return response.data;
 };
 

@@ -1,9 +1,9 @@
 .common-table {
   position: relative;
-  background-color: #22242b;
   z-index: 10;
   overflow: hidden;
-  &::after {
+
+  /*  &::after {
     content: "";
     position: absolute;
     bottom: -40%;
@@ -25,5 +25,5 @@
     background: radial-gradient(circle, #f64f59 0%, #c471ed 50%, #12c2e9 60%);
     filter: blur(150px);
     z-index: -1;
-  }
+  } */
 }

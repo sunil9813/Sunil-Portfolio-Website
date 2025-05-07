@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Typography } from "@material-tailwind/react";
+import { Button } from "@material-tailwind/react";
 import PropTypes from "prop-types";
 
 export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
@@ -27,14 +27,21 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   };
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-50/10 p-4">
-      <Typography variant="small" className="font-normal text-textcolor">
+    <div className="flexbC border-t border-gray-50/10 p-4">
+      <h3 className="textColor text-xs 3xl:text-sm opacity-75">
         Page {page} of {totalPages}
-      </Typography>
+      </h3>
       <div className="flex gap-2 opacity-75">
         <div className="flex space-x-2">
           {/* Prev Button */}
-          <Button variant="outlined" size="sm" color="white" onClick={() => handlePageChange(page - 1)} disabled={page === 1}>
+          <Button
+            variant="outlined"
+            size="sm"
+            color="white"
+            className="h-8 bg-blue-gray-50 dark:bg-blue-gray-900/10 border border-gray-500/20 dark:border-gray-500 text-gray-600 dark:text-gray-400 font-normal"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
+          >
             Prev
           </Button>
 
@@ -46,17 +53,29 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           ))}
 
           {/* Ellipsis before last page */}
-          {page < totalPages - 2 && <span className="text-white">...</span>}
+          {page < totalPages - 2 && <span className="textColor">...</span>}
 
           {/* Last page button */}
           {page < totalPages - 1 && (
-            <Button size="sm" color="white" onClick={() => handlePageChange(totalPages)}>
+            <Button
+              size="sm"
+              color="white"
+              className="h-8 bg-blue-gray-50 dark:bg-blue-gray-900/10 border border-gray-500/20 dark:border-gray-500 text-gray-600 dark:text-gray-400 font-normal"
+              onClick={() => handlePageChange(totalPages)}
+            >
               {totalPages}
             </Button>
           )}
 
           {/* Next Button */}
-          <Button variant="outlined" size="sm" color="white" onClick={() => handlePageChange(page + 1)} disabled={page === totalPages}>
+          <Button
+            variant="outlined"
+            size="sm"
+            color="white"
+            className="h-8 bg-blue-gray-50 dark:bg-blue-gray-900/10 border border-gray-500/20 dark:border-gray-500 text-gray-600 dark:text-gray-400 font-normal"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page === totalPages}
+          >
             Next
           </Button>
         </div>

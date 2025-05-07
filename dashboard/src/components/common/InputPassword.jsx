@@ -3,7 +3,7 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import PropTypes from "prop-types";
 import { InputLabel } from "../customeUI/Title";
 
-export const InputPassword = ({ fieldName, value, name, onChange, onPaste, placeholder }) => {
+export const InputPassword = ({ fieldNameType, fieldName, value, name, onChange, onPaste, placeholder }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePassword = () => {
@@ -21,7 +21,7 @@ export const InputPassword = ({ fieldName, value, name, onChange, onPaste, place
   };
   return (
     <>
-      <InputLabel text={fieldName} className="label-shine text-xs" />
+      {fieldNameType && <InputLabel text={fieldName} className="label-shine text-xs" />}
       <div className="input_glow mt-2" onMouseMove={handleMouseMove}>
         <div className="input_glow_background">
           <div className="input_glow_background-glow"></div>
@@ -38,7 +38,7 @@ export const InputPassword = ({ fieldName, value, name, onChange, onPaste, place
               placeholder={placeholder}
               className="p-2 w-full text-xs rounded-md text-gray-500"
             />
-            <div className="icon text-gray-500 absolute top-2 right-3 cursor-pointer z-20" onClick={togglePassword}>
+            <div className="icon text-gray-500 absolute 3xl:top-4 top-2.5 right-3 cursor-pointer z-20" onClick={togglePassword}>
               {showPassword ? <AiFillEyeInvisible size={20} /> : <AiFillEye size={20} />}
             </div>
           </div>
@@ -48,7 +48,7 @@ export const InputPassword = ({ fieldName, value, name, onChange, onPaste, place
   );
 };
 
-export const InputFiled = ({ fieldName, type, value, name, onChange, placeholder }) => {
+export const InputFiled = ({ fieldNameType, fieldName, type, value, name, onChange, placeholder }) => {
   // Mouse move event handler
   const handleMouseMove = (e) => {
     const card = e.currentTarget;
@@ -61,7 +61,7 @@ export const InputFiled = ({ fieldName, type, value, name, onChange, placeholder
   };
   return (
     <>
-      <InputLabel text={fieldName} className="label-shine text-md" />
+      {fieldNameType && <InputLabel text={fieldName} className="label-shine text-md" />}
       <div className="input_glow mt-2" onMouseMove={handleMouseMove}>
         <div className="input_glow_background">
           <div className="input_glow_background-glow"></div>
@@ -78,6 +78,7 @@ export const InputFiled = ({ fieldName, type, value, name, onChange, placeholder
 };
 
 InputPassword.propTypes = {
+  fieldNameType: PropTypes.bool,
   fieldName: PropTypes.any,
   value: PropTypes.any,
   name: PropTypes.any,
@@ -86,6 +87,7 @@ InputPassword.propTypes = {
   placeholder: PropTypes.any,
 };
 InputFiled.propTypes = {
+  fieldNameType: PropTypes.bool,
   fieldName: PropTypes.any,
   type: PropTypes.any,
   value: PropTypes.any,

@@ -3,9 +3,9 @@ const cloudinary = require("cloudinary").v2;
 const Filter = require("bad-words");
 const slugify = require("slugify");
 const BlogModel = require("../models/BlogModel");
-const { default: mongoose } = require("mongoose");
 const { default: ImageModel } = require("../models/ImageModel");
 const CategoryModel = require("../models/common/CategoryModel");
+const { updateResourceField } = require("../utils/updateResourceField");
 
 const createBlog = asyncHandler(async (req, res) => {
   const { title, description, tags, category, metaDescription, visibility, groupId } = req.body;
@@ -324,41 +324,31 @@ const updateFeaturedStatus = asyncHandler(async (req, res) => {
   const { blogId } = req.params;
   const { featured } = req.body;
 
-  // Validate the blogId
-  if (!mongoose.Types.ObjectId.isValid(blogId)) {
-    return res.status(400).json({ error: "Invalid blog ID." });
-  }
-
-  // Validate the featured field
-  if (typeof featured !== "boolean") {
-    return res.status(400).json({ error: "The 'featured' field must be a boolean." });
-  }
-
   try {
-    // Find the blog to check its creator
-    const blog = await BlogModel.findById(blogId);
-    if (!blog) {
-      return res.status(404).json({ error: "Blog not found." });
-    }
-
-    // Check if the logged-in user is the creator or an admin
-    if (req.user.id !== blog.userId && req.user.role !== "admin") {
-      return res.status(403).json({ error: "You are not authorized to update this blog." });
-    }
-
-    // Find the blog and update the featured status
-    const updatedBlog = await BlogModel.findByIdAndUpdate(
-      blogId,
-      { featured },
-      { new: true } // Return the updated document
-    );
+    const updatedBlog = await updateResourceField({
+      resourceId: blogId,
+      fieldName: "featured",
+      fieldValue: featured,
+      validateField: (value) => {
+        if (typeof value !== "boolean") {
+          return "The 'featured' field must be a boolean.";
+        }
+        return null;
+      },
+      Model: BlogModel,
+      user: req.user,
+      userIdField: "user",
+      resourceName: "Blog",
+    });
 
     res.status(200).json({
       message: "Blog featured status updated successfully.",
       data: updatedBlog,
     });
   } catch (error) {
-    res.status(500).json({ error: "An error occurred while updating the featured status." });
+    res.status(error.message.includes("not found") ? 404 : error.message.includes("Invalid") ? 400 : 403).json({
+      error: error.message,
+    });
   }
 });
 
@@ -366,41 +356,31 @@ const updateVisibility = asyncHandler(async (req, res) => {
   const { blogId } = req.params;
   const { visibility } = req.body;
 
-  // Validate the blogId
-  if (!mongoose.Types.ObjectId.isValid(blogId)) {
-    return res.status(400).json({ error: "Invalid blog ID." });
-  }
-
-  // Validate the visibility field
-  if (!["public", "private"].includes(visibility)) {
-    return res.status(400).json({ error: "Visibility must be either 'public' or 'private'." });
-  }
-
   try {
-    // Find the blog to check its creator
-    const blog = await BlogModel.findById(blogId);
-    if (!blog) {
-      return res.status(404).json({ error: "Blog not found." });
-    }
-
-    // Check if the logged-in user is the creator or an admin
-    if (req.user.id !== blog.userId && req.user.role !== "admin") {
-      return res.status(403).json({ error: "You are not authorized to update this blog." });
-    }
-
-    // Find the blog and update the visibility
-    const updatedBlog = await BlogModel.findByIdAndUpdate(
-      blogId,
-      { visibility },
-      { new: true } // Return the updated document
-    );
+    const updatedBlog = await updateResourceField({
+      resourceId: blogId,
+      fieldName: "visibility",
+      fieldValue: visibility,
+      validateField: (value) => {
+        if (!["public", "private"].includes(value)) {
+          return "Visibility must be either 'public' or 'private'.";
+        }
+        return null;
+      },
+      Model: BlogModel,
+      user: req.user,
+      userIdField: "user",
+      resourceName: "Blog",
+    });
 
     res.status(200).json({
       message: "Blog visibility updated successfully.",
       data: updatedBlog,
     });
   } catch (error) {
-    res.status(500).json({ error: "An error occurred while updating the visibility." });
+    res.status(error.message.includes("not found") ? 404 : error.message.includes("Invalid") ? 400 : 403).json({
+      error: error.message,
+    });
   }
 });
 

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { SidebarItem } from "./SidebarItem";
 import { menu } from "@/assets/Data";
 import { Logo } from "../common/Logo";
-import { CiGrid41 } from "react-icons/ci";
 
 export const Sidebar = () => {
   const [openIndex, setOpenIndex] = useState(null); // Track the open sub-menu
@@ -19,15 +18,11 @@ export const Sidebar = () => {
   };
 
   return (
-    <section className="sidebars bg-sidebarbg h-[100vh]">
-      <div className="border-b h-[8vh] border-gray-50/10 logo flex justify-between items-center">
-        <button className="flex items-center" onClick={goHome}>
+    <section className="sidebars h-[100vh]">
+      <div className="h-[8vh] flex justify-between items-center px-3">
+        <button onClick={goHome} className="mt-4">
           <Logo size="xs" />
-          <h1 className="text-2xl font-semibold text-indigo-500">MetaDash</h1>
         </button>
-        <div className="flex px-5">
-          <CiGrid41 size={25} />
-        </div>
       </div>
 
       <div className="p-3">

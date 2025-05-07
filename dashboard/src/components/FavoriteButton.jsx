@@ -24,7 +24,6 @@ export const FavoriteButton = ({ resourceType, resourceId, initialFavorited = fa
     try {
       // Dispatch toggleFavorite action
       await dispatch(toggleFavorite({ resourceType, resourceId })).unwrap();
-
       // After successfully toggling favorite, fetch the updated favorite list
       await dispatch(getUserFavorite()).unwrap();
     } catch (error) {

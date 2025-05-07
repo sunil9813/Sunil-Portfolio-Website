@@ -1,52 +1,72 @@
 import { DateFormatter } from "@/components/common/DateFormatter";
 import { getBlogPrivate, updateFeaturedStatus, updateVisibility } from "@/redux/slices/blogSlice";
 import { getUserFavorite } from "@/redux/slices/common/favoriteSlice";
-import { Comments, FavoriteButton, LikeButton, Loader, Wrapper } from "@/utils/Router";
-import { useEffect, useRef, useMemo } from "react";
+import { Comments, FavoriteButton, LikeButton, Wrapper, RichTextRenderer } from "@/utils/Router";
+import { useEffect, useMemo, useState } from "react";
 import { AiFillLike } from "react-icons/ai";
 import { FaComments, FaUser } from "react-icons/fa";
 import { IoEye } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import parse, { domToReact } from "html-react-parser";
-import hljs from "highlight.js";
 import { Chip, Switch } from "@material-tailwind/react";
-import MathFormulaParser from "@/utils/MathFormulaParser";
+import { toast } from "react-toastify";
 
 export const BlogDetails = () => {
   const { slug } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const contentRef = useRef(null);
 
-  const { blog, isLoading } = useSelector((state) => state.blog);
+  const { blog } = useSelector((state) => state.blog);
   const { favoriteResource } = useSelector((state) => state.favorite);
   const { user } = useSelector((state) => state.auth);
+  const likeState = useSelector((state) => state.like);
   const userId = user?._id;
 
-  const description = useMemo(() => blog?.description || "", [blog?.description]);
-  const isFavorited = useMemo(() => favoriteResource?.Blog?.some((fav) => fav._id === blog?._id), [favoriteResource, blog?._id]);
-  const likeCount = useSelector((state) => {
-    const count = state.like.likeCounts["blog"]?.[blog?._id] ?? blog?.likes?.length ?? 0;
-    return count;
-  });
+  // Local state for switches and their loading states
+  const [localVisibility, setLocalVisibility] = useState(blog?.visibility || "private");
+  const [localFeatured, setLocalFeatured] = useState(blog?.featured || false);
 
+  const isFavorited = useMemo(() => favoriteResource?.Blog?.some((fav) => fav._id === blog?._id), [favoriteResource, blog?._id]);
+  const likeCount = useMemo(() => {
+    return likeState.likeCounts["blog"]?.[blog?._id] ?? blog?.likes?.length ?? 0;
+  }, [likeState, blog?._id, blog?.likes]);
+
+  // Initial fetch of blog details
   useEffect(() => {
     dispatch(getBlogPrivate(slug));
   }, [slug, dispatch]);
 
+  // Fetch user's favorite resources
   useEffect(() => {
     dispatch(getUserFavorite(userId));
   }, [dispatch, userId]);
 
-  const handleVisibilityToggle = (blogId, visibility) => {
-    dispatch(updateVisibility({ blogId, visibility }));
-    dispatch(getBlogPrivate(slug));
+  // Sync local state with Redux state when blog changes
+  useEffect(() => {
+    if (blog) {
+      setLocalVisibility(blog.visibility);
+      setLocalFeatured(blog.featured);
+    }
+  }, [blog]);
+
+  const handleVisibilityToggle = async (blogId, newVisibility) => {
+    try {
+      setLocalVisibility(newVisibility);
+      await dispatch(updateVisibility({ blogId, visibility: newVisibility })).unwrap();
+    } catch (error) {
+      toast.error("Failed to update visibility:", error);
+      setLocalVisibility(blog.visibility);
+    }
   };
 
-  const handleFeaturedToggle = (blogId, featured) => {
-    dispatch(updateFeaturedStatus({ blogId, featured }));
-    dispatch(getBlogPrivate(slug));
+  const handleFeaturedToggle = async (blogId, newFeatured) => {
+    try {
+      setLocalFeatured(newFeatured);
+      await dispatch(updateFeaturedStatus({ blogId, featured: newFeatured })).unwrap();
+    } catch (error) {
+      toast.error("Failed to update featured status:", error);
+      setLocalFeatured(blog.featured);
+    }
   };
 
   const handleFilterClick = (filterType, value) => {
@@ -57,53 +77,8 @@ export const BlogDetails = () => {
     }
   };
 
-  useEffect(() => {
-    if (contentRef.current) {
-      const codeBlocks = contentRef.current.querySelectorAll("pre code");
-      codeBlocks.forEach((block) => {
-        hljs.highlightElement(block);
-      });
-    }
-  }, [description]);
-
-  const parsedContent = parse(description, {
-    replace: (domNode) => {
-      if (domNode.attribs && domNode.attribs["data-type"] === "math-formula") {
-        return <MathFormulaParser formula={domNode.attribs["data-formula"]} display={domNode.attribs["data-display"] === "true"} />;
-      }
-      if (domNode.attribs && domNode.attribs["data-type"] === "emoji") {
-        const emoji = domNode.attribs["data-emoji"] || domNode.children[0]?.data || "😊";
-        return <span className="emoji">{emoji}</span>;
-      }
-      if (domNode.name === "img" && domNode.attribs.src && !domNode.attribs["data-type"]) {
-        return <img src={domNode.attribs.src} alt={domNode.attribs.alt || "Image"} className="editor-image" />;
-      }
-      if (domNode.attribs && domNode.attribs["data-type"] === "column-container") {
-        return <div className="column-container">{domToReact(domNode.children)}</div>;
-      }
-      if (domNode.attribs && domNode.attribs["data-type"] === "column") {
-        return <div className="column">{domToReact(domNode.children)}</div>;
-      }
-
-      /*------------ table ----------------*/
-
-      /*------------ work on it ----------------*/
-      if (domNode.attribs && domNode.attribs["data-type"] === "grid-box") {
-        return (
-          <div className="grid-box" data-column-count={domNode.attribs["data-column-count"]}>
-            {domToReact(domNode.children)}
-          </div>
-        );
-      }
-      if (domNode.attribs && domNode.attribs["data-type"] === "grid-cell") {
-        return <div className="grid-cell">{domToReact(domNode.children)}</div>;
-      }
-    },
-  });
-
   return (
     <>
-      {isLoading && <Loader />}
       <Wrapper className="p-5">
         <div className="h-96 relative">
           <img src={blog?.cover?.filePath} alt={blog?.cover?.fileName} className="w-full h-full object-cover rounded-xl" />
@@ -118,9 +93,9 @@ export const BlogDetails = () => {
                   id="visibility-switch"
                   ripple={false}
                   className="h-full w-full checked:bg-[#2ec946]"
-                  label={blog?.visibility === "public" ? "Public" : "Private"}
-                  checked={blog?.visibility === "public"}
-                  onChange={() => handleVisibilityToggle(blog?._id, blog?.visibility === "public" ? "private" : "public")}
+                  label={localVisibility === "public" ? "Public" : "Private"}
+                  checked={localVisibility === "public"}
+                  onChange={() => handleVisibilityToggle(blog?._id, localVisibility === "public" ? "private" : "public")}
                   containerProps={{ className: "w-11 h-6" }}
                   labelProps={{ className: "text-white font-normal capitalize" }}
                   circleProps={{ className: "before:hidden left-0.5 border-none" }}
@@ -131,9 +106,9 @@ export const BlogDetails = () => {
                   id="featured-switch"
                   ripple={false}
                   className="h-full w-full checked:bg-[#2ec946]"
-                  label={blog?.featured === true ? "Featured In Home" : "None"}
-                  checked={blog?.featured === true}
-                  onChange={() => handleFeaturedToggle(blog?._id, !blog?.featured)}
+                  label={localFeatured === true ? "Featured In Home" : "None"}
+                  checked={localFeatured === true}
+                  onChange={() => handleFeaturedToggle(blog?._id, !localFeatured)}
                   containerProps={{ className: "w-11 h-6" }}
                   labelProps={{ className: "text-white font-normal capitalize" }}
                   circleProps={{ className: "before:hidden left-0.5 border-none" }}
@@ -179,10 +154,9 @@ export const BlogDetails = () => {
             blog?.tags?.map((tag) => <Chip key={tag?._id} variant="outlined" color="indigo" className="rounded-sm cursor-pointer" value={tag.tag} onClick={() => handleFilterClick("tag", tag.tag)} />)}
         </div>
         <p className="text-textcolor py-4">{blog?.metaDescription}</p>
-        <div className="tiptap" ref={contentRef}>
-          <div className="prose prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full text-white">{parsedContent}</div>
-        </div>
+        <RichTextRenderer content={blog?.description || ""} />
       </Wrapper>
+
       <Comments />
     </>
   );

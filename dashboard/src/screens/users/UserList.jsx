@@ -1,5 +1,5 @@
 import { deleteUserByAdmin, getAllUserByAdmin } from "@/redux/slices/authSlice";
-import { BreadcrumbsComponent, GlitterCards, Table } from "@/utils/Router";
+import { BreadcrumbsComponent, GlitterCards, Table, Wrapper } from "@/utils/Router";
 import { Avatar } from "@material-tailwind/react";
 import PropTypes from "prop-types";
 import { useEffect } from "react";
@@ -8,91 +8,9 @@ import { FaFacebookF } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
+import { UserProfile } from "@/components/profile/UserProfile";
 
 const TABLE_HEAD = ["S.N", "Member", "Role", "Status", "Connected"];
-
-const TABLE_ROWS = [
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-3.jpg",
-    name: "John Michael",
-    email: "john@creative-tim.com",
-    job: "Manager",
-    statu: "blocked",
-    date: "23/04/18",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg",
-    name: "Alexa Liras",
-    email: "alexa@creative-tim.com",
-    job: "Programator",
-    statu: "suspended",
-    date: "23/04/18",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-1.jpg",
-    name: "Laurent Perrier",
-    email: "laurent@creative-tim.com",
-    job: "Executive",
-    statu: "none",
-    date: "19/09/17",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-4.jpg",
-    name: "Michael Levi",
-    email: "michael@creative-tim.com",
-    job: "Programator",
-    statu: "none",
-    date: "24/12/08",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-5.jpg",
-    name: "Richard Gran",
-    email: "richard@creative-tim.com",
-    job: "Manager",
-    statu: "none",
-    date: "04/10/21",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-3.jpg",
-    name: "John Michael",
-    email: "john@creative-tim.com",
-    job: "Manager",
-    statu: "blocked",
-    date: "23/04/18",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg",
-    name: "Alexa Liras",
-    email: "alexa@creative-tim.com",
-    job: "Programator",
-    statu: "suspended",
-    date: "23/04/18",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-1.jpg",
-    name: "Laurent Perrier",
-    email: "laurent@creative-tim.com",
-    job: "Executive",
-    statu: "none",
-    date: "19/09/17",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-4.jpg",
-    name: "Michael Levi",
-    email: "michael@creative-tim.com",
-    job: "Programator",
-    statu: "none",
-    date: "24/12/08",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-5.jpg",
-    name: "Richard Gran",
-    email: "richard@creative-tim.com",
-    job: "Manager",
-    statu: "none",
-    date: "04/10/21",
-  },
-];
 
 export const UserList = () => {
   const dispatch = useDispatch();
@@ -125,8 +43,10 @@ export const UserList = () => {
   };
   return (
     <>
-      <section className="user-list">
-        <BreadcrumbsComponent text="All User" />
+      <Wrapper className="user-list">
+        <div className="px-5 pt-5">
+          <BreadcrumbsComponent currentPage="Users Overview" space={true} />
+        </div>
         <Table
           head={TABLE_HEAD}
           rowData={usersList}
@@ -134,11 +54,12 @@ export const UserList = () => {
           linktocreate="create-user"
           linktoview="view-user"
           rowsPerPageNumber={7}
-          comp={<UserListCard rowData={TABLE_ROWS} />}
+          // comp={<UserListCard rowData={TABLE_ROWS} />}
+          comp={<UserProfile rowData={usersList} />}
           delete={confirmDelete}
           type="users"
         />
-      </section>
+      </Wrapper>
     </>
   );
 };

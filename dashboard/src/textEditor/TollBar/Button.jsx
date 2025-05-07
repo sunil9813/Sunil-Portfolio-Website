@@ -8,10 +8,10 @@ const Button = ({ children, active, disabled, onMouseDown, onClick, tooltip }) =
 
   const getActiveStyle = useCallback(() => {
     if (active) return "bg-green-400 text-white";
-    return "text-textcolor bg-sidebarbg";
+    return "textColor bg-white dark:bg-black/20";
   }, [active]);
 
-  const commonClasses = "w-8 h-8 flex justify-center items-center rounded text-lg hover:bg-green-400 hover:text-white hover:scale-110 hover:shadow-md transition";
+  const commonClasses = "3xl:w-8 3xl:h-8 w-6 h-6 text-xs 3xl:text-sm flex justify-center items-center rounded text-lg hover:bg-green-400 hover:text-white hover:scale-110 hover:shadow-md transition";
 
   return (
     <div className="relative inline-block" ref={buttonRef}>

@@ -13,77 +13,58 @@ export default withMT({
   ],
   theme: {
     extend: {
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
       colors: {
+        dark: {
+          surface1: "#101010",
+          surface2: "#191919",
+          highlight: "#222222",
+          text: {
+            primary: "#F1F1F1",
+            secondary: "#7B7B7B",
+            tertiary: "#727272",
+          },
+        },
+        // Light theme colors
+        light: {
+          surface1: "#F1F1F1",
+          surface2: "#FDFDFD",
+          highlight: "#F9F9F9",
+          text: {
+            primary: "#101010",
+            secondary: "#727272",
+            tertiary: "#7B7B7B",
+          },
+        },
+        stroke: "#282828",
+        textcolor: "#727272",
+
         sidebarbg: "#22242B",
         primarybg: "#1A1C23",
-        textcolor: "#949598",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        chart: {
-          1: "hsl(var(--chart-1))",
-          2: "hsl(var(--chart-2))",
-          3: "hsl(var(--chart-3))",
-          4: "hsl(var(--chart-4))",
-          5: "hsl(var(--chart-5))",
-        },
-        "color-1": "hsl(var(--color-1))",
-        "color-2": "hsl(var(--color-2))",
-        "color-3": "hsl(var(--color-3))",
-        "color-4": "hsl(var(--color-4))",
-        "color-5": "hsl(var(--color-5))",
-      },
-      animation: {
-        rainbow: "rainbow var(--speed, 2s) infinite linear",
-      },
-      keyframes: {
-        rainbow: {
-          "0%": {
-            "background-position": "0%",
-          },
-          "100%": {
-            "background-position": "200%",
-          },
-        },
       },
       boxShadow: {
         menuShadow: "0 0 2px 2px #22242B",
+        dropDownDark:
+          "0px 5px 1.5px -4px rgba(8, 8, 8, 0.09), 0px 6px 4px -4px rgba(8, 8, 8, 0.05), 0px 6px 13px 0px rgba(8, 8, 8, 0.03), 0px 24px 24px -16px rgba(8, 8, 8, 0.04), 0px 2.15px 0.5px -2px rgba(0, 0, 0, 0.8), 0px 0px 10px 0px rgba(0, 0, 0, 0.1), inset 0px 0px 12px 4px rgba(250, 250, 250, 0.05)",
+        insetShadow:
+          "-0px 1px 4px rgba(0, 0, 0, 0.28), -1px 3px 18px rgba(0, 0, 0, 0.25), -2px 7px 40px rgba(0, 0, 0, 0.22), -3px 12px 71px rgba(0, 0, 0, 0.2), -5px 19px 111px rgba(0, 0, 0, 0.17), -8px 27px 160px rgba(0, 0, 0, 0.14), -10px 37px 218px rgba(0, 0, 0, 0.11), -13px 48px 284px rgba(0, 0, 0, 0.08), -17px 61px 360px rgba(0, 0, 0, 0.06), -21px 75px 444px rgba(0, 0, 0, 0.03)",
       },
+
+      // above
+      screens: {
+        // your other breakpoints
+        "2xl": "1530px", // for ≥1536px
+        "3xl": "1700px", // optional if you want above 1700px too
+      },
+
+      /*  screens: {
+        mobile: { max: "400px" },
+        sm: { max: "700px" },
+        md: { max: "900px" },
+        lg: { max: "1100px" },
+        xl: { max: "1300px" },
+        xxl: { max: "1500px" },
+        "3xl": { max: "1700px" },
+      }, */
     },
   },
   plugins: [tailwindcssAnimate, tailwindcssTypography],

@@ -3,14 +3,21 @@ import PropTypes from "prop-types";
 export const HeadingTwo = ({ children, className }) => {
   return (
     <>
-      <h2 className={`text-3xl font-semibold ${className}`}>{children}</h2>
+      <h2 className={`capitalize text-xl 3xl:text-2xl font-semibold textColor ${className}`}>{children}</h2>
     </>
   );
 };
-export const InputLabel = ({ text, className }) => {
+export const InputTitle = ({ children, className }) => {
   return (
     <>
-      <span className={`text-sm block text-textcolor ${className}`}>{text}</span>
+      <h3 className={`capitalize text-sm 3xl:text-lg font-[500] textColor ${className}`}>{children}</h3>
+    </>
+  );
+};
+export const InputLabel = ({ children, className }) => {
+  return (
+    <>
+      <span className={`textSizeSm block text-gray-600 dark:text-gray-300 ${className}`}>{children}</span>
     </>
   );
 };
@@ -20,6 +27,10 @@ HeadingTwo.propTypes = {
   className: PropTypes.any,
 };
 InputLabel.propTypes = {
-  text: PropTypes.any,
+  children: PropTypes.any,
+  className: PropTypes.any,
+};
+InputTitle.propTypes = {
+  children: PropTypes.any,
   className: PropTypes.any,
 };

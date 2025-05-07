@@ -40,10 +40,10 @@ export const DropDownTextFormat = ({ editor }) => {
         <button
           onBlur={() => setShowOptions(false)}
           onMouseDown={() => setShowOptions(!showOptions)}
-          className="flex items-center gap-1 hover:bg-green-400 h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition"
+          className="flex items-center bg-white dark:bg-black/20 gap-1 hover:bg-green-400 h-6 3xl:h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition"
         >
-          <TfiText size={14} />
-          <AiFillCaretDown size={14} />
+          <TfiText />
+          <AiFillCaretDown />
         </button>
       </Tooltip>
     );

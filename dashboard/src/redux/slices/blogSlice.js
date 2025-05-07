@@ -86,6 +86,16 @@ const blogSlice = createSlice({
       state.isLoading = false;
       state.message = "";
     },
+    updateVisibilitySuccess(state, action) {
+      if (state.blog) {
+        state.blog.visibility = action.payload.visibility;
+      }
+    },
+    updateFeaturedSuccess(state, action) {
+      if (state.blog) {
+        state.blog.featured = action.payload.featured;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -173,17 +183,17 @@ const blogSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.blog = action.payload; // Assuming you're returning the updated blog
+        if (state.blog) {
+          state.blog.featured = action.payload.featured;
+        }
         toast.success("Featured status updated successfully");
       })
       .addCase(updateFeaturedStatus.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.blog = null;
         toast.error(action.payload);
       })
-      // Handle update visibility
       .addCase(updateVisibility.pending, (state) => {
         state.isLoading = true;
       })
@@ -191,14 +201,15 @@ const blogSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.blog = action.payload; // Assuming you're returning the updated blog
+        if (state.blog) {
+          state.blog.visibility = action.payload.visibility;
+        }
         toast.success("Visibility updated successfully");
       })
       .addCase(updateVisibility.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.blog = null;
         toast.error(action.payload);
       })
       .addCase(getBlogsByCategoryAndTag.pending, (state) => {

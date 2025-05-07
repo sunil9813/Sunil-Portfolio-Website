@@ -7,7 +7,6 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import EditLink from "./link/EditLink";
 import Youtube from "@tiptap/extension-youtube";
-import TipTapImage from "@tiptap/extension-image";
 import GallaryModel from "./GalleryModel/GallaryModel";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
@@ -27,10 +26,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { deleteImage, getAllImages, uploadImageToEditorDes } from "@/redux/slices/imageSlice";
 import { toast } from "react-toastify";
 import PropTypes from "prop-types";
-import { ImageResize } from "tiptap-extension-resize-image";
 import { Indent } from "./extensions/Indent";
-import "./style/extensions.scss";
-import "./style/table.scss";
+import "./style/index.scss";
 import { LineHeight } from "./extensions/LineHeight";
 import { MathFormula } from "./extensions/MathFormula";
 import { Emoji } from "./extensions/Emoji";
@@ -38,6 +35,9 @@ import { Gif } from "./extensions/Gift";
 import { Column, ColumnContainer } from "./extensions/Column";
 import { CustomTable } from "./extensions/CustomTable";
 import { TableActionPopup } from "./components/table/TableActionPopup";
+import "prosemirror-tables/style/tables.css";
+import CustomImage from "./extensions/CustomImageExtension";
+import { GalleryBox, GalleryLayout } from "./extensions/Gallery";
 
 const lowlight = createLowlight(all);
 lowlight.register("html", html);
@@ -51,6 +51,7 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
   const dispatch = useDispatch();
   const { images, isLoadingUpload, isLoadingDelete } = useSelector((state) => state.image); // Updated selector
   const [isSticky, setIsSticky] = useState(false);
+  const [selectedCellPos, setSelectedCellPos] = useState(null);
 
   useEffect(() => {
     const handleScroll = () => setIsSticky(window.scrollY > 500);
@@ -80,8 +81,7 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
       Youtube.configure({ width: 840, height: 472.5, HTMLAttributes: { class: "mx-auto rounded-xl" } }),
       CodeBlockLowlight.configure({ lowlight }),
       Highlight.configure({ multicolor: true, HTMLAttributes: { class: "prose-black" } }),
-      TipTapImage.configure({ HTMLAttributes: { class: "mx-auto" } }),
-      ImageResize,
+      CustomImage,
       Indent.configure({
         types: ["paragraph", "heading", "list_item"],
         max: 20,
@@ -96,7 +96,14 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
       ColumnContainer,
       Column,
       CustomTable,
-      // ResizableImage,
+      GalleryBox.configure({
+        onOpenGallery: (pos, callback) => {
+          setSelectedCellPos(pos);
+          setShowGallery(true);
+          editor.setMeta("galleryCallback", callback);
+        },
+      }),
+      GalleryLayout,
     ],
 
     editorProps: {
@@ -105,7 +112,7 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
         const range = getMarkRange(state.doc.resolve(pos), state.schema.marks.link);
         if (range) setSelectionRange(range);
       },
-      attributes: { class: "prose prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full text-white" },
+      attributes: { class: "prose prose-sm 3xl:prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full textColor" },
     },
   });
 
@@ -158,15 +165,16 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
 
   return (
     <>
-      <div className="p-3 bg-transparent relative">
-        <div
+      <div className=" relative">
+        {/* <div
           className={`transition-all duration-300 z-30 backdrop-blur-md ${
-            isSticky ? "fixed top-[78px] right-0 w-[85%] bg-sidebarbg shadow-lg p-3 flex justify-center items-center flex-col" : "relative z-10"
+            isSticky ? "relative top-0 right-0 w-[85%] highlightbg shadow-lg p-3 flex justify-center items-center flex-col" : "relative z-10"
           }`}
-        >
+        > */}
+        <div>
           <TollBar editor={editor} onOpenImageClick={() => setShowGallery(true)} />
         </div>
-        <div className="h-[1px] w-full bg-white/10 my-3"></div>
+        <div className="h-[1px] w-full bg-gray-800/10 dark:bg-white/10 my-3"></div>
         {editor && <EditLink editor={editor} />}
         <EditorContent editor={editor} className="min-h-[300px]" />
         <TableActionPopup editor={editor} />

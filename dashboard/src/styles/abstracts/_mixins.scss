@@ -17,12 +17,15 @@
       @content;
     }
   } @else if $breakpoint == "xl" {
-    @media (max-width: 1550px) {
+    @media (max-width: 1530px) {
+      @content;
+    }
+  } @else if $breakpoint == "2xl" {
+    @media (max-width: 1700px) {
       @content;
     }
   }
 }
-
 // Centering Mixin
 @mixin center($width: 100%) {
   display: flex;

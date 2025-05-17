@@ -33,8 +33,8 @@ export const BreadcrumbsComponent = ({ currentPage, space }) => {
   return (
     <>
       <div className="flexbC relative">
-        <h2 className="capitalize text-xl 3xl:text-2xl font-semibold textColor">{currentPage}</h2>
-        <nav className={`flex items-center space-x-1 text-xs 3xl:text-sm capitalize ${space ? "pr-44" : ""}`}>
+        {/* <h2 className="capitalize text-xl 3xl:text-2xl font-semibold textColor">{currentPage}</h2> */}
+        <nav className={`flex items-center space-x-1 text-xs 3xl:text-sm capitalize`}>
           {/* Home Link */}
           <Link to="/" className="opacity-60 dark:opacity-80 hover:opacity-100">
             <IoHomeOutline size={15} />

@@ -27,6 +27,7 @@ import {
   ViewCategory,
   ViewUser,
   AssetConfigure,
+  LayoutWithOutHeader,
 } from "./utils/Router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -214,7 +215,7 @@ function App() {
     {
       path: "/all-project",
       element: (
-        <Layout>
+        <Layout title="Manage Projects">
           <ProjectList />
         </Layout>
       ),
@@ -232,9 +233,9 @@ function App() {
     {
       path: "/create-project",
       element: (
-        <Layout>
+        <LayoutWithOutHeader>
           <CreateProject />
-        </Layout>
+        </LayoutWithOutHeader>
       ),
       errorElement: <ErrorPage />,
     },

@@ -108,17 +108,18 @@ const uploadCoverandMedia = uploadChapter.fields([
 
 module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, uploadAvatarandProjectDoc, uploadCoverandMedia };
 */
+
 const multer = require("multer");
 const AssetLimitConfigModel = require("../models/project/AssetLimitConfigModel");
 
 // Use memory storage for Cloudinary uploads
-const storage = multer.memoryStorage();
+const storage = multer.memoryStorage(); // for multiple filed image upload
 
 // File filter to enforce file type and size limits based on field name
 function fileFilter(req, file, cb) {
   const imageMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
 
-  if (file.fieldname === "assets" || file.fieldname === "thumbnail") {
+  if (file.fieldname === "assets" || file.fieldname === "thumbnail" || file.fieldname === "logo") {
     // Restrict assets and thumbnail to images (10MB limit)
     if (!imageMimeTypes.includes(file.mimetype)) {
       return cb(new Error("Invalid file type for assets/thumbnail. Supported types are jpg, png, and jpeg."), false);
@@ -139,12 +140,22 @@ function fileFilter(req, file, cb) {
   }
 }
 
-// General upload middleware for single image files (10MB limit)
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+const storageSingleFile = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname); // 23/08/2022
+  },
 });
+function fileFilterSingleFile(req, file, cb) {
+  if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg") {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type. Supported types are jpg, png, and jpeg."), false);
+  }
+}
+const upload = multer({ storageSingleFile, fileFilterSingleFile });
 
 // General upload middleware for any file type (100MB limit)
 const uploadFile = multer({
@@ -174,16 +185,13 @@ const getUploadAssetsandThumbnail = async () => {
   }
 };
 
-/* ---------------- End Project ---------------- */
-
-/* ---------------- Testimonial ---------------- */
 const uploadTestimonial = multer({ storage });
 const uploadAvatarandProjectDoc = uploadTestimonial.fields([
   { name: "projectDoc", maxCount: 1 },
   { name: "avatar", maxCount: 1 },
 ]);
 
-/* ---------------- End Testimonial ---------------- */
+/* ---------------- End Project ---------------- */
 
 /* ---------------- Chapter ---------------- */
 const uploadChapter = multer({ storage });
@@ -191,7 +199,6 @@ const uploadCoverandMedia = uploadChapter.fields([
   { name: "cover", maxCount: 1 },
   { name: "media", maxCount: 1 },
 ]);
-
 /* ---------------- End Chapter ---------------- */
 
 module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, uploadAvatarandProjectDoc, uploadCoverandMedia };

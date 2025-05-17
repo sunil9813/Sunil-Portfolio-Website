@@ -112,7 +112,7 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
         const range = getMarkRange(state.doc.resolve(pos), state.schema.marks.link);
         if (range) setSelectionRange(range);
       },
-      attributes: { class: "prose prose-sm 3xl:prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full textColor" },
+      attributes: { class: "prose prose-sm focus:outline-none prose-invert max-w-full mx-auto h-full textColor" },
     },
   });
 

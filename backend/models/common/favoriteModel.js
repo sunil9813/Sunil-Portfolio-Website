@@ -16,7 +16,7 @@ const FavoriteSchema = new mongoose.Schema(
     itemType: {
       type: String,
       required: true,
-      enum: ["Posts", "Blog", "Courses", "Chapter"],
+      enum: ["Project", "Blog", "Courses", "Chapter"],
     },
   },
   { timestamps: true }

@@ -5,7 +5,7 @@ import { setInitialLikes, toggleLike, updateLikeLocally } from "@/redux/slices/c
 import { useEffect, useCallback } from "react";
 import { IconButton } from "@material-tailwind/react";
 
-export const LikeButton = ({ resourceType, contentId, initialLikes = [] }) => {
+export const LikeButton = ({ resourceType, contentId, initialLikes = [], showtrue }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const userId = user?._id;
@@ -39,9 +39,14 @@ export const LikeButton = ({ resourceType, contentId, initialLikes = [] }) => {
   }, [dispatch, resourceType, contentId, userId, isLiked, currentLikeCount]);
 
   return (
-    <IconButton color="blue" onClick={handleLikeToggle}>
-      {isLiked ? <AiFillLike size={22} /> : <AiOutlineLike size={22} />}
-    </IconButton>
+    <>
+      {showtrue && <button onClick={handleLikeToggle}>{isLiked ? <AiFillLike size={18} /> : <AiOutlineLike size={18} />}</button>}
+      {!showtrue && (
+        <IconButton color="blue" onClick={handleLikeToggle}>
+          {isLiked ? <AiFillLike size={22} /> : <AiOutlineLike size={22} />}
+        </IconButton>
+      )}
+    </>
   );
 };
 
@@ -49,4 +54,5 @@ LikeButton.propTypes = {
   resourceType: PropTypes.string.isRequired,
   contentId: PropTypes.string.isRequired,
   initialLikes: PropTypes.array,
+  showtrue: PropTypes.any,
 };

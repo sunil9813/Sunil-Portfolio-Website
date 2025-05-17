@@ -1,5 +1,5 @@
 import { createProject, getAllProject } from "@/redux/slices/projectSlice";
-import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, Loader, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
+import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -18,11 +18,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { IoIosCheckmarkCircle } from "react-icons/io";
 import { FaCirclePlus, FaCircleMinus } from "react-icons/fa6";
+import { ProjectToolsSection } from "./ProjectToolsSection";
+import { inputClassName } from "@/utils";
 
 const initialState = {
   title: "",
   metaDescription: "",
-  visibility: "",
+  visibility: "private",
   layout: "",
   urllink: "",
   price: "",
@@ -32,9 +34,6 @@ const initialState = {
   formats: [],
   highlights: [],
 };
-
-const inputClassName =
-  "w-full h-11 3xl:h-12 px-5 textColor textSizeSm border border-gray-100 dark:border-gray-800/50 focus:border-gray-200 dark:focus:border-gray-800 rounded-full placeholder:text-xs placeholder:3xl:text-sm placeholder:text-gray-800/20 dark:placeholder:text-gray-500/50";
 
 export const CreateProject = () => {
   const navigate = useNavigate();
@@ -64,7 +63,7 @@ export const CreateProject = () => {
   const [discountEnabled, setDiscountEnabled] = useState(false);
 
   const { title, category, metaDescription, visibility, tags, formats, layout, urllink, price, discount } = project;
-  const { isLoading, isError, uploadProgress } = useSelector((state) => state.project);
+  const { isError } = useSelector((state) => state.project);
   const { assetLimit } = useSelector((state) => state.assetlimit);
 
   // Fetch asset limit on mount
@@ -184,16 +183,6 @@ export const CreateProject = () => {
     setProject({ ...project, tags: newTags });
   };
 
-  const handleFormatChange = (newFormats) => {
-    const hasDuplicate = newFormats.some((format, index) => newFormats.indexOf(format) !== index);
-    if (hasDuplicate) {
-      setFormatError("Formats cannot be duplicates.");
-      return;
-    }
-    setFormatError("");
-    setProject({ ...project, formats: newFormats });
-  };
-
   const handleHighlightChange = (index, value) => {
     const updatedHighlights = [...highlights];
     updatedHighlights[index] = value;
@@ -272,7 +261,15 @@ export const CreateProject = () => {
     if (file) handleResourceFileUploadChange({ target: { files: [file] } });
   }, []);
 
-  const handleCreate = async () => {
+  const handleCreate = async (publishType) => {
+    // Determine visibility based on publishType
+    let finalVisibility = visibility;
+    if (publishType === "draft") {
+      finalVisibility = "private";
+    } else if (publishType === "publish") {
+      finalVisibility = "public";
+    }
+
     if (!title.trim()) {
       toast.error("Title is required.");
       return;
@@ -321,7 +318,7 @@ export const CreateProject = () => {
     formData.append("metaDescription", metaDescription);
     formData.append("groupId", groupId);
     formData.append("thumbnail", thumbnail);
-    formData.append("visibility", visibility);
+    formData.append("visibility", finalVisibility);
     formData.append("layout", layout);
     formData.append("urllink", urllink);
     formData.append("price", price || 0);
@@ -355,8 +352,6 @@ export const CreateProject = () => {
       formData.append("resourceFile", JSON.stringify({ type: "file" }));
     }
 
-    // Debug FormData contents
-    console.log("FormData contents:");
     for (const [key, value] of formData.entries()) {
       console.log(`${key}:`, value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value);
     }
@@ -377,7 +372,7 @@ export const CreateProject = () => {
         setHighlights([""]);
         setHighlightErrors([""]);
         setDiscountEnabled(false);
-        toast.success("Project created successfully!");
+        toast.success(publishType === "draft" ? "Draft saved successfully!" : "Project published successfully!");
         navigate("/all-projects");
       } else {
         const errorMessage = isError?.message?.includes("validation failed")
@@ -396,24 +391,10 @@ export const CreateProject = () => {
       <StickyHeader>
         <HeadingTwo>New Project</HeadingTwo>
         <div className="flexC gap-2">
-          <GhostButton>Save draft</GhostButton>
-          <TertiaryButton onClick={handleCreate} disabled={isLoading}>
-            {isLoading ? `Uploading... ${uploadProgress}%` : "Publish now"}
-          </TertiaryButton>
+          <GhostButton onClick={() => handleCreate("draft")}>Save draft</GhostButton>
+          <TertiaryButton onClick={() => handleCreate("publish")}>Publish now</TertiaryButton>
         </div>
       </StickyHeader>
-
-      {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-dark-surface1 p-6 rounded-lg shadow-lg">
-            <Loader />
-            <p className="text-center mt-4 text-lg">Uploading: {uploadProgress}%</p>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <section className="flex justify-between gap-3">
         <div className="w-2/3">
@@ -456,10 +437,6 @@ export const CreateProject = () => {
                 {metaDescError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{metaDescError}</p>}
               </div>
             </div>
-            <div className="input mt-4">
-              <InputLabel className="my-2">Description</InputLabel>
-              <Editor customId={groupId} value={description} onChange={setDescription} folderName="project/description" folder="project" subfolder="description" />
-            </div>
           </Wrapper>
           <Wrapper className="p-5 my-3">
             <InputTitle className="mb-4">Category & attributes</InputTitle>
@@ -468,53 +445,29 @@ export const CreateProject = () => {
               <TagsInput className={`${inputClassName} !p-0 !px-2 !pt-2 rounded-xl !min-h-20 !h-auto`} value={tags} onChange={handleTagChange} inputProps={{ placeholder: "Add Tag" }} />
               {tagError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{tagError}</p>}
             </div>
-            <div className="input py-3">
-              <InputLabel className="my-2">Languages</InputLabel>
-              <TagsInput className={`${inputClassName} !p-0 !px-2 !pt-2 rounded-xl !min-h-20 !h-auto`} value={formats} onChange={handleFormatChange} inputProps={{ placeholder: "Add Language" }} />
-              {formatError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{formatError}</p>}
-            </div>
-            <div className="input">
+            <div className="input my-5">
               <InputLabel className="my-2">Category</InputLabel>
               <CategoryDropDown type="project" value={category} onChange={(selectedOption) => setProject({ ...project, category: selectedOption })} />
             </div>
-          </Wrapper>
-          <Wrapper className="p-5">
-            <InputTitle className="mb-4">Layout & Visibility</InputTitle>
-            <div className="flex justify-between gap-3 items-center">
-              <div className="w-1/2">
-                <InputLabel className="my-2">Visibility</InputLabel>
-                <select name="visibility" className={`${inputClassName} !px-2 outline-none bg-transparent`} value={visibility} onChange={handleInputChange}>
-                  <option className="text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="">
-                    Select Visibility
-                  </option>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="public">
-                    Public
-                  </option>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="private">
-                    Private
-                  </option>
-                </select>
-              </div>
-              <div className="w-1/2">
-                <InputLabel className="my-2">Layout</InputLabel>
-                <select name="layout" className={`${inputClassName} !px-2 outline-none bg-transparent`} value={layout} onChange={handleInputChange}>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="">
-                    Select Layout
-                  </option>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="flex">
-                    Flex
-                  </option>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="grid">
-                    Grid
-                  </option>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="responsive">
-                    Responsive
-                  </option>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="non-responsive">
-                    Non-Responsive
-                  </option>
-                </select>
-              </div>
+            <div>
+              <InputLabel className="my-2">Layout</InputLabel>
+              <select name="layout" className={`${inputClassName} !px-2 outline-none bg-transparent`} value={layout} onChange={handleInputChange}>
+                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="">
+                  Select Layout
+                </option>
+                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="flex">
+                  Flex
+                </option>
+                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="grid">
+                  Grid
+                </option>
+                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="responsive">
+                  Responsive
+                </option>
+                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="non-responsive">
+                  Non-Responsive
+                </option>
+              </select>
             </div>
           </Wrapper>
           <Wrapper className="p-5 w-full my-3">
@@ -564,47 +517,13 @@ export const CreateProject = () => {
               </div>
             )}
           </Wrapper>
+          <Wrapper className="p-5">
+            <Editor customId={groupId} value={description} onChange={setDescription} folderName="project/description" folder="project" subfolder="description" />
+          </Wrapper>
         </div>
 
         <div className="w-1/3">
           <Wrapper className="p-5 w-full">
-            <InputTitle className="mb-4">Thumbnail image</InputTitle>
-            <div
-              onDrop={handleDropThumbnail}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center w-full h-56 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
-            >
-              {thumbnailPreview ? (
-                <div className="relative w-full h-56 flex items-center justify-center">
-                  <img src={thumbnailPreview} alt="Thumbnail Preview" className="w-full h-full rounded-3xl object-cover" />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setThumbnail(null);
-                      setThumbnailPreview(null);
-                    }}
-                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    title="Remove Thumbnail"
-                    aria-label="Remove thumbnail image"
-                  >
-                    <MdClose />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <IoCameraSharp size={30} />
-                  <p className="text-sm text-gray-500 dark:text-gray-400 textSizeSm">
-                    Drag and drop an image or
-                    <span className="textColor font-medium cursor-pointer" onClick={() => thumbnailInputRef.current.click()}>
-                      click to browse
-                    </span>
-                  </p>
-                </div>
-              )}
-              <input ref={thumbnailInputRef} id="thumbnail" type="file" name="thumbnail" className="hidden" onChange={handleThumbnailChange} accept="image/png,image/jpeg,image/jpg" />
-            </div>
-          </Wrapper>
-          <Wrapper className="p-5 w-full my-3">
             <InputTitle className="mb-4">Upload product files</InputTitle>
             <div className="input">
               <InputLabel className="my-2">Resource File URL (e.g., GitHub link)</InputLabel>
@@ -657,6 +576,44 @@ export const CreateProject = () => {
               )}
             </div>
           </Wrapper>
+          <Wrapper className="p-5 w-full  my-3">
+            <InputTitle className="mb-4">Thumbnail image</InputTitle>
+            <div
+              onDrop={handleDropThumbnail}
+              onDragOver={(e) => e.preventDefault()}
+              className="flex flex-col items-center justify-center w-full h-56 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
+            >
+              {thumbnailPreview ? (
+                <div className="relative w-full h-56 flex items-center justify-center">
+                  <img src={thumbnailPreview} alt="Thumbnail Preview" className="w-full h-full rounded-3xl object-cover" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setThumbnail(null);
+                      setThumbnailPreview(null);
+                    }}
+                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                    title="Remove Thumbnail"
+                    aria-label="Remove thumbnail image"
+                  >
+                    <MdClose />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <IoCameraSharp size={30} />
+                  <p className="text-sm text-gray-500 dark:text-gray-400 textSizeSm">
+                    Drag and drop an image or
+                    <span className="textColor font-medium cursor-pointer" onClick={() => thumbnailInputRef.current.click()}>
+                      click to browse
+                    </span>
+                  </p>
+                </div>
+              )}
+              <input ref={thumbnailInputRef} id="thumbnail" type="file" name="thumbnail" className="hidden" onChange={handleThumbnailChange} accept="image/png,image/jpeg,image/jpg" />
+            </div>
+          </Wrapper>
+
           <Wrapper className="p-5">
             <InputTitle className="mb-4">Price</InputTitle>
             <div className="input">
@@ -751,6 +708,9 @@ export const CreateProject = () => {
               </div>
             ))}
           </Wrapper>
+
+          <ProjectToolsSection formats={formats} setProject={setProject} formatError={formatError} setFormatError={setFormatError} />
+          <div className="pb-96"></div>
         </div>
       </section>
     </>

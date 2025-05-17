@@ -7,12 +7,11 @@ import { IoIosNotificationsOutline } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
 import { generateItemColor } from "@/utils";
 import { ThemeToggle } from "../common/ThemeToggle";
-import { DropdownWrapper, SearchBox } from "@/utils/Router";
+import { DropdownWrapper, HeadingTwo, SearchBox } from "@/utils/Router";
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { motion } from "framer-motion";
 
-export const Header = () => {
+export const Header = ({ title }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector(selectUser);
@@ -27,48 +26,24 @@ export const Header = () => {
     navigate("/login");
   };
 
-  const WavingHand = () => (
-    <motion.span
-      style={{
-        display: "inline-block",
-        originX: 0.7, // Pivot point near the wrist
-        originY: 0.7,
-        fontSize: "20px",
-      }}
-      animate={{
-        rotate: [0, 14, -8, 14, -4, 10, 0], // Wave pattern
-      }}
-      transition={{
-        duration: 1.5,
-        ease: "easeInOut",
-        repeat: Infinity,
-        repeatDelay: 1,
-      }}
-    >
-      ✋
-    </motion.span>
-  );
   return (
     <header>
       <div className="flexbC h-[8vh]">
         <div className="w-1/2">
-          <h3 className="text-lg font-semibold capitalize xl:text-[15px] 3xl:text-[17px] textColor">
-            Welcome {username} <WavingHand />
-          </h3>
-          <p className="text-xs opacity-75 textColor">Here’s what’s happening with your store today.</p>
+          <HeadingTwo>{title}</HeadingTwo>
         </div>
-        <div className="flex justify-end items-center gap-5">
+        <div className="flex justify-end items-center gap-3">
           <div className="w-96">
             <SearchBox />
           </div>
-          <div className="flexbC gap-3">
-            <button className="w-7 h-7 2xl:w-9 2xl:h-9 3xl:w-12 3xl:h-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flexC ">
+          <div className="flexbC gap-2">
+            <button className="button !p-0 size-10 3xl:size-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flexC ">
               <CiStar className="text-textcolor text-lg 2xl:text-xl 3xl:text-2xl" />
             </button>
             <ThemeToggle />
-            <button className="relative w-7 h-7 2xl:w-9 2xl:h-9 3xl:w-12 3xl:h-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flexC ">
+            <button className="button !p-0 relative size-10 3xl:size-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flexC ">
               <IoIosNotificationsOutline className="text-textcolor text-lg 2xl:text-xl 3xl:text-2xl" />
-              <span className="bg-red-500 w-4 h-4 3xl:w-6 3xl:h-6 3xl:text-xs rounded-full text-[8px] flexC absolute -top-1.5 -right-2">10</span>
+              <span className="bg-red-500 w-4 h-4 3xl:w-6 3xl:h-6 3xl:text-xs rounded-full text-[8px] flexC absolute -top-0.5 -right-1">10</span>
             </button>
 
             <UserMenu user={user?.avatar} username={username} role={role} photo={photo} logoutUser={logoutUser} />
@@ -87,7 +62,7 @@ function UserMenu({ user, username, role, photo, logoutUser }) {
         <div className="flex items-center gap-1 cursor-pointer" onClick={() => setIsOpenDropdown(!isOpenDropdown)} aria-expanded={isOpenDropdown}>
           {user?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
             <div
-              className="font-semibold capitalize w-7 h-7 2xl:w-9 2xl:h-9 3xl:w-12 3xl:h-12 rounded-full flexC text-white text-xl"
+              className="font-semibold capitalize size-10 3xl:size-12 rounded-full flexC text-white text-xl"
               style={{
                 background: generateItemColor(username || "X"),
               }}
@@ -95,7 +70,7 @@ function UserMenu({ user, username, role, photo, logoutUser }) {
               {username?.slice(0, 1) ?? "?"}
             </div>
           ) : (
-            <button className="w-7 h-7 2xl:w-9 2xl:h-9 3xl:w-12 3xl:h-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flexC relative ">
+            <button className="size-10 3xl:size-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flexC relative ">
               <img src={photo} alt={user?.avatar?.publicId} className="w-full h-full object-cover rounded-full p-0.5" />
             </button>
           )}
@@ -164,4 +139,7 @@ ProfileList.propTypes = {
   icon: PropTypes.node.isRequired,
   text: PropTypes.string.isRequired,
   link: PropTypes.string.isRequired,
+};
+Header.propTypes = {
+  title: PropTypes.string.isRequired,
 };

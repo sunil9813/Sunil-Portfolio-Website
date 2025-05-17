@@ -11,7 +11,7 @@ const toggleFavorite = asyncHandler(async (req, res) => {
   }
 
   // Check if the resource type is valid
-  if (!["Posts", "Courses", "Blog", "Chapter"].includes(resourceType)) {
+  if (!["Project", "Courses", "Blog", "Chapter"].includes(resourceType)) {
     return res.status(422).json({ error: "Invalid resource type!" });
   }
 

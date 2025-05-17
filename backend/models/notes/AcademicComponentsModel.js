@@ -1,16 +1,4 @@
-const mongoose = require("mongoose");
-
-const universitySchema = new mongoose.Schema(
-  {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true, unique: true },
-    description: { type: String, required: true },
-    edate: { type: String, required: true },
-    location: { type: String, required: true },
-    logo: { type: Object, default: null },
-  },
-  { timestamps: true }
-);
+/* const mongoose = require("mongoose");
 
 const facultySchema = new mongoose.Schema(
   {
@@ -81,11 +69,11 @@ const chapterSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const UniversityModel = mongoose.model("University", universitySchema);
 const FacultyModel = mongoose.model("Faculty", facultySchema);
 const ProgramModel = mongoose.model("Program", programSchema);
 const SemesterModel = mongoose.model("Semester", semesterSchema);
 const SubjectModel = mongoose.model("Subject", subjectSchema);
 const ChapterModel = mongoose.model("Chapter", chapterSchema);
 
-module.exports = { UniversityModel, FacultyModel, ProgramModel, SemesterModel, SubjectModel, ChapterModel };
+module.exports = { FacultyModel, ProgramModel, SemesterModel, SubjectModel, ChapterModel };
+ */

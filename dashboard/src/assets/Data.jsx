@@ -68,6 +68,10 @@ export const menu = [
     icon: <BsImageAlt size={17} />,
     childrens: [
       {
+        title: "Overview",
+        path: "/overview-project",
+      },
+      {
         title: "projects",
         path: "/all-project",
       },

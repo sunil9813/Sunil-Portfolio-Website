@@ -18,7 +18,7 @@ export { FilterPage } from "@/pages/FilterPage";
 
 /* -----------  Common Design ----------- */
 export { PrimaryButton, TertiaryButton, GhostButton } from "@/components/customeUI/Button";
-export { HeadingTwo, InputLabel, InputTitle } from "@/components/customeUI/Title";
+export { HeadingTwo, HeadingThree, InputLabel, InputTitle } from "@/components/customeUI/Title";
 export { Wrapper, StickyHeader } from "@/components/customeUI/Wrapper";
 export { BreadcrumbsComponent } from "@/components/cards/Breadcrumbs";
 export { GlitterCards } from "@/components/cards/GlowCard";
@@ -42,7 +42,7 @@ export { Table } from "@/components/table/Table";
 
 /* ---- ##########  Pages ########## -----------*/
 export { Home } from "../pages/home/Home";
-export { Layout } from "../components/common/Layout";
+export { Layout, LayoutWithOutHeader } from "../components/common/Layout";
 
 /* -----------  Auth ----------- */
 export { ResetPassword } from "@/screens/auth/ResetPassword";

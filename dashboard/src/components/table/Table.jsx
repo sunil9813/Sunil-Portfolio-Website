@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Pagination } from "../Pagination";
 import { DateFormatter } from "../common/DateFormatter";
 import { generateItemColor, truncateText } from "@/utils";
+import { TertiaryButton } from "../customeUI/Button";
 
 export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, deleteFun, rowsPerPageNumber = 5, type, linktoupdate, handleVisibilityToggle, handleFeaturedToggle, hidden }) => {
   const navigate = useNavigate();
@@ -35,13 +36,13 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
   return (
     <>
       <section className="relative">
-        <div className="flex items-center gap-2 absolute -top-8 right-4 z-10">
-          <button className="button !w-auto !px-3 flex items-center gap-2" onClick={() => navigate(`/${linktocreate}`)}>
-            <FaPlus size={10} /> <span className="!text-xs">{btntext}</span>
-          </button>
+        <div className="flex items-center gap-2 absolute -top-7 right-4 z-10">
           <button className="button !w-auto !px-2" onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}>
             {viewMode === "table" ? <CiGrid2H size={15} className="text-black dark:text-white" /> : <CiGrid41 size={15} className="text-black dark:text-white" />}
           </button>
+          <TertiaryButton className="!w-auto !h-auto py-2 !px-5 flex items-center gap-2" onClick={() => navigate(`/${linktocreate}`)}>
+            <FaPlus size={10} /> <span className="!text-xs">{btntext}</span>
+          </TertiaryButton>
         </div>
         {viewMode === "table" ? (
           <div className="w-full">

@@ -18,7 +18,13 @@ const projectSchema = mongoose.Schema(
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     layout: { type: String, require: true },
     urllink: { type: String },
-    visibility: { type: String, enum: ["public", "private"], default: "private" },
+    visibility: { type: String, enum: ["public", "private", "scheduled"], default: "private" },
+    scheduledPublish: {
+      type: Date,
+      required: function () {
+        return this.visibility === "scheduled";
+      },
+    },
     featured: { type: Boolean, default: false },
     tags: [{ tag: { type: String, maxLength: 500, trim: true } }],
     // code that are use here

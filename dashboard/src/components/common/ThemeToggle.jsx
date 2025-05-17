@@ -11,7 +11,7 @@ export const ThemeToggle = () => {
   return (
     <motion.button
       onClick={() => dispatch(toggleTheme())}
-      className="w-7 h-7 2xl:w-9 2xl:h-9 3xl:w-12 3xl:h-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flex justify-center items-center"
+      className="button !p-0 size-10 3xl:size-12 bg-light-surface2 dark:bg-dark-highlight rounded-full flex justify-center items-center"
       whileTap={{ scale: 0.9 }}
       animate={{
         rotate: theme === "dark" ? 180 : 0,

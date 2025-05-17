@@ -81,13 +81,13 @@ const projectSlice = createSlice({
       state.message = "";
     },
     updateVisibilitySuccess(state, action) {
-      if (state.blog) {
-        state.blog.visibility = action.payload.visibility;
+      if (state.project) {
+        state.project.visibility = action.payload.visibility;
       }
     },
     updateFeaturedSuccess(state, action) {
-      if (state.blog) {
-        state.blog.featured = action.payload.featured;
+      if (state.project) {
+        state.project.featured = action.payload.featured;
       }
     },
   },

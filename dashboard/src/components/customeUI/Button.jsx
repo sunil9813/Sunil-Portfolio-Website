@@ -1,5 +1,16 @@
 import PropTypes from "prop-types";
 
+export const ActionButton = ({ children, onClick, className, type }) => {
+  return (
+    <button
+      className={`rounded-full inline-block text-center textSizeSm text-white h-10 3xl:h-12 px-7 bg-action cursor-pointer shadow-[0px_4px_20px_rgba(1,_122,_255,_0.3),_inset_0px_1px_0px_rgba(255,_255,_255,_0.4),_inset_0px_-4px_13px_rgba(0,_0,_0,_0.2)] ${className}`}
+      onClick={onClick}
+      type={type}
+    >
+      {children}
+    </button>
+  );
+};
 export const GhostButton = ({ children, onClick, className, type }) => {
   return (
     <button className={`button !px-7 h-10 3xl:h-12 ${className}`} onClick={onClick} type={type}>
@@ -67,6 +78,12 @@ SecondaryButton.propTypes = {
   onClick: PropTypes.any,
 };
 TertiaryButton.propTypes = {
+  children: PropTypes.any,
+  className: PropTypes.any,
+  onClick: PropTypes.any,
+  type: PropTypes.any,
+};
+ActionButton.propTypes = {
   children: PropTypes.any,
   className: PropTypes.any,
   onClick: PropTypes.any,

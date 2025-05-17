@@ -7,6 +7,13 @@ export const HeadingTwo = ({ children, className }) => {
     </>
   );
 };
+export const HeadingThree = ({ children, className }) => {
+  return (
+    <>
+      <h3 className={`capitalize text-lg 3xl:text-xl font-[500] textColor ${className}`}>{children}</h3>
+    </>
+  );
+};
 export const InputTitle = ({ children, className }) => {
   return (
     <>
@@ -22,6 +29,10 @@ export const InputLabel = ({ children, className }) => {
   );
 };
 
+HeadingThree.propTypes = {
+  children: PropTypes.any,
+  className: PropTypes.any,
+};
 HeadingTwo.propTypes = {
   children: PropTypes.any,
   className: PropTypes.any,

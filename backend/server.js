@@ -12,8 +12,11 @@ const projectRoute = require("./routes/Project/ProjectRoute");
 const favoriteRoute = require("./routes/common/favoriteRoute");
 const categoryRoute = require("./routes/common/categoryRoute");
 const contactRoute = require("./routes/ContactRoute");
-const academicComponentsRoute = require("./routes/notes/AcademicComponentsRoute");
 const commentRoute = require("./routes/common/CommentRoute");
+
+/*  -------  AcademicComponentsRoute ----------- */
+const UniversityRoute = require("./routes/educationRoute/universityRoute");
+/*  -------  End AcademicComponentsRoute ----------- */
 
 // Notes routes
 const coursesRoute = require("./routes/notes/CoursesRoute");
@@ -79,7 +82,6 @@ app.use("/api/v1/about/testimonial", testimonialRoute);
 
 //Setting routes
 app.use("/api/v1/setting", settingRoute);
-app.use("/api/v1/academic", academicComponentsRoute);
 app.use("/api/v1/tag", tagRoute);
 
 app.use("/api/v1/book", coursesRoute);
@@ -88,6 +90,10 @@ app.use("/api/v1/contact", contactRoute);
 app.use("/api/v1/price-limit", PriceLimitConfigRoute);
 app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/payment", PaymentRoute);
+
+/*  -------  AcademicComponentsRoute ----------- */
+app.use("/api/v1/university", UniversityRoute);
+/*  -------  End AcademicComponentsRoute ----------- */
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Photo Idol");

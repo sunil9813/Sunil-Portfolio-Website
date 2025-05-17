@@ -37,6 +37,7 @@ export default withMT({
         },
         stroke: "#282828",
         textcolor: "#727272",
+        action: "#007aff",
 
         sidebarbg: "#22242B",
         primarybg: "#1A1C23",

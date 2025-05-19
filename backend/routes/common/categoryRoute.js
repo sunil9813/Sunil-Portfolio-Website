@@ -1,9 +1,9 @@
 const express = require("express");
 const { protect, admin } = require("../../middleware/authMiddleware");
 const { createCategory, getAllCategory, getCategory, deleteCategory, updateCategory, getCategoriesByType } = require("../../controllers/common/categoryControllers");
-const { upload } = require("../../utils/uploadImg");
 const validation = require("../../middleware/Validation");
 const { createCategoryValidation } = require("../../utils/validations/PostsValidation");
+const { upload } = require("../../middleware/imageMiddleware");
 const router = express.Router();
 
 router.get("/", getAllCategory);

@@ -91,6 +91,7 @@ const getCategoriesByType = asyncHandler(async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 const getCategory = asyncHandler(async (req, res) => {
   let categoryId;
 

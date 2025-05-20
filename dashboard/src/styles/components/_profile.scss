@@ -1,0 +1,50 @@
+.profile-card-one {
+  position: relative;
+  z-index: 2;
+  .line1 {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    //  background-image: radial-gradient(circle closest-corner at 50% 100%, #64887a, rgba(20, 20, 20, 0) 70%), radial-gradient(circle closest-corner at 50% 0, #64887a, rgba(20, 20, 20, 0) 70%);
+    .dark & {
+      background-image: radial-gradient(circle closest-corner at 50% 100%, #64887a, rgba(20, 20, 20, 0) 70%);
+      filter: blur(10px);
+    }
+    z-index: -1;
+  }
+
+  .line2 {
+    position: absolute;
+    width: 180px;
+    height: 1px;
+    background-color: #4a7967;
+    .dark & {
+      background-color: #a5e0ca;
+    }
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+  }
+
+  .line3 {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    background-image: radial-gradient(circle closest-corner at 50% 0%, #b1dfcd, rgba(20, 20, 20, 0) 80%);
+    filter: blur(40px);
+    .dark & {
+      background-image: radial-gradient(circle closest-corner at 50% 0%, #64887a, rgba(20, 20, 20, 0) 80%);
+    }
+    z-index: -1;
+  }
+}

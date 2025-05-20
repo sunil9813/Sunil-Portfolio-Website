@@ -1,0 +1,53 @@
+@use "../abstracts/variables" as *; // Import variables with 'as *' to use them directly
+@import url("https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&display=swap");
+@import url(https://fonts.googleapis.com/css?family=Poppins:100,100italic,200,200italic,300,300italic,regular,italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic);
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  color: $text-white;
+  background: $background-color;
+  font-family: $font-family-base;
+}
+/* input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  transition: background-color 5000s ease-in-out 0s;
+  -webkit-text-fill-color: inherit !important;
+} */
+
+textarea,
+input {
+  background: none;
+  outline: none;
+}
+
+.scroll-bar-none {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.scroll-bar-none::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+::-webkit-scrollbar {
+  width: 5px;
+  border-radius: 20px;
+}
+::-webkit-scrollbar-track {
+  background: radial-gradient(128px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+  border-radius: 20px;
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  background: radial-gradient(128px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+}
+.rubik-wet-paint-regular {
+  font-family: "Rubik Wet Paint", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}

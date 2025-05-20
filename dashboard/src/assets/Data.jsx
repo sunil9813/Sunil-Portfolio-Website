@@ -1,0 +1,163 @@
+import { FaRegUser, FaUsers } from "react-icons/fa";
+import { AiFillSetting, AiOutlineUser } from "react-icons/ai";
+import { RiDashboardFill } from "react-icons/ri";
+import { BiCategoryAlt, BiImage } from "react-icons/bi";
+import { BsImageAlt } from "react-icons/bs";
+import { MdOutlineCategory } from "react-icons/md";
+import { CiImageOn } from "react-icons/ci";
+
+export const menu = [
+  {
+    title: "Dashboard",
+    icon: <RiDashboardFill size={17} />,
+    path: "/",
+  },
+  /*  {
+    title: "Users",
+    icon: <FaUsers size={17} />,
+    path: "/users",
+  }, */
+  {
+    title: "Users",
+    icon: <FaUsers size={17} />,
+    childrens: [
+      {
+        title: "all user",
+        path: "/all-user",
+      },
+      {
+        title: "create user",
+        path: "/create-user",
+      },
+    ],
+  },
+  {
+    title: "Category",
+    icon: <MdOutlineCategory size={17} />,
+    childrens: [
+      {
+        title: "all category",
+        path: "/all-category",
+      },
+      {
+        title: "create category",
+        path: "/create-category",
+      },
+    ],
+  },
+  {
+    title: "Blog",
+    icon: <CiImageOn size={17} />,
+    childrens: [
+      {
+        title: "all blog",
+        path: "/all-blog",
+      },
+      {
+        title: "Your Creation",
+        path: "/loginuser-blog",
+      },
+      {
+        title: "create blog",
+        path: "/create-blog",
+      },
+    ],
+  },
+  {
+    title: "project",
+    icon: <BsImageAlt size={17} />,
+    childrens: [
+      {
+        title: "Overview",
+        path: "/overview-project",
+      },
+      {
+        title: "projects",
+        path: "/all-project",
+      },
+      {
+        title: "Your Creation",
+        path: "/users-create-project",
+      },
+      {
+        title: "create project",
+        path: "/create-project",
+      },
+    ],
+  },
+
+  {
+    title: "Setting",
+    icon: <AiFillSetting size={17} />,
+    childrens: [
+      {
+        title: "Assets Limit",
+        path: "/assets-limit",
+      },
+    ],
+  },
+  {
+    title: "Profile",
+    icon: <FaRegUser size={17} />,
+    childrens: [
+      {
+        title: "Profile",
+        path: "/profile",
+      },
+      {
+        title: "Favorite",
+        path: "/favorite",
+      },
+      {
+        title: "Change Password",
+        path: "/change-password",
+      },
+    ],
+  },
+];
+
+export const menus = [
+  {
+    title: "Dashboard",
+    icon: <RiDashboardFill size={17} />,
+    path: "/",
+  },
+  {
+    title: "Users",
+    icon: <FaUsers size={17} />,
+    path: "/users",
+  },
+  {
+    title: "project",
+    icon: <BsImageAlt size={17} />,
+    childrens: [
+      {
+        title: "projects",
+        path: "/projects",
+        icon: <BiCategoryAlt size={17} />,
+      },
+      {
+        title: "category",
+        path: "/category",
+        icon: <BiCategoryAlt size={17} />,
+      },
+    ],
+  },
+
+  {
+    title: "Setting",
+    icon: <AiFillSetting size={17} />,
+    childrens: [
+      {
+        title: "Profile",
+        path: "/profile",
+        icon: <AiOutlineUser size={17} />,
+      },
+      {
+        title: "Assets Limit",
+        path: "/assets-limit",
+        icon: <BiImage size={17} />,
+      },
+    ],
+  },
+];

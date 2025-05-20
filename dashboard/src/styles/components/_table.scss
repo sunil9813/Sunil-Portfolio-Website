@@ -1,0 +1,29 @@
+.common-table {
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+
+  /*  &::after {
+    content: "";
+    position: absolute;
+    bottom: -40%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(228px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+    filter: blur(100px);
+    z-index: -2;
+    opacity: 0.3;
+  }
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: -20%;
+    left: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, #f64f59 0%, #c471ed 50%, #12c2e9 60%);
+    filter: blur(150px);
+    z-index: -1;
+  } */
+}

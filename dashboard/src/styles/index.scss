@@ -1,0 +1,37 @@
+@use "./abstracts/functions";
+@use "./abstracts/mixins";
+@use "./abstracts/variables" as *;
+@use "./base/base";
+@use "base/reset";
+@use "./base/typography";
+@use "./components/logo";
+@use "./components/buttons";
+@use "./components/input";
+@use "./components/card";
+@use "./components/table";
+@use "./components/navbar";
+@use "./components/form";
+@use "./components/comment";
+@use "./components/profile";
+@use "./components/bentoCard";
+@use "./layout/footer";
+@use "./layout/grid";
+@use "./layout/header";
+@use "./layout/sidebar";
+@use "./pages/auth";
+@use "./pages/home";
+@use "./vendors/slick";
+@use "./vendors/react-masonry-css";
+@use "./vendors/skeleton";
+@use "./editor/buttonWithTooltip";
+@use "./vendors/react-datepicker";
+
+.reactjs-tiptap-editor .richtext-bg-background {
+  .dark & {
+    background-color: #22242b !important;
+  }
+}
+.richtext-outline-1,
+.richtext-outline {
+  outline: none !important;
+}

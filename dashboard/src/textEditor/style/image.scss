@@ -1,0 +1,48 @@
+.custom-image {
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.custom-image-selected img {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  position: relative !important;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px !important;
+  height: 10px !important;
+  background-color: #3b82f6 !important;
+  border: 1px solid #ffffff !important;
+  z-index: 20;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.resize-handle.top-left {
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.resize-handle.top-right {
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+
+.resize-handle.bottom-left {
+  bottom: 0;
+  left: 0;
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+
+.resize-handle.bottom-right {
+  bottom: 0;
+  right: 0;
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}

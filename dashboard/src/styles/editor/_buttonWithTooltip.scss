@@ -1,0 +1,31 @@
+@keyframes tooltipEnter {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-80%);
+    scale: 0.9;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-100%);
+    scale: 1;
+  }
+}
+
+@keyframes arrowEnter {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-60%) rotate(45deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  }
+}
+
+.animate-tooltip-enter {
+  animation: tooltipEnter 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-arrow-enter {
+  animation: arrowEnter 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards 0.1s;
+}

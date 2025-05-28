@@ -11,5 +11,5 @@ router.get("/", getAllUniversity);
 router.get("/details/:slug", getUniversity);
 router.delete("/", protect, admin, deleteUniversity);
 router.delete("/:id", protect, admin, deleteUniversity);
-router.patch("/:id", protect, admin, upload.single("logo"), updateUniversity);
+router.patch("/:slug", protect, admin, upload.single("logo"), updateUniversity);
 module.exports = router;

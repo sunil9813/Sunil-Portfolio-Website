@@ -101,7 +101,7 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                                     )}
                                     <div className="flex flex-col">
                                       <span className={spanClass}>{item?.user?.name || item?.name}</span>
-                                      {hidden && <span className="font-normal opacity-70 text-xs 3xl:text-sm">{item?.user?.email || item?.email}</span>}
+                                      <span className="font-normal opacity-70 text-xs 3xl:text-sm">{item?.user?.email || item?.email}</span>
                                     </div>
                                   </div>
                                 </td>
@@ -251,6 +251,120 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
 
                                   <td className={classes}>
                                     <span className={`${spanClass} !uppercase`}>{item?.category?.title}</span>
+                                  </td>
+
+                                  <td className={classes}>
+                                    <Switch
+                                      className="h-full w-full checked:bg-deep-purple-500"
+                                      circleProps={{ className: "border-none" }}
+                                      defaultChecked={item?.visibility === "public"}
+                                      onChange={() => handleVisibilityToggle(item?._id, item?.visibility === "public" ? "private" : "public")}
+                                    />
+                                  </td>
+
+                                  <td className={classes}>
+                                    <Switch
+                                      className="h-full w-full checked:bg-deep-purple-500"
+                                      circleProps={{ className: "border-none" }}
+                                      defaultChecked={item?.featured === true}
+                                      onChange={() => handleFeaturedToggle(item?._id, !item?.featured)}
+                                    />
+                                  </td>
+                                </>
+                              )}
+
+                              {/* University List */}
+                              {type === "university" && (
+                                <>
+                                  <td className={classes}>
+                                    {/* <span className={spanClass}>{truncateText(item?.name)}</span> */}
+                                    <span className={spanClass}>{item?.name}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <button className="w-8 h-8 3xl:w-10 3xl:h-10 rounded-md">
+                                      <img src={item?.logo?.filePath} alt={item?.logo?.publicId} className="w-full h-full object-cover rounded-md" />
+                                    </button>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.edate}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{truncateText(item?.location, 30)}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    {/* <span className={spanClass}>{truncateText(item?.name)}</span> */}
+                                    <span className={spanClass}>{item?.type}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    {/* <span className={spanClass}>{truncateText(item?.name)}</span> */}
+                                    <NavLink to={item?.website} target="_blank" className={spanClass}>
+                                      Browse URL
+                                    </NavLink>
+                                  </td>
+                                </>
+                              )}
+
+                              {/* department List */}
+                              {type === "department" && (
+                                <>
+                                  <td className={classes}>
+                                    {/* <span className={spanClass}>{truncateText(item?.name)}</span> */}
+                                    <span className={spanClass}>{item?.name}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <button className="w-8 h-8 3xl:w-10 3xl:h-10 rounded-md">
+                                      <img src={item?.thumbnail?.filePath} alt={item?.thumbnail?.publicId} className="w-full h-full object-cover rounded-md" />
+                                    </button>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.university?.name}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.faculty?.name}</span>
+                                  </td>
+                                </>
+                              )}
+
+                              {/* Subject / Courses List */}
+                              {type === "course" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{truncateText(item?.name, 30)}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.accessType === "paid" ? `Paid` : "Free"}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    {!item?.thumbnail || !item?.thumbnail?.filePath ? (
+                                      <div className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
+                                    ) : (
+                                      <button className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md">
+                                        <img src={item.thumbnail.filePath} alt={item.thumbnail.publicId || "thumbnail"} className="w-full h-full object-cover rounded-md" />
+                                      </button>
+                                    )}
+                                  </td>
+
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-teal-400/20 text-teal-500 dark:bg-teal-300/20 dark:text-teal-300 rounded-full text-xs px-3 py-1">
+                                        {item?.numOfViews === 0 ? "0" : item?.numOfViews}
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  {/* number of likes  to do */}
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-yellow-400/20 text-yellow-800 dark:bg-yellow-300/20 dark:text-yellow-300 rounded-full text-xs px-3 py-1">
+                                        {/* {item?.likes?.length === 0 ? "0" : item?.likes?.length} */}
+                                        {item?.likesCount === 0 ? "0" : item?.likesCount}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-purple-400/20 text-purple-800 dark:bg-purple-300/20 dark:text-purple-300 rounded-full text-xs px-3 py-1">0{item?.ratings}</div>
+                                    </div>
                                   </td>
 
                                   <td className={classes}>

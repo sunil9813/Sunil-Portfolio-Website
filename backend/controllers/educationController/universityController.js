@@ -4,7 +4,7 @@ const cloudinary = require("cloudinary").v2;
 const slugify = require("slugify");
 
 const createUniversity = asyncHandler(async (req, res) => {
-  const { name, description, edate, location, website } = req.body;
+  const { name, description, edate, location, website, type, groupId } = req.body;
   const userId = req.user.id;
 
   // Generate a unique slug for the blog post
@@ -56,11 +56,13 @@ const createUniversity = asyncHandler(async (req, res) => {
   const data = await UniversityModel.create({
     user: userId,
     name: name,
+    groupId: groupId,
     description: description,
     edate: edate,
     website: website,
     slug: slug,
     location: location,
+    type: type,
     logo: fileData,
   });
 
@@ -135,12 +137,12 @@ const deleteUniversity = asyncHandler(async (req, res) => {
 });
 
 const updateUniversity = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { slug } = req.params;
   const { name, description, edate, location, website } = req.body;
 
   try {
     // Find the university by its ID
-    const universityToUpdate = await UniversityModel.findById(id);
+    const universityToUpdate = await UniversityModel.findOne({ slug });
 
     if (!universityToUpdate) {
       return res.status(404).json({ message: "University not found." });
@@ -156,14 +158,14 @@ const updateUniversity = asyncHandler(async (req, res) => {
         strict: true,
       });
 
-      let slug = originalSlug;
+      let newSlug = originalSlug;
       let suffix = 1;
 
-      while (await UniversityModel.findOne({ slug, _id: { $ne: id } })) {
-        slug = `${suffix}-${originalSlug}`;
+      while (await UniversityModel.findOne({ slug: newSlug, _id: { $ne: universityToUpdate._id } })) {
+        newSlug = `${suffix}-${originalSlug}`;
         suffix++;
       }
-      universityToUpdate.slug = slug;
+      universityToUpdate.slug = newSlug;
     }
 
     if (description) universityToUpdate.description = description;

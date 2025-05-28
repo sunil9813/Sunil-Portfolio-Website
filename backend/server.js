@@ -16,11 +16,11 @@ const commentRoute = require("./routes/common/CommentRoute");
 
 /*  -------  AcademicComponentsRoute ----------- */
 const UniversityRoute = require("./routes/educationRoute/universityRoute");
+const FacultyRoute = require("./routes/educationRoute/FacultyRoute");
+const ProgramRoute = require("./routes/educationRoute/ProgramRoute");
+const SubjectRoute = require("./routes/educationRoute/SubjectRoute");
+const ChapterRoute = require("./routes/educationRoute/ChapterRoute");
 /*  -------  End AcademicComponentsRoute ----------- */
-
-// Notes routes
-const coursesRoute = require("./routes/notes/CoursesRoute");
-//End Notes routes
 
 // About routes
 const introRoute = require("./routes/about/IntroductionRoute");
@@ -32,7 +32,6 @@ const testimonialRoute = require("./routes/about/TestimonialRoute");
 // Setting routes
 const settingRoute = require("./routes/settings/SettingRoute");
 const AssetLimitConfigRoute = require("./routes/Project/AssetLimitConfigRoute");
-const tagRoute = require("./routes/common/updateTags");
 const blogRoute = require("./routes/BlogRoute");
 const likeRoute = require("./routes/common/likeRoute");
 // End Setting routes
@@ -82,9 +81,7 @@ app.use("/api/v1/about/testimonial", testimonialRoute);
 
 //Setting routes
 app.use("/api/v1/setting", settingRoute);
-app.use("/api/v1/tag", tagRoute);
 
-app.use("/api/v1/book", coursesRoute);
 app.use("/api/v1/contact", contactRoute);
 
 app.use("/api/v1/price-limit", PriceLimitConfigRoute);
@@ -93,6 +90,10 @@ app.use("/api/v1/payment", PaymentRoute);
 
 /*  -------  AcademicComponentsRoute ----------- */
 app.use("/api/v1/university", UniversityRoute);
+app.use("/api/v1/faculty", FacultyRoute);
+app.use("/api/v1/program", ProgramRoute);
+app.use("/api/v1/subject", SubjectRoute);
+app.use("/api/v1/chapter", ChapterRoute);
 /*  -------  End AcademicComponentsRoute ----------- */
 
 app.get("/", (req, res) => {

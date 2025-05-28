@@ -1,3 +1,5 @@
+export { UniversityDropDown, FacultyDropDown } from "@/screens/universityStructure/StructureAcademicDropDown";
+
 export { AssetConfigure } from "@/pages/setting/AssetConfigure";
 
 export { CreateProject } from "@/screens/project/CreateProject";
@@ -68,4 +70,28 @@ export { BlogDetails } from "@/screens/blog/BlogDetails";
 export { BlogList } from "@/screens/blog/BlogList";
 export { CreateBlog } from "@/screens/blog/CreateBlog";
 export { UpdateBlog } from "@/screens/blog/UpdateBlog";
+
+/* -----------  University ----------- */
+export { CreateUniversity } from "@/screens/universityStructure/university/CreateUniversity";
+export { OverviewUniversity } from "@/screens/universityStructure/university/OverviewUniversity";
+export { UniversityDetails } from "@/screens/universityStructure/university/UniversityDetails";
+export { UpdateUniversity } from "@/screens/universityStructure/university/UpdateUniversity";
+
+/* -----------  faculties ----------- */
+export { CreateFaculty } from "@/screens/universityStructure/faculties/CreateFaculty";
+export { FacultyOverview } from "@/screens/universityStructure/faculties/FacultyOverview";
+export { ViewFaculty } from "@/screens/universityStructure/faculties/ViewFaculty";
+
+/* -----------  programs ----------- */
+export { CreateProgram } from "@/screens/universityStructure/programs/CreateProgram";
+export { OverviewProgram } from "@/screens/universityStructure/programs/OverviewProgram";
+export { UpdateProgram } from "@/screens/universityStructure/programs/UpdateProgram";
+export { ViewProgram } from "@/screens/universityStructure/programs/ViewProgram";
+
+/* -----------  Courses ----------- */
+export { CreateCourse } from "@/screens/universityStructure/courses/CreateCourse";
+export { CourseDetails } from "@/screens/universityStructure/courses/CourseDetails";
+export { CourseList } from "@/screens/universityStructure/courses/CourseList";
+export { UpdateCourse } from "@/screens/universityStructure/courses/UpdateCourse";
+
 /* ---- ##########  Pages ########## -----------*/

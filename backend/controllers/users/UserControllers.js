@@ -11,7 +11,7 @@ const { sendVerificationMail, sendForgotPassworLink, sendPasswordResetSuccessEma
 const { OAuth2Client } = require("google-auth-library");
 const UserModel = require("../../models/users/UserModel");
 const BlogModel = require("../../models/BlogModel");
-const CoursesModel = require("../../models/notes/CoursesModel");
+const CoursesModel = require("../../models/educationModel/SubjectModel");
 const ProjectModel = require("../../models/project/ProjectModel");
 const { default: mongoose } = require("mongoose");
 const SocialMediaModel = require("../../models/users/SocialMediaModel");

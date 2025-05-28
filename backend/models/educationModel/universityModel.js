@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// eg : TU,PU,KU
 const UniversitySchema = new mongoose.Schema(
   {
     user: {
@@ -7,6 +8,7 @@ const UniversitySchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    groupId: { type: String },
     name: { type: String, required: true, unique: true },
     slug: {
       type: String,
@@ -16,6 +18,11 @@ const UniversitySchema = new mongoose.Schema(
     edate: { type: String, required: true },
     location: { type: String, required: true },
     website: { type: String, trim: true },
+    type: {
+      type: String,
+      enum: ["Public", "Private", "Autonomous"],
+      default: "Public",
+    },
     logo: {
       type: Object,
       required: true,

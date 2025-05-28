@@ -1,6 +1,6 @@
 const express = require("express");
 const { protect } = require("../middleware/authMiddleware");
-const { getAllImages, uploadImageToEditorDes, updateImage, deleteImage } = require("../controllers/cloudinaryImgUploadCtrForEditor");
+const { getAllImages, uploadImageToEditorDes, updateImage, deleteImage } = require("../controllers/CloudinaryImgUploadCtrForEditor");
 const { upload, uploadFile } = require("../utils/uploadImg");
 
 const router = express.Router();

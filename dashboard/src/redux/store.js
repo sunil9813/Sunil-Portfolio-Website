@@ -10,6 +10,10 @@ import favoriteReducer from "./slices/common/favoriteSlice";
 import themeReducer from "./slices/themeSlice";
 import projectReducer from "./slices/projectSlice";
 import assetLimitReducer from "./slices/settings/AssestLimitSlice";
+import universityReducer from "./slices/universityStructure/universitySlice";
+import facultyReducer from "./slices/universityStructure/facultySlice";
+import programReducer from "./slices/universityStructure/programSlice";
+import courseReducer from "./slices/universityStructure/courseSlice";
 
 export const store = configureStore({
   reducer: {
@@ -24,5 +28,9 @@ export const store = configureStore({
     favorite: favoriteReducer,
     project: projectReducer,
     assetlimit: assetLimitReducer,
+    university: universityReducer,
+    faculty: facultyReducer,
+    program: programReducer,
+    course: courseReducer,
   },
 });

@@ -1,10 +1,12 @@
-import { FaRegUser, FaUsers } from "react-icons/fa";
+import { FaRegUser, FaUniversity, FaUsers } from "react-icons/fa";
 import { AiFillSetting, AiOutlineUser } from "react-icons/ai";
 import { RiDashboardFill } from "react-icons/ri";
 import { BiCategoryAlt, BiImage } from "react-icons/bi";
 import { BsImageAlt } from "react-icons/bs";
 import { MdOutlineCategory } from "react-icons/md";
 import { CiImageOn } from "react-icons/ci";
+import { PiBooksLight } from "react-icons/pi";
+import { GiBookshelf } from "react-icons/gi";
 
 export const menu = [
   {
@@ -82,6 +84,54 @@ export const menu = [
       {
         title: "create project",
         path: "/create-project",
+      },
+    ],
+  },
+
+  {
+    title: "University",
+    icon: <FaUniversity size={17} />,
+    childrens: [
+      {
+        title: "Overview",
+        path: "/all-university",
+      },
+      {
+        title: "Create",
+        path: "/create-university",
+      },
+      {
+        title: "Faculty",
+        path: "/all-faculty",
+      },
+    ],
+  },
+
+  {
+    title: "Program",
+    icon: <PiBooksLight size={17} />,
+    childrens: [
+      {
+        title: "Overview",
+        path: "/all-program",
+      },
+      {
+        title: "Create program",
+        path: "/create-program",
+      },
+    ],
+  },
+  {
+    title: "courses",
+    icon: <GiBookshelf size={17} />,
+    childrens: [
+      {
+        title: "Overview",
+        path: "/all-courses",
+      },
+      {
+        title: "Create courses",
+        path: "/create-courses",
       },
     ],
   },

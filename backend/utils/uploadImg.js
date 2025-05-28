@@ -7,24 +7,23 @@ const storage = multer.memoryStorage(); // for multiple filed image upload
 // File filter to enforce file type and size limits based on field name
 function fileFilter(req, file, cb) {
   const imageMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
-
-  if (file.fieldname === "assets" || file.fieldname === "thumbnail" || file.fieldname === "logo") {
-    // Restrict assets and thumbnail to images (10MB limit)
+  if (file.fieldname === "thumbnail") {
     if (!imageMimeTypes.includes(file.mimetype)) {
-      return cb(new Error("Invalid file type for assets/thumbnail. Supported types are jpg, png, and jpeg."), false);
+      return cb(new Error("Invalid file type for thumbnail. Supported types are jpg, png, and jpeg."), false);
     }
     if (file.size > 10 * 1024 * 1024) {
-      return cb(new Error(`File ${file.originalname} exceeds 10MB limit for ${file.fieldname}.`), false);
+      return cb(new Error(`File ${file.originalname} exceeds 10MB limit for thumbnail.`), false);
     }
     cb(null, true);
-  } else if (file.fieldname === "resourceFileUpload") {
-    // Allow any file type for resourceFileUpload (100MB limit)
-    if (file.size > 100 * 1024 * 1024) {
-      return cb(new Error(`File ${file.originalname} exceeds 100MB limit for resourceFileUpload.`), false);
+  } else if (file.fieldname === "resourceFile") {
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Resource file must be a PDF."), false);
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return cb(new Error(`File ${file.originalname} exceeds 5MB limit for resourceFile.`), false);
     }
     cb(null, true);
   } else {
-    // Reject unexpected fields
     cb(new Error(`Unexpected field: ${file.fieldname}`), false);
   }
 }
@@ -37,6 +36,7 @@ const storageSingleFile = multer.diskStorage({
     cb(null, new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname); // 23/08/2022
   },
 });
+
 function fileFilterSingleFile(req, file, cb) {
   if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg") {
     cb(null, true);
@@ -73,14 +73,25 @@ const getUploadAssetsandThumbnail = async () => {
     throw new Error("Failed to fetch asset limit configuration: " + error.message);
   }
 };
-
-const uploadTestimonial = multer({ storage });
-const uploadAvatarandProjectDoc = uploadTestimonial.fields([
-  { name: "projectDoc", maxCount: 1 },
-  { name: "avatar", maxCount: 1 },
-]);
-
 /* ---------------- End Project ---------------- */
+
+/* ---------------- Courses / Subject ---------------- */
+const getUploadFileandThumbnail = async () => {
+  try {
+    const uploadCourse = multer({
+      storage,
+      fileFilter,
+    });
+
+    return uploadCourse.fields([
+      { name: "thumbnail", maxCount: 1 },
+      { name: "resourceFile", maxCount: 1 },
+    ]);
+  } catch (error) {
+    throw new Error("Failed to configure upload middleware: " + error.message);
+  }
+};
+/* ---------------- End Courses / Subject  ---------------- */
 
 /* ---------------- Chapter ---------------- */
 const uploadChapter = multer({ storage });
@@ -90,4 +101,10 @@ const uploadCoverandMedia = uploadChapter.fields([
 ]);
 /* ---------------- End Chapter ---------------- */
 
-module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, uploadAvatarandProjectDoc, uploadCoverandMedia };
+const uploadTestimonial = multer({ storage });
+const uploadAvatarandProjectDoc = uploadTestimonial.fields([
+  { name: "projectDoc", maxCount: 1 },
+  { name: "avatar", maxCount: 1 },
+]);
+
+module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, getUploadFileandThumbnail, uploadAvatarandProjectDoc, uploadCoverandMedia };

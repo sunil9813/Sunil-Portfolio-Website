@@ -28,6 +28,18 @@ import {
   ViewUser,
   AssetConfigure,
   LayoutWithOutHeader,
+  CreateUniversity,
+  OverviewUniversity,
+  UniversityDetails,
+  FacultyOverview,
+  OverviewProgram,
+  UpdateProgram,
+  CreateProgram,
+  ViewProgram,
+  UpdateUniversity,
+  CreateCourse,
+  CourseList,
+  CourseDetails,
 } from "./utils/Router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -258,6 +270,121 @@ function App() {
       errorElement: <ErrorPage />,
     },
 
+    // University Routes
+
+    {
+      path: "/all-university",
+      element: (
+        <Layout title="Manage University">
+          <OverviewUniversity />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/create-university",
+      element: (
+        <LayoutWithOutHeader>
+          <CreateUniversity />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/view-university/:slug",
+      element: (
+        <Layout title="details information">
+          <UniversityDetails />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/update-university/:slug",
+      element: (
+        <LayoutWithOutHeader>
+          <UpdateUniversity />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+
+    // Faculty Route
+    {
+      path: "/all-faculty",
+      element: (
+        <Layout title="Overview">
+          <FacultyOverview />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    // Program Route
+    {
+      path: "/all-program",
+      element: (
+        <Layout title="Overview">
+          <OverviewProgram />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/create-program",
+      element: (
+        <LayoutWithOutHeader>
+          <CreateProgram />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/update-program/:slug",
+      element: (
+        <LayoutWithOutHeader>
+          <UpdateProgram />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/view-program/:slug",
+      element: (
+        <Layout title="details information">
+          <ViewProgram />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+
+    // Courses Route
+    {
+      path: "/create-courses",
+      element: (
+        <LayoutWithOutHeader>
+          <CreateCourse />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/all-courses",
+      element: (
+        <Layout title="Overview">
+          <CourseList />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/view-course/:slug",
+      element: (
+        <Layout title="Course Details">
+          <CourseDetails />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
     {
       path: "/filter",
       element: (

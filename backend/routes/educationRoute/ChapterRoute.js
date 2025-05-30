@@ -2,9 +2,20 @@ const express = require("express");
 const { protect, admin } = require("../../middleware/authMiddleware");
 const { upload } = require("../../middleware/imageMiddleware");
 const { createChapter, getAllChapter, getChapter, deleteChapter } = require("../../controllers/educationController/ChapterController");
+const { getUploadVideoandThumbnail } = require("../../utils/uploadImg");
 const router = express.Router();
 
-router.post("/", protect, admin, upload.single("thumbnail"), createChapter);
+// Async wrapper for dynamic Project upload middleware
+const uploadVideoandThumbnail = async (req, res, next) => {
+  try {
+    const uploadMiddleware = await getUploadVideoandThumbnail();
+    uploadMiddleware(req, res, next);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to initialize upload middleware: ${error.message}` });
+  }
+};
+
+router.post("/", protect, uploadVideoandThumbnail, createChapter);
 router.get("/", getAllChapter);
 router.get("/details/:slug", getChapter);
 router.delete("/", protect, admin, deleteChapter);

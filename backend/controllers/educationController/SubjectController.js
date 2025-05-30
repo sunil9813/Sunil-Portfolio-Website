@@ -284,6 +284,31 @@ const getAllSubject = asyncHandler(async (req, res) => {
   }
 });
 
+const getUserSubjects = asyncHandler(async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const subjects = await SubjectModel.find({ user: userId }).sort("-createdAt").populate({
+      path: "user",
+      select: "avatar name email",
+    });
+
+    if (!subjects || subjects.length === 0) {
+      res.status(404);
+      throw new Error("No subjects found for this user.");
+    }
+
+    res.status(200).json({
+      success: true,
+      total: subjects.length,
+      subjects,
+    });
+  } catch (err) {
+    res.status(err.statusCode || 500);
+    throw new Error(err.message || "Failed to fetch user's subjects.");
+  }
+});
+
 const getSubject = asyncHandler(async (req, res) => {
   const { slug } = req.params;
 
@@ -387,6 +412,40 @@ const deleteSubject = asyncHandler(async (req, res) => {
       error: "Failed to delete subject from database.",
       details: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
+  }
+});
+
+const getChaptersBySubjectSlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  try {
+    // Step 1: Find the subject by slug
+    const subject = await SubjectModel.findOne({ slug });
+
+    if (!subject) {
+      res.status(404);
+      throw new Error("Subject not found");
+    }
+
+    const subjectData = {
+      name: subject.name,
+      logo: subject?.thumbnail,
+    };
+    // Step 2: Find chapters with that subject
+    const chapters = await ChapterModel.find({ subject: subject._id }).sort({ createdAt: 1 }).populate({
+      path: "user",
+      select: "avatar name email",
+    });
+
+    res.status(200).json({
+      success: true,
+      total: chapters.length,
+      subject: subjectData,
+      chapters,
+    });
+  } catch (err) {
+    res.status(err.statusCode || 500);
+    throw new Error(err.message || "Failed to fetch chapters for the subject.");
   }
 });
 
@@ -691,4 +750,6 @@ module.exports = {
   getAllSubject,
   getSubject,
   deleteSubject,
+  getUserSubjects,
+  getChaptersBySubjectSlug,
 };

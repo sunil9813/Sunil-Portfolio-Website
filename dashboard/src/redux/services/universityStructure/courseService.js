@@ -13,6 +13,10 @@ const getAllCourse = async () => {
   const response = await axios.get(API_URL);
   return response.data;
 };
+const getUserCourses = async () => {
+  const response = await axios.get(`${API_URL}my-subjects`);
+  return response.data;
+};
 const getCourse = async (slug) => {
   const response = await axios.get(`${API_URL}details/${slug}`);
   return response.data;
@@ -24,6 +28,10 @@ const createCourse = async (formdata) => {
 const deleteCourse = async (subjectId) => {
   const response = await axios.delete(API_URL, { data: { id: subjectId } });
   return response.data.message;
+};
+const getChaptersBySubjectSlug = async (slug) => {
+  const response = await axios.get(`${API_URL}${slug}/chapters`);
+  return response.data;
 };
 
 const updateCourse = async ({ slug, formData }) => {
@@ -37,6 +45,8 @@ const courseService = {
   createCourse,
   deleteCourse,
   updateCourse,
+  getUserCourses,
+  getChaptersBySubjectSlug,
 };
 
 export default courseService;

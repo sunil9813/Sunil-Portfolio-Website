@@ -129,7 +129,7 @@ export const RichTextRenderer = React.memo(({ content }) => {
 
   return (
     <div className="tiptap" ref={contentRef}>
-      <div className="prose prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full text-white">{parsedContent}</div>
+      <div className="prose prose-sm focus:outline-none prose-invert max-w-full mx-auto h-full text-white">{parsedContent}</div>
     </div>
   );
 });

@@ -94,11 +94,71 @@ const getUploadFileandThumbnail = async () => {
 /* ---------------- End Courses / Subject  ---------------- */
 
 /* ---------------- Chapter ---------------- */
-const uploadChapter = multer({ storage });
-const uploadCoverandMedia = uploadChapter.fields([
-  { name: "cover", maxCount: 1 },
-  { name: "media", maxCount: 1 },
-]);
+const getUploadVideoandThumbnail = async () => {
+  try {
+    const uploadCourse = multer({
+      storage,
+      fileFilter: (req, file, cb) => {
+        // Configuration for different file types
+        const fileConfig = {
+          thumbnail: {
+            mimeTypes: ["image/png", "image/jpg", "image/jpeg", "image/webp"],
+            maxSize: 2 * 1024 * 1024, // 2MB
+            error: {
+              type: "Thumbnail must be an image (PNG, JPG, JPEG, WEBP)",
+              size: "Thumbnail exceeds maximum size of 10MB",
+            },
+          },
+          video: {
+            mimeTypes: [
+              "video/mp4",
+              "video/quicktime", // mov
+              "video/x-msvideo", // avi
+              "video/x-matroska", // mkv
+              "video/webm",
+              "video/mpeg",
+            ],
+            maxSize: 10 * 1024 * 1024 * 1024, // 10GB
+            error: {
+              type: "Video must be MP4, MOV, AVI, MKV, WEBM, or MPEG format",
+              size: "Video exceeds maximum size of 10GB",
+            },
+          },
+        };
+
+        // Check if field is valid
+        if (!fileConfig[file.fieldname]) {
+          return cb(new Error(`Unexpected field: ${file.fieldname}. Only 'thumbnail' and 'video' are allowed.`), false);
+        }
+
+        const config = fileConfig[file.fieldname];
+
+        // Check MIME type
+        if (!config.mimeTypes.includes(file.mimetype)) {
+          return cb(new Error(config.error.type), false);
+        }
+
+        // Check file size
+        if (file.size > config.maxSize) {
+          return cb(new Error(config.error.size), false);
+        }
+
+        // All checks passed
+        cb(null, true);
+      },
+      limits: {
+        fileSize: 10 * 1024 * 1024 * 1024, // Global limit set to 10GB
+      },
+    });
+
+    return uploadCourse.fields([
+      { name: "thumbnail", maxCount: 1 },
+      { name: "video", maxCount: 1 },
+    ]);
+  } catch (error) {
+    throw new Error("Failed to configure upload middleware: " + error.message);
+  }
+};
 /* ---------------- End Chapter ---------------- */
 
 const uploadTestimonial = multer({ storage });
@@ -107,4 +167,4 @@ const uploadAvatarandProjectDoc = uploadTestimonial.fields([
   { name: "avatar", maxCount: 1 },
 ]);
 
-module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, getUploadFileandThumbnail, uploadAvatarandProjectDoc, uploadCoverandMedia };
+module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, getUploadFileandThumbnail, getUploadVideoandThumbnail, uploadAvatarandProjectDoc };

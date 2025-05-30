@@ -93,5 +93,12 @@ export { CreateCourse } from "@/screens/universityStructure/courses/CreateCourse
 export { CourseDetails } from "@/screens/universityStructure/courses/CourseDetails";
 export { CourseList } from "@/screens/universityStructure/courses/CourseList";
 export { UpdateCourse } from "@/screens/universityStructure/courses/UpdateCourse";
+export { CoursesWiseAllChapter } from "@/screens/universityStructure/courses/allchapter/CoursesWiseAllChapter";
+
+/* -----------  Chapter ----------- */
+export { ChapterDetails } from "@/screens/universityStructure/chapter/ChapterDetails";
+export { ChapterOverview } from "@/screens/universityStructure/chapter/ChapterOverview";
+export { CreateChapterr } from "@/screens/universityStructure/chapter/CreateChapterr";
+export { UpdateChapter } from "@/screens/universityStructure/chapter/UpdateChapter";
 
 /* ---- ##########  Pages ########## -----------*/

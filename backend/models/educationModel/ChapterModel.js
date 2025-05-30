@@ -5,12 +5,10 @@ const { mongoose } = require("mongoose");
 const subjectSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    university: { type: mongoose.Schema.Types.ObjectId, ref: "University" },
-    faculty: { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" },
-    program: { type: mongoose.Schema.Types.ObjectId, ref: "Program" },
     subject: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: true },
 
-    title: { type: String, required: true, trim: true, maxLength: 250 },
+    title: { type: String, required: true, trim: true, maxLength: 100 }, // chapter name
+    metaTitle: { type: String, required: true, trim: true, maxLength: 250 }, // title
     slug: { type: String, unique: true },
     description: { type: String, require: true },
     metaDescription: { type: String, required: true, trim: true, maxLength: 160 },
@@ -18,16 +16,10 @@ const subjectSchema = new mongoose.Schema(
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     numOfViews: { type: Number, default: 0 },
 
-    visibility: { type: String, enum: ["public", "private", "scheduled"], default: "private" },
-    scheduledPublish: {
-      type: Date,
-      required: function () {
-        return this.visibility === "scheduled";
-      },
-    },
     tags: [{ tag: { type: String, maxLength: 500, trim: true } }],
 
     thumbnail: { type: Object, required: false },
+    video: { type: Object, required: false },
     ratings: { type: Number, default: 0 },
     reviews: [
       {

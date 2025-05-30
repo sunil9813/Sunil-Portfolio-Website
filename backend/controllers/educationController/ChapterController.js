@@ -3,14 +3,15 @@ const slugify = require("slugify");
 const cloudinary = require("cloudinary").v2;
 const Filter = require("bad-words");
 const ChapterModel = require("../../models/educationModel/ChapterModel");
+const SubjectModel = require("../../models/educationModel/SubjectModel");
 
 const createChapter = asyncHandler(async (req, res) => {
-  const { title, description, metaDescription, university, faculty, program, subject, groupId, visibility, scheduledPublish, tags } = req.body;
+  const { title, metaTitle, description, metaDescription, subject, groupId, tags } = req.body;
   const userId = req.user.id;
 
   // Profanity check
   const filter = new Filter();
-  const fieldsToCheck = [title, description, metaDescription];
+  const fieldsToCheck = [title, metaTitle, description, metaDescription];
   for (const field of fieldsToCheck) {
     if (field && filter.isProfane(field)) {
       return res.status(400).json({
@@ -19,66 +20,114 @@ const createChapter = asyncHandler(async (req, res) => {
     }
   }
 
-  // Validate scheduled publish if visibility is scheduled
-  if (visibility === "scheduled" && !scheduledPublish) {
-    return res.status(400).json({
-      error: "Scheduled publish date is required when visibility is set to scheduled",
+  // Required fields validation
+  if (!title) return res.status(400).json({ error: "Chapter title is required." });
+  if (!description) return res.status(400).json({ error: "Description is required." });
+  if (!metaDescription) return res.status(400).json({ error: "Meta description is required." });
+  if (!subject) return res.status(400).json({ error: "Subject is required." });
+  if (metaDescription.length > 160) {
+    return res.status(400).json({ error: "Meta description cannot exceed 160 characters." });
+  }
+
+  // Check if the subject exists and was created by the same user
+  const existingSubject = await SubjectModel.findOne({ _id: subject, user: userId });
+  if (!existingSubject) {
+    return res.status(403).json({
+      error: "You can only create chapters for subjects you created or the subject doesn't exist",
     });
   }
 
-  // Generate a unique slug for the blog post
-  const originalSlug = slugify(title, {
-    lower: true,
-    remove: /[*+~.()'"!:@]/g,
-    strict: true,
-  });
-
+  // Generate unique slug
+  const originalSlug = slugify(title, { lower: true, remove: /[*+~.()'"!:@]/g, strict: true });
   let slug = originalSlug;
   let suffix = 1;
-
   while (await ChapterModel.findOne({ slug })) {
     slug = `${suffix}-${originalSlug}`;
     suffix++;
   }
 
-  // ===== THUMBNAIL HANDLING (OPTIONAL) =====
-  let thumbnailData = null;
-
-  if (req.file) {
-    // Validate file type
-    const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg"];
-    if (!allowedImageTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({
-        error: "Invalid image format. Supported formats: JPEG, PNG, JPG.",
-      });
+  // Handle thumbnail (optional)
+  let thumbnailData = {};
+  if (req.files && req.files["thumbnail"] && req.files["thumbnail"][0]) {
+    const thumbnailFile = req.files["thumbnail"][0];
+    const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+    if (!allowedImageTypes.includes(thumbnailFile.mimetype)) {
+      return res.status(400).json({ error: "Invalid thumbnail format. Supported formats: JPEG, PNG, JPG, WEBP." });
+    }
+    if (thumbnailFile.size > 10 * 1024 * 1024) {
+      return res.status(400).json({ error: "Thumbnail size should not exceed 10 MB." });
     }
 
-    // Validate file size (2MB max)
-    if (req.file.size > 2 * 1024 * 1024) {
-      return res.status(400).json({
-        error: "Thumbnail size should not exceed 2MB.",
-      });
-    }
-
-    // Upload to Cloudinary if file exists
     try {
-      const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
-        folder: "Sunil Portfolio/Chapter",
+      await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream({ folder: "Sunil Portfolio/Chapter/Thumbnails", resource_type: "image" }, (error, result) => {
+          if (error) return reject(new Error("Thumbnail upload failed."));
+          thumbnailData = {
+            fileName: thumbnailFile.originalname,
+            filePath: result.secure_url,
+            fileType: thumbnailFile.mimetype,
+            publicId: result.public_id,
+          };
+          resolve();
+        });
+        uploadStream.end(thumbnailFile.buffer);
       });
-
-      thumbnailData = {
-        fileName: req.file.originalname,
-        filePath: uploadedFile.secure_url,
-        fileType: req.file.mimetype,
-        publicId: uploadedFile.public_id,
-      };
     } catch (error) {
-      return res.status(500).json({
-        error: "Thumbnail could not be uploaded",
-      });
+      return res.status(500).json({ error: "Thumbnail could not be uploaded." });
     }
   }
-  // ===== END THUMBNAIL HANDLING =====
+
+  // Handle video (optional)
+  let videoData = {};
+  if (req.files && req.files["video"] && req.files["video"][0]) {
+    const videoFile = req.files["video"][0];
+    const allowedVideoTypes = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska", "video/webm"];
+    if (!allowedVideoTypes.includes(videoFile.mimetype)) {
+      return res.status(400).json({
+        error: "Invalid video format. Supported formats: MP4, MOV, AVI, MKV, WEBM.",
+      });
+    }
+    if (videoFile.size > 10 * 1024 * 1024 * 1024) {
+      return res.status(400).json({ error: "Video size should not exceed 10 GB." });
+    }
+
+    try {
+      await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "Sunil Portfolio/Chapter/Videos",
+            resource_type: "video",
+            chunk_size: 6000000,
+            eager: [
+              { width: 300, height: 300, crop: "pad", audio_codec: "none" },
+              { width: 160, height: 100, crop: "crop", gravity: "south", audio_codec: "none" },
+            ],
+            eager_async: true,
+          },
+          (error, result) => {
+            if (error) return reject(new Error("Video upload failed."));
+            videoData = {
+              fileName: videoFile.originalname,
+              filePath: result.secure_url,
+              fileType: videoFile.mimetype,
+              publicId: result.public_id,
+              duration: result.duration,
+              resolution: `${result.width}x${result.height}`,
+              size: result.bytes,
+            };
+            resolve();
+          }
+        );
+        uploadStream.end(videoFile.buffer);
+      });
+    } catch (error) {
+      // Clean up thumbnail if video upload fails
+      if (thumbnailData.publicId) {
+        await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+      }
+      return res.status(500).json({ error: "Video could not be uploaded." });
+    }
+  }
 
   // Handle tags
   let tagsArray = [];
@@ -86,7 +135,7 @@ const createChapter = asyncHandler(async (req, res) => {
     let parsedTags = [];
     if (typeof tags === "string") {
       try {
-        parsedTags = JSON.parse(tags); // Expecting [{ tag: 'css' }, { tag: 'js' }]
+        parsedTags = JSON.parse(tags);
       } catch (error) {
         return res.status(400).json({ error: "Invalid tags format. Tags must be a valid JSON array of objects." });
       }
@@ -111,28 +160,51 @@ const createChapter = asyncHandler(async (req, res) => {
         throw new Error("Duplicate tags are not allowed.");
       }
     } catch (error) {
+      // Clean up uploads if tags validation fails
+      if (thumbnailData.publicId) {
+        await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+      }
+      if (videoData.publicId) {
+        await cloudinary.uploader.destroy(videoData.publicId, { resource_type: "video" });
+      }
       return res.status(400).json({ error: error.message });
     }
   }
 
-  const data = await ChapterModel.create({
-    user: userId,
-    university,
-    faculty,
-    subject,
-    program,
-    title,
-    slug,
-    description,
-    metaDescription,
-    groupId,
-    visibility,
-    scheduledPublish: visibility === "scheduled" ? scheduledPublish : null,
-    tags: tagsArray,
-    thumbnail: thumbnailData,
-  });
+  // Create the chapter
+  try {
+    const data = await ChapterModel.create({
+      user: userId,
+      subject,
+      title,
+      metaTitle,
+      slug,
+      description,
+      metaDescription,
+      groupId,
+      tags: tagsArray,
+      thumbnail: thumbnailData,
+      video: videoData,
+    });
 
-  res.status(201).json({ message: "Chapter created successfully", data });
+    res.status(201).json({
+      success: true,
+      message: "Chapter created successfully",
+      data,
+    });
+  } catch (error) {
+    // Clean up Cloudinary uploads
+    if (thumbnailData.publicId) {
+      await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+    }
+    if (videoData.publicId) {
+      await cloudinary.uploader.destroy(videoData.publicId, { resource_type: "video" });
+    }
+    res.status(500).json({
+      error: "Failed to create chapter",
+      details: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
 });
 
 const getAllChapter = asyncHandler(async (req, res) => {
@@ -183,26 +255,22 @@ const getChapter = asyncHandler(async (req, res) => {
     throw new Error("Faculty slug is required");
   }
 
-  const faculty = await ChapterModel.findOne({ slug })
+  const chapter = await ChapterModel.findOne({ slug })
     .populate({
       path: "user",
       select: "avatar name email",
     })
     .populate({
-      path: "university",
-      select: "name logo",
-    })
-    .populate({
       path: "subject",
-      select: "name",
+      select: "name university program faculty",
     });
 
-  if (!faculty) {
+  if (!chapter) {
     res.status(404);
     throw new Error("Faculty not found");
   }
 
-  res.status(200).json(faculty);
+  res.status(200).json(chapter);
 });
 
 const deleteChapter = asyncHandler(async (req, res) => {
@@ -235,6 +303,21 @@ const deleteChapter = asyncHandler(async (req, res) => {
     } catch (error) {
       res.status(500).json({ message: "An error occurred while deleting the logo image from Cloudinary." });
       return;
+    }
+  }
+
+  // Delete video if exists
+  if (chapter.video && chapter.video.publicId) {
+    try {
+      // Use resource_type: 'video' for video files
+      const result = await cloudinary.uploader.destroy(chapter.video.publicId, {
+        resource_type: "video",
+      });
+      if (result.result !== "ok") {
+        console.error("Error deleting video from Cloudinary:", result);
+      }
+    } catch (error) {
+      console.error("Error deleting video:", error);
     }
   }
 

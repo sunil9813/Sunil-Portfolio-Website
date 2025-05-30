@@ -49,7 +49,6 @@ export default withMT({
         insetShadow:
           "-0px 1px 4px rgba(0, 0, 0, 0.28), -1px 3px 18px rgba(0, 0, 0, 0.25), -2px 7px 40px rgba(0, 0, 0, 0.22), -3px 12px 71px rgba(0, 0, 0, 0.2), -5px 19px 111px rgba(0, 0, 0, 0.17), -8px 27px 160px rgba(0, 0, 0, 0.14), -10px 37px 218px rgba(0, 0, 0, 0.11), -13px 48px 284px rgba(0, 0, 0, 0.08), -17px 61px 360px rgba(0, 0, 0, 0.06), -21px 75px 444px rgba(0, 0, 0, 0.03)",
       },
-
       // above
       screens: {
         // your other breakpoints

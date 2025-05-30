@@ -6,6 +6,7 @@ import { getAllUniversity } from "@/redux/slices/universityStructure/universityS
 import { Loader } from "@/utils/Router";
 import { getAllFaculty } from "@/redux/slices/universityStructure/facultySlice";
 import { getAllProgram } from "@/redux/slices/universityStructure/programSlice";
+import { getUserCourses } from "@/redux/slices/universityStructure/courseSlice";
 
 const inputClassName =
   "w-full !h-11 3xl:h-12 textColor textSizeSm border border-gray-100 dark:border-gray-800/50 focus:border-gray-200 dark:focus:border-gray-800 !rounded-full placeholder:text-xs placeholder:3xl:text-sm placeholder:text-gray-800/20 dark:placeholder:text-gray-500/50";
@@ -143,6 +144,62 @@ export const ProgramDropDown = ({ value, onChange, facultyId, disabled, placehol
       ))}
     </select>
   );
+};
+
+export const CourseDropDown = ({ value, onChange, disabled, placeholder, className }) => {
+  const dispatch = useDispatch();
+  const { courses, isLoading } = useSelector((state) => state.course);
+  const { subjects } = courses;
+
+  useEffect(() => {
+    dispatch(getUserCourses()); // Fetch only the current user's courses
+  }, [dispatch]);
+
+  const handleChange = (event) => {
+    const selectedId = event.target.value;
+    const selectedCourse = subjects.find((course) => course._id === selectedId);
+    onChange(selectedCourse);
+  };
+
+  const currentValueId = typeof value === "object" ? value?._id : value;
+
+  // Filter out courses that have a resourceFile
+  const filteredCourses = subjects?.filter((course) => !course.resourceFile);
+
+  return isLoading ? (
+    <Loader />
+  ) : (
+    <select
+      name="course"
+      value={currentValueId || ""}
+      onChange={handleChange}
+      className={`${CommonClassForInput + inputClassName} ${className} !bg-transparent !h-auto outline-none capitalize`}
+      disabled={disabled}
+    >
+      <option className="textColor capitalize text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="">
+        {placeholder || "Select Course"}
+      </option>
+      {filteredCourses?.map((course) => (
+        <option className="textColor capitalize text-xs 3xl:text-sm dark:!bg-black dark:text-white" key={course._id} value={course._id}>
+          {course.name}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+CourseDropDown.propTypes = {
+  value: PropTypes.oneOfType([
+    PropTypes.shape({
+      _id: PropTypes.string,
+      name: PropTypes.string,
+    }),
+    PropTypes.string,
+  ]),
+  onChange: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
+  placeholder: PropTypes.string,
+  className: PropTypes.string,
 };
 
 FacultyDropDown.propTypes = {

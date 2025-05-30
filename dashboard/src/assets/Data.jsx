@@ -7,6 +7,7 @@ import { MdOutlineCategory } from "react-icons/md";
 import { CiImageOn } from "react-icons/ci";
 import { PiBooksLight } from "react-icons/pi";
 import { GiBookshelf } from "react-icons/gi";
+import { GrChapterAdd } from "react-icons/gr";
 
 export const menu = [
   {
@@ -132,6 +133,20 @@ export const menu = [
       {
         title: "Create courses",
         path: "/create-courses",
+      },
+    ],
+  },
+  {
+    title: "chapter",
+    icon: <GrChapterAdd size={17} />,
+    childrens: [
+      {
+        title: "Overview",
+        path: "/all-chapter",
+      },
+      {
+        title: "Create chapter",
+        path: "/create-chapter",
       },
     ],
   },

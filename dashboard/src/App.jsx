@@ -40,6 +40,10 @@ import {
   CreateCourse,
   CourseList,
   CourseDetails,
+  CreateChapterr,
+  ChapterOverview,
+  ChapterDetails,
+  CoursesWiseAllChapter,
 } from "./utils/Router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -385,6 +389,45 @@ function App() {
       ),
       errorElement: <ErrorPage />,
     },
+    {
+      path: "/course/allchapter/:slug",
+      element: (
+        <Layout title="Course Details">
+          <CoursesWiseAllChapter />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+
+    // Chapter Route
+    {
+      path: "/all-chapter",
+      element: (
+        <Layout title="Overview">
+          <ChapterOverview />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/create-chapter",
+      element: (
+        <LayoutWithOutHeader>
+          <CreateChapterr />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/view-chapter/:slug",
+      element: (
+        <Layout title="Chapter Details">
+          <ChapterDetails />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+
     {
       path: "/filter",
       element: (

@@ -329,7 +329,9 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                               {type === "course" && (
                                 <>
                                   <td className={classes}>
-                                    <span className={spanClass}>{truncateText(item?.name, 30)}</span>
+                                    <NavLink to={`/course/allchapter/${item?.slug}`}>
+                                      <span className={spanClass}>{truncateText(item?.name, 30)}</span>
+                                    </NavLink>
                                   </td>
                                   <td className={classes}>
                                     <span className={spanClass}>{item?.accessType === "paid" ? `Paid` : "Free"}</span>
@@ -383,6 +385,40 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                                       defaultChecked={item?.featured === true}
                                       onChange={() => handleFeaturedToggle(item?._id, !item?.featured)}
                                     />
+                                  </td>
+                                </>
+                              )}
+
+                              {/* All Chapter List */}
+                              {type === "chapter" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.subject?.name}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    {/* <span className={spanClass}>{truncateText(item?.name)}</span> */}
+                                    <span className={spanClass}>{truncateText(item?.title, 30)}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-teal-400/20 text-teal-500 dark:bg-teal-300/20 dark:text-teal-300 rounded-full text-xs px-3 py-1">
+                                        {item?.numOfViews === 0 ? "0" : item?.numOfViews}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  {/* number of likes  to do */}
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-yellow-400/20 text-yellow-800 dark:bg-yellow-300/20 dark:text-yellow-300 rounded-full text-xs px-3 py-1">
+                                        {item?.likes?.length === 0 ? "0" : item?.likes?.length}
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  <td className={`${classes}`}>
+                                    <div className="w-max">
+                                      <div className="bg-purple-400/20 text-purple-800 dark:bg-purple-300/20 dark:text-purple-300 rounded-full text-xs px-3 py-1">{item?.ratings}</div>
+                                    </div>
                                   </td>
                                 </>
                               )}

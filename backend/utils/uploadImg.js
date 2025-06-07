@@ -7,7 +7,7 @@ const storage = multer.memoryStorage(); // for multiple filed image upload
 // File filter to enforce file type and size limits based on field name
 function fileFilter(req, file, cb) {
   const imageMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
-  if (file.fieldname === "thumbnail") {
+  if (file.fieldname === "thumbnail" || file.fieldname === "avatar") {
     if (!imageMimeTypes.includes(file.mimetype)) {
       return cb(new Error("Invalid file type for thumbnail. Supported types are jpg, png, and jpeg."), false);
     }
@@ -15,7 +15,7 @@ function fileFilter(req, file, cb) {
       return cb(new Error(`File ${file.originalname} exceeds 10MB limit for thumbnail.`), false);
     }
     cb(null, true);
-  } else if (file.fieldname === "resourceFile") {
+  } else if (file.fieldname === "resourceFile" || file.fieldname === "cv" || file.fieldname === "projectDoc") {
     if (file.mimetype !== "application/pdf") {
       return cb(new Error("Resource file must be a PDF."), false);
     }
@@ -161,10 +161,38 @@ const getUploadVideoandThumbnail = async () => {
 };
 /* ---------------- End Chapter ---------------- */
 
-const uploadTestimonial = multer({ storage });
-const uploadAvatarandProjectDoc = uploadTestimonial.fields([
-  { name: "projectDoc", maxCount: 1 },
-  { name: "avatar", maxCount: 1 },
-]);
+/* ---------------- Portfolio/Intro ---------------- */
+const getUploadCVandAvatar = async () => {
+  try {
+    const uploadCourse = multer({
+      storage,
+      fileFilter,
+    });
 
-module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, getUploadFileandThumbnail, getUploadVideoandThumbnail, uploadAvatarandProjectDoc };
+    return uploadCourse.fields([
+      { name: "avatar", maxCount: 1 },
+      { name: "cv", maxCount: 1 },
+    ]);
+  } catch (error) {
+    throw new Error("Failed to configure upload middleware: " + error.message);
+  }
+};
+/* ---------------- End Portfolio/Intro ---------------- */
+
+const getuploadAvatarandProjectDoc = async () => {
+  try {
+    const uploadCourse = multer({
+      storage,
+      fileFilter,
+    });
+
+    return uploadCourse.fields([
+      { name: "avatar", maxCount: 1 },
+      { name: "projectDoc", maxCount: 1 },
+    ]);
+  } catch (error) {
+    throw new Error("Failed to configure upload middleware: " + error.message);
+  }
+};
+
+module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, getUploadFileandThumbnail, getUploadVideoandThumbnail, getUploadCVandAvatar, getuploadAvatarandProjectDoc };

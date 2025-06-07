@@ -318,11 +318,6 @@ export const CreateCourse = () => {
       formData.append("resourceFile", resourceFile);
     }
 
-    // Debugging: Log FormData entries
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value);
-    }
-
     try {
       const resultAction = await dispatch(createCourse(formData)); // Use createSubject
       if (createCourse.fulfilled.match(resultAction)) {

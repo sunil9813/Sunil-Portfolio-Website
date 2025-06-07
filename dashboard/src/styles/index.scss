@@ -14,11 +14,13 @@
 @use "./components/comment";
 @use "./components/profile";
 @use "./components/bentoCard";
+@use "./components/stepper";
 @use "./layout/footer";
 @use "./layout/grid";
 @use "./layout/header";
 @use "./layout/sidebar";
 @use "./pages/auth";
+@use "./pages/port_resume";
 @use "./pages/home";
 @use "./vendors/slick";
 @use "./vendors/react-masonry-css";
@@ -34,4 +36,24 @@
 .richtext-outline-1,
 .richtext-outline {
   outline: none !important;
+}
+
+.editor-default {
+  .tiptap {
+    :first-child {
+      margin-top: 0;
+    }
+
+    /* List styles */
+
+    ul,
+    ol {
+      padding: 0 1rem;
+      margin: 1.25rem 1rem 1.25rem 0.4rem;
+      list-style-type: disc;
+      li p {
+        margin: 0 !important;
+      }
+    }
+  }
 }

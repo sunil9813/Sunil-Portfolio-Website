@@ -15,7 +15,7 @@ const CoursesModel = require("../../models/educationModel/SubjectModel");
 const ProjectModel = require("../../models/project/ProjectModel");
 const { default: mongoose } = require("mongoose");
 const SocialMediaModel = require("../../models/users/SocialMediaModel");
-const Resume = require("../../models/about/resumeModel");
+const Resume = require("../../models/portfolio/resumeModel");
 
 const cryptr = new Cryptr(process.env.CRYPTR_KEY);
 const client = new OAuth2Client(process.env.GOOGLE_ClIENT_ID);

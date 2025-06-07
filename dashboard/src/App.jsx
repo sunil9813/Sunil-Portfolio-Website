@@ -44,13 +44,25 @@ import {
   ChapterOverview,
   ChapterDetails,
   CoursesWiseAllChapter,
+  AboutList,
+  CreateAbout,
+  UpdateAbout,
+  ViewAllResume,
+  CreateResume,
+  ResumeDeatils,
+  UpdateResume,
+  AllPortfolioService,
+  PortfolioServiceCreate,
+  PortfolioServiceDetails,
+  AllTestimonial,
+  CreateTestimonial,
 } from "./utils/Router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { getLogInStatus, getUserProfile, selectIsLoggedIn, selectUser } from "./redux/slices/authSlice";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { selectTheme, toggleTheme } from "./redux/slices/themeSlice";
 
 axios.defaults.withCredentials = true;
@@ -60,10 +72,10 @@ function App() {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const user = useSelector(selectUser);
   const theme = useSelector(selectTheme);
-  const [width, setWidth] = useState(window.innerWidth);
+  /*   const [width, setWidth] = useState(window.innerWidth);
   console.log("====================================");
   console.log(width);
-  console.log("====================================");
+  console.log("===================================="); */
 
   useEffect(() => {
     if (theme === "dark") {
@@ -428,6 +440,120 @@ function App() {
       errorElement: <ErrorPage />,
     },
 
+    // Portfoili / intro
+    {
+      path: "/intro",
+      element: (
+        <Layout title="overivew">
+          <AboutList />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/create-intro",
+      element: (
+        <LayoutWithOutHeader>
+          <CreateAbout />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/update-intro/:id",
+      element: (
+        <LayoutWithOutHeader>
+          <UpdateAbout />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    // Portfoili / Resume
+    {
+      path: "/resume",
+      element: (
+        <Layout title="overivew">
+          <ViewAllResume />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/create-resume",
+      element: (
+        <LayoutWithOutHeader>
+          <CreateResume />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/view-resume/:id",
+      element: (
+        <Layout title="Details">
+          <ResumeDeatils />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/update-resume/:id",
+      element: (
+        <LayoutWithOutHeader>
+          <UpdateResume />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+
+    // Portfoili / Service
+    {
+      path: "/service",
+      element: (
+        <Layout title="overivew">
+          <AllPortfolioService />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/create-service",
+      element: (
+        <LayoutWithOutHeader>
+          <PortfolioServiceCreate />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/view-service/:slug",
+      element: (
+        <Layout title="Overview">
+          <PortfolioServiceDetails />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+
+    // Portfoili / testimonial
+    {
+      path: "/testimonial",
+      element: (
+        <Layout title="Overview">
+          <AllTestimonial />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/create-testimonial",
+      element: (
+        <LayoutWithOutHeader>
+          <CreateTestimonial />
+        </LayoutWithOutHeader>
+      ),
+      errorElement: <ErrorPage />,
+    },
     {
       path: "/filter",
       element: (

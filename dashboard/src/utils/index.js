@@ -1,23 +1,33 @@
-export const generateItemColor = (itemName) => {
+export const generateItemColor = (itemName, theme = "dark") => {
   const hashCode = Array.from(itemName).reduce((hash, char) => {
     return (hash << 5) - hash + char.charCodeAt(0);
   }, 0);
 
-  // Generate RGB color values based on hash code
+  // Generate base RGB values
   const r = (hashCode & 0xff0000) >> 16;
   const g = (hashCode & 0x00ff00) >> 8;
   const b = hashCode & 0x0000ff;
 
-  // Adjust brightness (lower the brightness for a darker shade)
-  const adjustBrightness = (colorValue, factor = 0.7) => Math.floor(colorValue * factor);
-
-  // Apply brightness adjustment
-  const newR = adjustBrightness(r);
-  const newG = adjustBrightness(g);
-  const newB = adjustBrightness(b);
-
-  // Return the adjusted color in RGB format
-  return `rgb(${newR}, ${newG}, ${newB})`;
+  // Adjust colors based on theme
+  if (theme === "dark") {
+    // For dark theme - brighter, more saturated colors
+    const adjustForDark = (colorValue) => {
+      const normalized = colorValue / 255;
+      // Apply curve to boost mid-tones and saturation
+      const adjusted = Math.pow(normalized, 0.7);
+      return Math.floor(adjusted * 200 + 55); // Range: 55-255
+    };
+    return `rgb(${adjustForDark(r)}, ${adjustForDark(g)}, ${adjustForDark(b)})`;
+  } else {
+    // For light theme - darker, less saturated colors
+    const adjustForLight = (colorValue) => {
+      const normalized = colorValue / 255;
+      // Apply curve to darken and desaturate slightly
+      const adjusted = Math.pow(normalized, 1.3) * 0.8;
+      return Math.floor(adjusted * 180 + 30); // Range: 30-210
+    };
+    return `rgb(${adjustForLight(r)}, ${adjustForLight(g)}, ${adjustForLight(b)})`;
+  }
 };
 export const isImageValid = (file) => {
   const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];

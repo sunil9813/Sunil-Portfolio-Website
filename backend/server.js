@@ -22,12 +22,12 @@ const SubjectRoute = require("./routes/educationRoute/SubjectRoute");
 const ChapterRoute = require("./routes/educationRoute/ChapterRoute");
 /*  -------  End AcademicComponentsRoute ----------- */
 
-// About routes
-const introRoute = require("./routes/about/IntroductionRoute");
-const serviceRoute = require("./routes/about/ServiceRoute");
-const resumeRoute = require("./routes/about/ResumeRoute");
-const testimonialRoute = require("./routes/about/TestimonialRoute");
-// End About routes
+/*  -------   Portfolio routes ----------- */
+const introRoute = require("./routes/portfolio/IntroductionRoute");
+const serviceRoute = require("./routes/portfolio/ServiceRoute");
+const resumeRoute = require("./routes/portfolio/ResumeRoute");
+const testimonialRoute = require("./routes/portfolio/TestimonialRoute");
+/*  -------  End Portfolio routes ----------- */
 
 // Setting routes
 const settingRoute = require("./routes/settings/SettingRoute");
@@ -72,11 +72,10 @@ app.use("/api/v1/comment", commentRoute);
 app.use("/api/v1/like", likeRoute);
 
 // About routes
-app.use("/api/v1/about/intro", introRoute);
-app.use("/api/v1/about/service", serviceRoute);
-app.use("/api/v1/about/resume", resumeRoute);
-app.use("/api/v1/about/resume", resumeRoute);
-app.use("/api/v1/about/testimonial", testimonialRoute);
+app.use("/api/v1/portfolio/intro", introRoute);
+app.use("/api/v1/portfolio/service", serviceRoute);
+app.use("/api/v1/portfolio/resume", resumeRoute);
+app.use("/api/v1/portfolio/testimonial", testimonialRoute);
 //End About routes
 
 //Setting routes

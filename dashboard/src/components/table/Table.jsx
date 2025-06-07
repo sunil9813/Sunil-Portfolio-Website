@@ -1,7 +1,7 @@
-import { Avatar, IconButton, Tooltip, Switch } from "@material-tailwind/react";
+import { Avatar, IconButton, Tooltip, Switch, Checkbox } from "@material-tailwind/react";
 import PropTypes from "prop-types";
 import { CiEdit, CiGrid2H, CiGrid41, CiLink, CiTrash } from "react-icons/ci";
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaRegFilePdf } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Pagination } from "../Pagination";
@@ -31,7 +31,9 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
   const indexOfLastRow = Math.min(indexOfFirstRow + rowsPerPage, rowData?.length);
   const currentRows = rowData?.slice(indexOfFirstRow, indexOfLastRow);
 
+  console.log("================rowData from table====================");
   console.log(rowData);
+  console.log("====================================");
 
   return (
     <>
@@ -79,7 +81,7 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                             <tr key={`${item._id}-${serialNumber}`} className="transition-colors duration-300">
                               <td className={`${classes} ${spanClass} px-5 w-12`}>{serialNumber}</td>
                               {!hidden && (
-                                <td className={`${classes}  ${type === "project" ? "w-auto" : "w-56"}`}>
+                                <td className={`${classes}  ${type === "project" || type === "intros" ? "w-auto" : "w-56"}`}>
                                   <div className="flex items-center gap-3">
                                     {item?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" || item?.user?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
                                       <div
@@ -423,6 +425,110 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                                 </>
                               )}
 
+                              {/* Portfolio / About or intro */}
+                              {type === "intros" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.fullname}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.position}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    {item?.phones?.slice(0, 1)?.map((phone, index) => (
+                                      <span className={spanClass} key={index}>
+                                        {phone?.phone}
+                                      </span>
+                                    ))}
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    {item?.emails?.slice(0, 1)?.map((email, index) => (
+                                      <span className="font-normal text-textColor text-xs 3xl:text-sm" key={index}>
+                                        {email?.email}
+                                      </span>
+                                    ))}
+                                  </td>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{truncateText(item?.address, 15)}</span>
+                                  </td>
+                                  <td className={classes}>
+                                    <NavLink to={item?.cv?.filePath} target="_blank">
+                                      <div className="relative bg-teal-400/20 text-teal-500 dark:bg-teal-300/20 dark:text-teal-300 rounded-full textSizeSm size-8 flexC">
+                                        <FaRegFilePdf />
+                                      </div>
+                                    </NavLink>
+                                  </td>
+                                  <td className={`${classes} flexC`}>
+                                    <div className="w-max">
+                                      <div className="bg-yellow-400/20 text-yellow-800 dark:bg-yellow-300/20 dark:text-yellow-300 rounded-full text-xs size-8 flexC">{item?.downloadCount}</div>
+                                    </div>
+                                  </td>
+                                </>
+                              )}
+
+                              {/* Portfolio / Resume */}
+                              {type === "resume" && (
+                                <>
+                                  <td className={classes}>
+                                    <Checkbox checked={item?.education?.length > 0} readOnly color="teal" className="!border dark:border-gray-50/30" />
+                                  </td>
+                                  <td className={classes}>
+                                    <Checkbox checked={item?.experience?.length > 0} readOnly color="teal" className="!border dark:border-gray-50/30" />
+                                  </td>
+                                  <td className={classes}>
+                                    <Checkbox checked={item?.skills?.length > 0} readOnly color="teal" className="!border dark:border-gray-50/30" />
+                                  </td>
+                                  <td className={classes}>
+                                    <Checkbox checked={item?.achievements?.length > 0} readOnly color="teal" className="!border dark:border-gray-50/30" />
+                                  </td>
+                                  <td className={classes}>
+                                    <Checkbox checked={item?.training?.length > 0} readOnly color="teal" className="!border dark:border-gray-50/30" />
+                                  </td>
+                                  <td className={classes}>
+                                    <Checkbox checked={item?.award?.length > 0} readOnly color="teal" className="!border dark:border-gray-50/30" />
+                                  </td>
+                                  <td className={classes}>
+                                    <Checkbox checked={item?.reference?.length > 0} readOnly color="teal" className="!border dark:border-gray-50/30" />
+                                  </td>
+                                </>
+                              )}
+
+                              {/* Portfolio / service */}
+                              {type === "service" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.title}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    {!item?.cover || !item?.cover?.filePath ? (
+                                      <div className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
+                                    ) : (
+                                      <button className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md">
+                                        <img src={item.cover.filePath} alt={item.cover.publicId || "cover"} className="w-full h-full object-cover rounded-md" />
+                                      </button>
+                                    )}
+                                  </td>
+                                </>
+                              )}
+
+                              {/* Portfolio / testimonial */}
+                              {type === "testimonial" && (
+                                <>
+                                  <td className={classes}>
+                                    <span className={spanClass}>{item?.content}</span>
+                                  </td>
+                                  <td className={`${classes}`}>
+                                    {!item?.cover || !item?.cover?.filePath ? (
+                                      <div className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400"></div>
+                                    ) : (
+                                      <button className="w-16 h-8 3xl:w-20 3xl:h-10 rounded-md">
+                                        <img src={item.cover.filePath} alt={item.cover.publicId || "cover"} className="w-full h-full object-cover rounded-md" />
+                                      </button>
+                                    )}
+                                  </td>
+                                </>
+                              )}
+
                               <td className={`${classes}`}>
                                 <div className={spanClass}>
                                   <DateFormatter date={item?.createdAt} />
@@ -431,7 +537,7 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                               <td className={`${classes}`}>
                                 <div className=" flex justify-end">
                                   <Tooltip className="bg-green-400 capitalize" content={`Edit ${type}`}>
-                                    <NavLink to={`/${linktoupdate}/${item?.slug}`}>
+                                    <NavLink to={`/${linktoupdate}/${item?.slug || item?._id}`}>
                                       <IconButton variant="text" color="green" size="sm" className="text-md 3xl:text-xl">
                                         <CiEdit />
                                       </IconButton>
@@ -443,7 +549,7 @@ export const Table = ({ head, rowData, btntext, linktocreate, linktoview, comp, 
                                     </IconButton>
                                   </Tooltip>
                                   <Tooltip className="bg-blue-400 capitalize" content={`View ${type}`}>
-                                    <IconButton variant="text" color="blue" size="sm" className="text-md 3xl:text-xl" onClick={() => navigate(`/${linktoview}/${item?.slug}`)}>
+                                    <IconButton variant="text" color="blue" size="sm" className="text-md 3xl:text-xl" onClick={() => navigate(`/${linktoview}/${item?.slug || item?._id}`)}>
                                       <CiLink />
                                     </IconButton>
                                   </Tooltip>

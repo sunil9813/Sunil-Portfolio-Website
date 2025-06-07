@@ -28,3 +28,16 @@ export const getContrastingTextColor = (bgColor) => {
   // Return black for light backgrounds, white for dark backgrounds
   return luminance > 0.5 ? "#000000" : "#ffffff";
 };
+
+export const gradientColors = [
+  "linear-gradient(rgb(192, 52, 149) 0%, rgb(76, 36, 214) 100%)",
+  "linear-gradient(rgb(0, 91, 157) 0%, rgb(26, 105, 85) 100%)",
+  "linear-gradient(209.21deg, rgb(136, 0, 148) 13.57%, rgb(81, 77, 255) 98.38%)",
+  "linear-gradient(209.21deg, rgb(233, 109, 44) 13.57%, rgb(239, 77, 77) 98.38%)",
+  "linear-gradient(209.21deg, rgb(186, 233, 44) 13.57%, rgb(77, 120, 239) 98.38%)",
+  "linear-gradient(209.21deg, rgb(211, 30, 100) 13.57%, rgb(77, 190, 255) 98.38%)",
+  "linear-gradient(209.21deg, rgb(239, 218, 54) 13.57%, rgb(255, 77, 202) 98.38%)",
+  "linear-gradient(209.21deg, rgb(54, 214, 239) 13.57%, rgb(255, 157, 77) 98.38%)",
+  "linear-gradient(209.21deg, rgb(100, 239, 54) 13.57%, rgb(77, 83, 255) 98.38%)",
+  "linear-gradient(209.21deg, rgb(239, 54, 164) 13.57%, rgb(255, 126, 77) 98.38%)",
+];

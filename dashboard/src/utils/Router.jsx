@@ -27,7 +27,7 @@ export { GlitterCards } from "@/components/cards/GlowCard";
 export { InputCard } from "@/components/cards/GlowCard";
 export { SearchBox } from "@/components/common/SearchBox";
 export { ImageModel } from "@/components/ImageModel";
-export { Input } from "@/components/customeUI/Input";
+export { Input, InputForResume } from "@/components/customeUI/Input";
 
 /* -----------  Common Design ----------- */
 
@@ -102,3 +102,28 @@ export { CreateChapterr } from "@/screens/universityStructure/chapter/CreateChap
 export { UpdateChapter } from "@/screens/universityStructure/chapter/UpdateChapter";
 
 /* ---- ##########  Pages ########## -----------*/
+
+/* ---- ########## Portfolio Pages ########## -----------*/
+/* -----------  About / Intro ----------- */
+export { CreateAbout } from "@/screens/portfolio/about/CreateAbout";
+export { AboutList } from "@/screens/portfolio/about/AboutList";
+export { UpdateAbout } from "@/screens/portfolio/about/UpdateAbout";
+export { ViewAbout } from "@/screens/portfolio/about/ViewAbout";
+
+/* -----------  Resume ----------- */
+export { ResumeDeatils } from "@/screens/portfolio/resume/ResumeDeatils";
+export { CreateResume } from "@/screens/portfolio/resume/CreateResume";
+export { UpdateResume } from "@/screens/portfolio/resume/UpdateResume";
+export { ViewAllResume } from "@/screens/portfolio/resume/ViewAllResume";
+
+/* -----------  Service ----------- */
+export { AllPortfolioService } from "@/screens/portfolio/portService/AllPortfolioService";
+export { PortfolioServiceCreate } from "@/screens/portfolio/portService/PortfolioServiceCreate";
+export { PortfolioServiceDetails } from "@/screens/portfolio/portService/PortfolioServiceDetails";
+export { PortfolioServiceUpdate } from "@/screens/portfolio/portService/PortfolioServiceUpdate";
+
+/* -----------  Testimonial ----------- */
+export { AllTestimonial } from "@/screens/portfolio/testimonial/AllTestimonial";
+export { CreateTestimonial } from "@/screens/portfolio/testimonial/CreateTestimonial";
+
+/* ---- ########## End Portfolio Pages ########## -----------*/

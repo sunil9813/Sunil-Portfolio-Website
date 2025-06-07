@@ -3,7 +3,7 @@ import { AiFillSetting, AiOutlineUser } from "react-icons/ai";
 import { RiDashboardFill } from "react-icons/ri";
 import { BiCategoryAlt, BiImage } from "react-icons/bi";
 import { BsImageAlt } from "react-icons/bs";
-import { MdOutlineCategory } from "react-icons/md";
+import { MdAutoGraph, MdOutlineCategory } from "react-icons/md";
 import { CiImageOn } from "react-icons/ci";
 import { PiBooksLight } from "react-icons/pi";
 import { GiBookshelf } from "react-icons/gi";
@@ -147,6 +147,29 @@ export const menu = [
       {
         title: "Create chapter",
         path: "/create-chapter",
+      },
+    ],
+  },
+  // Portfolio
+  {
+    title: "Portfolio",
+    icon: <MdAutoGraph size={17} />,
+    childrens: [
+      {
+        title: "About Us",
+        path: "/intro",
+      },
+      {
+        title: "resume",
+        path: "/resume",
+      },
+      {
+        title: "service",
+        path: "/service",
+      },
+      {
+        title: "testimonial",
+        path: "/testimonial",
       },
     ],
   },

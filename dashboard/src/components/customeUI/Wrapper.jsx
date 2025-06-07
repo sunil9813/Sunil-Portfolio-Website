@@ -39,9 +39,10 @@ export const StickyHeader = ({ children, className }) => {
 
 Wrapper.propTypes = {
   children: PropTypes.any,
-  className: PropTypes.any,
+  className: PropTypes.string,
+  dark: PropTypes.string,
 };
 StickyHeader.propTypes = {
   children: PropTypes.any,
-  className: PropTypes.any,
+  className: PropTypes.string,
 };

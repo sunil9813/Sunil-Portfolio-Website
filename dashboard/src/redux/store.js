@@ -15,6 +15,10 @@ import facultyReducer from "./slices/universityStructure/facultySlice";
 import programReducer from "./slices/universityStructure/programSlice";
 import courseReducer from "./slices/universityStructure/courseSlice";
 import chapterReducer from "./slices/universityStructure/chapterSlice";
+import introReducer from "./slices/portfolio/introSlice";
+import resumeReducer from "./slices/portfolio/resumeSlice";
+import serviceReducer from "./slices/portfolio/portServiceService";
+import testimonialReducer from "./slices/portfolio/testimonialSlice";
 
 export const store = configureStore({
   reducer: {
@@ -34,5 +38,9 @@ export const store = configureStore({
     program: programReducer,
     course: courseReducer,
     chapter: chapterReducer,
+    intro: introReducer,
+    resume: resumeReducer,
+    service: serviceReducer,
+    testimonial: testimonialReducer,
   },
 });

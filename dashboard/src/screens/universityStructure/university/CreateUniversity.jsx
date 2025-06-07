@@ -61,8 +61,8 @@ export const CreateUniversity = () => {
         toast.error("Logo must be a PNG, JPEG, or JPG image.");
         return;
       }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("Logo file size exceeds 10MB limit.");
+      if (selectedFile.size > 2 * 1024 * 1024) {
+        toast.error("Logo file size exceeds 2MB limit.");
         return;
       }
       setLogo(selectedFile);

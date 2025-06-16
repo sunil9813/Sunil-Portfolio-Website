@@ -23,6 +23,7 @@ export const Layout = ({ children, title }) => {
     </main>
   );
 };
+
 export const LayoutWithOutHeader = ({ children }) => {
   const theme = useSelector(selectTheme);
 

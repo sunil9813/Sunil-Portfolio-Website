@@ -12,9 +12,9 @@ const {
   getBlogsByCategoryAndTag,
 } = require("../controllers/BlogController");
 const { protect } = require("../middleware/authMiddleware");
-const { upload } = require("../utils/uploadImg");
 const validation = require("../middleware/Validation");
 const { createBlogValidation } = require("../utils/validations/PostsValidation");
+const { upload } = require("../middleware/imageMiddleware");
 
 const router = express.Router();
 

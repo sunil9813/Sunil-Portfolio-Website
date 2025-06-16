@@ -1,0 +1,260 @@
+@use "../abstracts/mixins" as *;
+/* ----------- New Design -----------*/
+
+.auth-section {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  background-image: url("/image/auth/background.svg");
+  background-size: cover;
+  background-repeat: repeat;
+  .dark & {
+    background-image: none;
+    background-color: #202020;
+  }
+  &_container {
+    position: relative;
+    border-radius: 32px;
+    width: 408px;
+    background-color: #fff;
+    .dark & {
+      background: none !important;
+    }
+    @include media-query("xl") {
+      margin-top: -100px;
+      border-radius: 32px;
+      width: 350px;
+    }
+    .dark & {
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        border-radius: 32px;
+      }
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #ffff; /* light.highlight from Tailwind config */
+        box-shadow: inset 2px 4px 16px 0 hsla(0, 0%, 0%, 0.05), /* Softer inset shadow */ 0 24px 24px -16px rgba(0, 0, 0, 0.06), 0 6px 13px 0 rgba(0, 0, 0, 0.08), 0 6px 4px -4px rgba(0, 0, 0, 0.07),
+          0 5px 1.5px -4px rgba(0, 0, 0, 0.1);
+        border-radius: 32px;
+      }
+    }
+    .dark & {
+      &::after {
+        border: 12px solid hsla(0, 0%, 97%, 0.5);
+        opacity: 0.29;
+        background: linear-gradient(158deg, hsla(0, 0%, 100%, 0.06) 14.19%, hsla(0, 0%, 100%, 0) 50.59%, hsla(0, 0%, 100%, 0) 68.79%, hsla(0, 0%, 100%, 0.02) 105.18%);
+        filter: blur(20px);
+      }
+      &::before {
+        background: #363638;
+        box-shadow: inset 2px 4px 16px 0 hsla(0, 0%, 97%, 0.06), 0 24px 24px -16px rgba(5, 5, 5, 0.09), 0 6px 13px 0 rgba(5, 5, 5, 0.1), 0 6px 4px -4px rgba(5, 5, 5, 0.1),
+          0 5px 1.5px -4px rgba(5, 5, 5, 0.25);
+        -webkit-backdrop-filter: blur(50px);
+        backdrop-filter: blur(50px);
+      }
+    }
+    &_content {
+      position: relative;
+      z-index: 20;
+      padding: 30px;
+      @include media-query("xl") {
+        padding: 30px;
+      }
+      input {
+        width: 100%;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.01);
+        border-radius: 50px;
+        border: 1.5px solid transparent;
+        font-size: 14px;
+        line-height: 1.4;
+        color: hsla(0, 0%, 97%, 0.76);
+        transition: all 0.2s;
+        &:focus {
+          border-color: hsla(0, 0%, 97%, 0.25);
+          background: transparent;
+        }
+        @include media-query("xl") {
+          height: 40px;
+        }
+        .dark & {
+          background: hsla(0, 0%, 97%, 0.05);
+          color: #fff !important;
+        }
+      }
+      input[type="email"],
+      input[type="tel"],
+      input[type="text"],
+      textarea {
+        -webkit-appearance: none;
+      }
+      .button {
+        width: 100%;
+        position: relative;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 24px;
+        height: 44px;
+        border-radius: 32px;
+        background: rgba(0, 0, 0, 0.08);
+        color: #363638;
+        .dark & {
+          background: rgba(40, 40, 40, 0.7);
+          box-shadow: inset 2px 4px 16px 0 hsla(0, 0%, 97%, 0.06);
+          -webkit-backdrop-filter: blur(50px);
+          color: hsla(0, 0%, 97%, 0.7);
+        }
+        backdrop-filter: blur(50px);
+        font-size: 14px;
+        line-height: 1.4;
+        font-weight: 600;
+
+        transition: background 0.2s, color 0.2s;
+        @include media-query("xl") {
+          height: 34px;
+        }
+        .dark & {
+          &:hover {
+            background: hsla(0, 0%, 97%, 0.1);
+            color: hsla(0, 0%, 97%, 0.76);
+          }
+
+          &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 32px;
+            pointer-events: none;
+            border: 1.5px solid hsla(0, 0%, 100%, 0.1);
+            -webkit-mask-image: linear-gradient(175deg, #000, transparent 50%);
+            mask-image: linear-gradient(175deg, #000, transparent 50%);
+          }
+        }
+      }
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 32px;
+        pointer-events: none;
+        border: 1.5px solid hsla(0, 0%, 100%, 0.3);
+        -webkit-mask-image: linear-gradient(225deg, #000, transparent 20%);
+        mask-image: linear-gradient(225deg, #000, transparent 20%);
+      }
+      &_line {
+        &::after {
+          content: "";
+          position: absolute;
+          top: 25%;
+          left: -105%;
+          width: 100%;
+          height: 500px;
+          background-image: url("/image/auth/line1.svg");
+          background-size: contain;
+          background-repeat: no-repeat;
+        }
+        &::before {
+          content: "";
+          position: absolute;
+          top: 25%;
+          right: -105%;
+          width: 100%;
+          height: 500px;
+          background-image: url("/image/auth/line2.svg");
+          background-size: contain;
+          background-repeat: no-repeat;
+        }
+      }
+
+      .line1 {
+        border: 1.5px solid hsla(0, 0%, 42%, 0.2);
+        -webkit-mask-image: linear-gradient(175deg, #000, transparent 80%);
+        mask-image: linear-gradient(175deg, #000, transparent 80%);
+        .dark & {
+          border: 1.5px solid hsla(0, 0%, 100%, 0.2);
+        }
+      }
+      .line2 {
+        border: 1.5px solid hsla(0, 0%, 42%, 0.2);
+        -webkit-mask-image: linear-gradient(-175deg, #000, transparent 80%);
+        mask-image: linear-gradient(-175deg, #000, transparent 80%);
+        .dark & {
+          border: 1.5px solid hsla(0, 0%, 100%, 0.2);
+        }
+      }
+    }
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 20%;
+    width: 60%;
+    height: 50vh;
+    background-image: url("/image/auth/dots.svg");
+    background-size: cover;
+    background-position: center;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-image: url("/image/auth/bg-entry.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: invert(100%);
+  }
+  .dark & {
+    &::before {
+      filter: invert(0%); /* No inversion in light mode */
+    }
+    &::after {
+      filter: invert(0%);
+    }
+  }
+}
+/* ----------- for otp login -----------*/
+.auth-section {
+  .auth-otp {
+    .input {
+      input {
+        padding: 0;
+        font-size: 18px !important;
+        background: #f9f9f9;
+        border: 1px solid #e9e9e9;
+        color: #777777;
+        border-radius: 10px !important;
+        .dark & {
+          background: hsla(0, 0%, 97%, 0.05);
+          color: #fff !important;
+          border: 1px solid transparent;
+        }
+        &:focus {
+          border-color: #ffda9f !important;
+          outline: none !important;
+          box-shadow: 0 0 0 2px rgba(247, 209, 149, 0.233) !important;
+        }
+      }
+    }
+  }
+}

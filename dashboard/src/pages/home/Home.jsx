@@ -1,4 +1,4 @@
-import { GradientWrapper } from "@/components/cards/GlowCard";
+import { Card, GlitterCards, GradientWrapper } from "@/components/cards/GlowCard";
 import { ProfileCard } from "@/ui/ProfileCard";
 import { DropdownWrapper, Wrapper } from "@/utils/Router";
 import { useState } from "react";
@@ -14,6 +14,13 @@ export const Home = () => {
           <GradientWrapper className="w-72">
             <input type="text" className="bg-none outline-none h-12 px-3 w-full" placeholder="Search here..." />
           </GradientWrapper>
+          <GlitterCards className="w-72">
+            <p>
+              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Vel sit incidunt sunt recusandae quia obcaecati vero. Iure, eveniet? Blanditiis similique sunt ab eaque accusamus non nemo nobis
+              officia quod. Officia dolorem neque enim minus delectus, eveniet harum iure facilis voluptatem sunt libero corporis quos numquam quia possimus ut aperiam labore!
+            </p>
+          </GlitterCards>
+          <Card></Card>
         </div>
       </Wrapper>
     </>

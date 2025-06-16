@@ -1,0 +1,99 @@
+.label-shine {
+  color: #d3d3d3;
+  background: linear-gradient(to right, #9f9f9f 0, #fff 10%, #868686 20%);
+  background-position: 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s infinite linear;
+  animation-fill-mode: forwards;
+  -webkit-text-size-adjust: none;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.text-shine {
+  color: #ffaa81;
+  background: linear-gradient(to right, #9f9f9f 0, #fff 10%, #868686 20%);
+  background: radial-gradient(50% 50% at 50% 50%, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(210, 106, 58, 0) 92.5%);
+  background: radial-gradient(circle at center, #fffff5 10%, #ffaa81 40%, #ffda9f 60%, rgba(255, 170, 129, 0.8) 75%, rgba(210, 106, 58, 0) 100%);
+  background-size: 200% 200%; /* Increase background size for full coverage */
+  background-position: 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s infinite linear;
+  animation-fill-mode: forwards;
+  -webkit-text-size-adjust: none;
+  text-decoration: none;
+  white-space: nowrap;
+}
+@-moz-keyframes shine {
+  0% {
+    background-position: 0;
+  }
+  60% {
+    background-position: 600px;
+  }
+  100% {
+    background-position: 600px;
+  }
+}
+@-webkit-keyframes shine {
+  0% {
+    background-position: 0;
+  }
+  60% {
+    background-position: 600px;
+  }
+  100% {
+    background-position: 600px;
+  }
+}
+@-o-keyframes shine {
+  0% {
+    background-position: 0;
+  }
+  60% {
+    background-position: 600px;
+  }
+  100% {
+    background-position: 600px;
+  }
+}
+@keyframes shine {
+  0% {
+    background-position: 0;
+  }
+  60% {
+    background-position: 600px;
+  }
+  100% {
+    background-position: 600px;
+  }
+}
+.gardient-text {
+  background: linear-gradient(90deg, rgb(179, 174, 245) 0.41%, rgb(215, 203, 231) 40.68%, rgb(229, 200, 200) 64.12%, rgb(234, 168, 121) 97.82%) text, rgb(217, 217, 217);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+}
+.gardient-text2 {
+  background: -webkit-gradient(linear, left top, right top, color-stop(20%, #ff78fa), color-stop(40%, #ffb36c), color-stop(60%, #ffb36c), color-stop(80%, #ff78fa));
+  background: linear-gradient(to right, #ff78fa 20%, #ffb36c 40%, #ffb36c 60%, #ff78fa 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+}
+.heading-gardient {
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+  background-image: radial-gradient(89.47% 51.04% at 44.27% 50%, #e2e3e9 0, #d4d6de 52.73%, #3d3f4c 100%);
+}
+.blog-title {
+  background-image: radial-gradient(circle at center, #fffff5 10%, #ffaa81 40%, #ffda9f 60%, rgba(255, 170, 129, 0.8) 75%, rgba(210, 106, 58, 0) 100%);
+}

@@ -111,7 +111,7 @@ const createBlog = asyncHandler(async (req, res) => {
 
 const getAllBlog = asyncHandler(async (req, res) => {
   const Blogs = await BlogModel.find()
-    .sort("createdAt")
+    .sort("-createdAt")
     .populate({
       path: "user",
       select: "avatar name email",

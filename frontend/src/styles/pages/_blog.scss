@@ -1,0 +1,118 @@
+@use "sass:math";
+$ease: cubic-bezier(0.3, 0.8, 0.5, 0.5);
+
+.light-rays-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.rays-blur {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  filter: blur(12px);
+  transform-origin: top left;
+  transform: rotate(90deg);
+  z-index: 1;
+}
+
+.ray {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(19, 22, 28, 0) 100%);
+  transform-origin: 0 0;
+  z-index: 1;
+  border-radius: 2px;
+}
+
+// for card
+
+@mixin shine-effect($size, $color) {
+  &::before,
+  &::after {
+    border-radius: inherit;
+    content: "";
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    transition: opacity 0.5s $ease;
+  }
+
+  &::before {
+    opacity: 0;
+    background: radial-gradient($size circle at var(--mouse-x) var(--mouse-y), $color, transparent 50%);
+  }
+
+  &::after {
+    opacity: 0;
+    background: radial-gradient($size * 3 circle at var(--mouse-x) var(--mouse-y), $color, transparent 40%);
+    filter: blur(6rem);
+    z-index: -1;
+    transition-duration: 1s;
+  }
+
+  &:hover::before,
+  &:hover::after {
+    opacity: 1;
+  }
+}
+
+.blog-card-list {
+  // CARD STYLING.
+  .cards:hover > .card::before {
+    opacity: 1;
+  }
+
+  .card {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    // background-color: hsl(265, 10%, 1%);
+    transition: $ease all 0.2s;
+    // background-image: radial-gradient(hsl(300, 22%, 15%) 20%, transparent 20%);
+    background-position: 0 0;
+    box-shadow: 0px 0px 0px 4px hsla(265, 5%, 0%, 0);
+    padding: 10px;
+    background: #0f0f0f !important;
+    &__background {
+      position: absolute;
+      border-radius: inherit;
+      inset: 1px;
+      background: hsl(265, 5%, 1%) 0%;
+      background: #0f0f0f !important;
+    }
+
+    &__background-glow {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      content: "";
+      background: radial-gradient(256px circle at var(--mouse-x) var(--mouse-y), hsl(280, 5%, 1%) 0%, hsl(265, 5%, 1%) 100%);
+
+      opacity: 0;
+      transition: $ease all 0.7s;
+    }
+
+    &:hover &__background-glow {
+      opacity: 1;
+    }
+
+    &__content {
+      position: relative;
+      height: 100%;
+    }
+
+    @include shine-effect(384px, hsla(265, 95%, 45%, 1));
+  }
+}

@@ -1,0 +1,11 @@
+.search {
+  .input_glow {
+    background-color: #1a1c23 !important;
+    &_background {
+      background-color: #1a1c23 !important;
+    }
+  }
+}
+.search.input_glow {
+  height: 50px !important;
+}

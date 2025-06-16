@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.flexI {
+  @apply flex items-center;
+}
+.flexC {
+  @apply flex justify-center items-center;
+}
+.flexbC {
+  @apply flex justify-between items-center;
+}
+.container {
+  @apply w-4/5 m-auto;
+}
+
+body {
+  @apply text-light-textColor dark:bg-dark-primary dark:text-dark-textColor text-sm;
+}
+
+.textColor {
+  @apply text-slate-900 dark:text-white;
+}
+.highlightbg {
+  @apply bg-[#f4f4f4] dark:bg-dark-highlight;
+}

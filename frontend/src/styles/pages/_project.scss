@@ -1,0 +1,50 @@
+.project {
+  overflow: hidden;
+}
+
+.asset-images {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  .asset-image {
+    position: absolute;
+    width: 200px;
+    height: 150px;
+    border-radius: 16px;
+    margin: 10px;
+    //transform: translateX(var(--tx)) translateY(var(--ty)) rotate(var(--rotate));
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+
+    /* Position each image differently */
+    &:nth-child(1) {
+      top: 10%;
+      left: 0%;
+      transform: rotate(-5deg);
+      &:hover {
+        transform: translateX(var(--hover-tx)) translateY(var(--hover-ty)) rotate(var(--hover-rotate)) scale(var(--hover-scale));
+        z-index: 10;
+      }
+    }
+    &:nth-child(2) {
+      top: 5%;
+      right: 0% !important;
+      transform: rotate(5deg);
+      &:hover {
+        transform: translateX(var(--hover-tx)) translateY(var(--hover-ty)) rotate(var(--hover-rotate)) scale(var(--hover-scale));
+        z-index: 10;
+      }
+    }
+    &:nth-child(3) {
+      left: 0;
+      right: 0;
+      margin: auto;
+      top: 30px !important;
+      &:hover {
+        transform: translateX(var(--hover-tx)) translateY(var(--hover-ty)) rotate(var(--hover-rotate)) scale(var(--hover-scale));
+        z-index: 10;
+      }
+    }
+  }
+}

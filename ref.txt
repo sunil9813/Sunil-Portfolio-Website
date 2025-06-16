@@ -1,11 +1,8 @@
 https://codepen.io/Joanverhulst/pen/LYgGxPG
 
-https://codepen.io/scanfcode/pen/XgQXGB
+https://codepen.io/Unleashed-Design/pen/oNMeBPP   // Spotlight Glow Hover Card
 
-https://codepen.io/Unleashed-Design/pen/oNMeBPP
 https://codepen.io/simeydotme/pen/gOZRrwb
-
-
 
 https://codepen.io/qogoist/pen/poBXdEG?anon=true&view=pen
 
@@ -57,7 +54,7 @@ take for refercne for component => https://bentogrids.com/
 take ref for team => https://www.raycast.com/teams
 for customer review => https://reflect.app/home
 
-
+https://preview.themeforest.net/item/giglink-nft-marketplace-tailwind-css-template/full_screen_preview/40404538?_ga=2.201381905.1893033478.1750071610-319606260.1732702020
 
 
 

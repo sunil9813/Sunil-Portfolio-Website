@@ -20,3 +20,8 @@
 .textSizeSm {
   @apply text-xs 3xl:text-sm;
 }
+.tags {
+  .highlightbg {
+    @apply bg-transparent dark:bg-transparent;
+  }
+}

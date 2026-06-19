@@ -12,7 +12,7 @@ import { MdEmail } from "react-icons/md";
 import { PiHandbagFill } from "react-icons/pi";
 import { HiLink } from "react-icons/hi2";
 import { LuNotepadTextDashed } from "react-icons/lu";
-import { getIntro, updateIntro } from "@/redux/slices/portfolio/IntroSlice";
+import { getIntro, updateIntro } from "@/redux/slices/portfolio/introSlice";
 
 const initialState = {
   fullname: "",

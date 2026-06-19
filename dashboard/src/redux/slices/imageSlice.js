@@ -23,7 +23,11 @@ export const getAllImages = createAsyncThunk("images/getAll", async ({ folder, s
 // Upload image
 export const uploadImageToEditorDes = createAsyncThunk("images/upload", async (formData, thunkAPI) => {
   try {
-    return await imageService.uploadImageToEditorDes(formData);
+    console.log("====================================");
+    console.log(formData);
+    console.log("====================================");
+    const result = await imageService.uploadImageToEditorDes(formData);
+    return result;
   } catch (error) {
     const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
     return thunkAPI.rejectWithValue(message);

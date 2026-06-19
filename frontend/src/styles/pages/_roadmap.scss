@@ -1,0 +1,117 @@
+/* Main container */
+.wave-container {
+  position: absolute;
+  top: 0;
+  z-index: -10;
+  width: 100%;
+  height: 150vh;
+  overflow: hidden;
+
+  /* Background gradient */
+  .background-gradient {
+    position: absolute;
+    width: 100%;
+    height: 1000px;
+    top: 0;
+    background: linear-gradient(rgb(130, 65, 188) 0%, rgb(225, 72, 133) 54.09%, rgb(251, 165, 139) 100%);
+    z-index: -3;
+  }
+
+  /* Decorative circles */
+  .circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.4;
+    z-index: -1;
+    mix-blend-mode: overlay;
+  }
+
+  .circle-1 {
+    left: 20%;
+    top: 150px;
+    width: 228px;
+    height: 228px;
+    background: linear-gradient(rgb(36, 36, 82) 0%, rgb(73, 38, 173) 100%);
+  }
+
+  .circle-2 {
+    left: 80%;
+    top: 286px;
+    width: 84px;
+    height: 84px;
+    background: linear-gradient(rgb(47, 184, 255) 0%, rgb(158, 236, 217) 100%);
+    mix-blend-mode: color-dodge;
+  }
+
+  .circle-3 {
+    left: 50%;
+    top: 170px;
+    width: 118px;
+    height: 118px;
+    background: linear-gradient(111.34deg, rgb(132, 78, 255) 0.04%, rgb(136, 248, 255) 100.04%);
+    mix-blend-mode: color-dodge;
+  }
+
+  /* Decorative pills */
+  .pill {
+    position: absolute;
+    background: linear-gradient(rgb(189, 225, 220) 0%, rgba(191, 227, 222, 0) 100%);
+    border-radius: 40px;
+    transform: rotate(-130deg);
+    z-index: -1;
+    opacity: 0.3;
+    mix-blend-mode: color-dodge;
+  }
+
+  .pill-1 {
+    width: 52px;
+    height: 320px;
+    top: 50px;
+    left: 20%;
+  }
+
+  .pill-2 {
+    width: 37px;
+    height: 304px;
+    left: 70%;
+    top: 215px;
+  }
+
+  .pill-3 {
+    width: 17px;
+    height: 143px;
+    left: 50%;
+    top: 190px;
+  }
+
+  /* Waves */
+  .wave {
+    position: absolute;
+    width: 100%;
+    z-index: -1;
+    overflow: hidden;
+  }
+
+  .wave-1 {
+    top: 450px;
+    height: 450px;
+    clip-path: url(#wave1);
+    background: linear-gradient(rgb(199, 99, 198) 0%, rgb(31, 194, 237) 100%);
+  }
+
+  .wave-2 {
+    top: 550px;
+    height: 450px;
+    clip-path: url(#wave2);
+    background: linear-gradient(rgb(255, 82, 82) 0%, rgb(255, 114, 182) 100%);
+  }
+
+  .wave-3 {
+    top: 550px;
+    height: 700px;
+    clip-path: url(#wave3);
+    background: linear-gradient(rgb(25, 25, 56) 0%, rgb(73, 38, 173) 100%);
+    background: linear-gradient(rgb(36, 36, 82) 0%, rgb(11, 5, 25) 100%);
+    background: linear-gradient(to bottom, #13161c 0%, #13161c 100%);
+  }
+}

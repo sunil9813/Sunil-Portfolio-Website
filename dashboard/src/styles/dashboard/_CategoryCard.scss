@@ -1,0 +1,619 @@
+/* ==========================================================================
+   WRAPPER RESET
+   ========================================================================== */
+
+.enhanced-folder-wrapper {
+  width: 100%;
+  min-width: 220px;
+  max-width: 286px;
+
+  padding: 0 !important;
+
+  overflow: visible !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   MAIN CARD
+   ========================================================================== */
+
+.enhanced-folder-card {
+  --action-size: 38px;
+
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  aspect-ratio: 268 / 220;
+
+  overflow: visible;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  transition:
+    transform 240ms ease,
+    filter 240ms ease;
+}
+
+.enhanced-folder-card:hover {
+  transform: translateY(-3px);
+}
+
+/* ==========================================================================
+   BACK PAPER LAYERS
+   ========================================================================== */
+
+.enhanced-folder-card__paper {
+  position: absolute;
+
+  overflow: hidden;
+
+  pointer-events: none;
+
+  box-shadow: 0 9px 21px rgba(0, 0, 0, 0.18);
+
+  transition:
+    transform 280ms ease,
+    filter 280ms ease,
+    opacity 280ms ease;
+}
+
+/* Rear coloured paper */
+
+.enhanced-folder-card__paper--rear {
+  z-index: 1;
+
+  top: 2px;
+  left: 93px;
+
+  width: 150px;
+  height: 45px;
+
+  border-radius: 11px 12px 10px 9px;
+
+  background: linear-gradient(100deg, var(--folder-rear-paper) 0%, var(--folder-front-paper) 100%);
+
+  transform: rotate(-9deg);
+  transform-origin: right bottom;
+
+  opacity: 0.82;
+}
+
+/* Category image paper */
+
+.enhanced-folder-card__paper--image {
+  z-index: 2;
+
+  top: 12px;
+  left: 105px;
+
+  width: 153px;
+  height: 48px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 11px 13px 10px 9px;
+
+  background: var(--folder-image-paper);
+
+  transform: rotate(-4deg);
+  transform-origin: right bottom;
+}
+
+.enhanced-folder-card__paper-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  transform: scale(1.06);
+
+  filter: saturate(0.94) contrast(1.06) brightness(0.8);
+}
+
+.enhanced-folder-card__paper-image-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(90deg, var(--folder-image-overlay), rgba(10, 8, 15, 0.03));
+
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+
+  pointer-events: none;
+}
+
+.enhanced-folder-card__paper-fallback {
+  display: flex;
+
+  width: 100%;
+  height: 100%;
+
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(100deg, var(--folder-rear-paper), var(--folder-front-paper));
+
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Front coloured paper */
+
+.enhanced-folder-card__paper--front {
+  z-index: 3;
+
+  top: 29px;
+  left: 121px;
+
+  width: 143px;
+  height: 34px;
+
+  border-radius: 9px 11px 9px 8px;
+
+  background: linear-gradient(90deg, var(--folder-rear-paper) 0%, var(--folder-front-paper) 100%);
+
+  transform: rotate(-0.5deg);
+  transform-origin: right bottom;
+
+  opacity: 0.92;
+
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Paper hover movement */
+
+.enhanced-folder-card:hover .enhanced-folder-card__paper--rear {
+  transform: translateY(-3px) rotate(-10deg);
+
+  filter: brightness(1.06);
+}
+
+.enhanced-folder-card:hover .enhanced-folder-card__paper--image {
+  transform: translateY(-2px) rotate(-4.8deg);
+
+  filter: brightness(1.06);
+}
+
+.enhanced-folder-card:hover .enhanced-folder-card__paper--front {
+  transform: translateY(-1px) rotate(-1deg);
+
+  filter: brightness(1.04);
+}
+
+/* ==========================================================================
+   MAIN SVG FOLDER
+   ========================================================================== */
+
+.enhanced-folder-card__shape {
+  position: absolute;
+  z-index: 4;
+
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+
+  filter: drop-shadow(0 23px 29px rgba(0, 0, 0, 0.29)) drop-shadow(0 8px 18px var(--folder-glow));
+
+  transition: filter 240ms ease;
+}
+
+.enhanced-folder-card:hover .enhanced-folder-card__shape {
+  filter: drop-shadow(0 28px 36px rgba(0, 0, 0, 0.36)) drop-shadow(0 12px 24px var(--folder-glow));
+}
+
+/* ==========================================================================
+   CONTENT
+   ========================================================================== */
+
+.enhanced-folder-card__content {
+  position: absolute;
+  z-index: 7;
+
+  top: 68px;
+  left: 34px;
+  right: 28px;
+
+  min-width: 0;
+}
+
+.enhanced-folder-card__type {
+  display: inline-flex;
+
+  max-width: 100%;
+
+  align-items: center;
+
+  gap: 5px;
+
+  margin-bottom: 7px;
+
+  color: rgba(228, 223, 232, 0.58);
+
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.enhanced-folder-card__type span {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enhanced-folder-card__title {
+  margin: 0 0 7px;
+
+  overflow: hidden;
+
+  color: #f5f3f7;
+
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+
+  letter-spacing: -0.025em;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enhanced-folder-card__metadata {
+  display: flex;
+
+  min-width: 0;
+
+  align-items: center;
+
+  gap: 6px;
+
+  color: rgba(226, 222, 229, 0.57);
+
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.enhanced-folder-card__metadata svg {
+  flex-shrink: 0;
+
+  color: var(--folder-accent);
+}
+
+.enhanced-folder-card__metadata span {
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enhanced-folder-card__description {
+  display: -webkit-box;
+
+  max-width: 82%;
+
+  margin: 9px 0 0;
+
+  overflow: hidden;
+
+  color: rgba(215, 211, 220, 0.44);
+
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+/* ==========================================================================
+   ACTIONS — HIDDEN UNTIL CARD HOVER
+   ========================================================================== */
+
+.enhanced-folder-card__actions {
+  position: absolute;
+  z-index: 9;
+
+  right: 18px;
+  bottom: 17px;
+
+  display: flex;
+  align-items: center;
+
+  /*
+   * Icons are hidden normally.
+   */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transform: translateY(10px) scale(0.9);
+
+  transition:
+    opacity 180ms ease,
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 240ms;
+}
+
+/*
+ * Show icons when the complete card is hovered.
+ * focus-within also supports keyboard navigation.
+ */
+.enhanced-folder-card:hover .enhanced-folder-card__actions,
+.enhanced-folder-card:focus-within .enhanced-folder-card__actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+
+  transform: translateY(0) scale(1);
+
+  transition-delay: 0s;
+}
+
+.enhanced-folder-card__action {
+  position: relative;
+
+  display: flex;
+
+  width: var(--action-size);
+  height: var(--action-size);
+
+  flex-shrink: 0;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  cursor: pointer;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  border-radius: 999px;
+
+  outline: 0;
+
+  background: linear-gradient(145deg, rgba(62, 56, 67, 0.97), rgba(24, 22, 28, 0.99));
+
+  color: rgba(255, 255, 255, 0.88);
+
+  text-decoration: none;
+
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  backdrop-filter: blur(10px);
+
+  /*
+   * Each button has its own entrance animation.
+   */
+  opacity: 0;
+
+  transform: translateY(8px) scale(0.8);
+
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.enhanced-folder-card:hover .enhanced-folder-card__action,
+.enhanced-folder-card:focus-within .enhanced-folder-card__action {
+  opacity: 1;
+
+  transform: translateY(0) scale(1);
+}
+
+/* Staggered entrance */
+
+.enhanced-folder-card:hover .enhanced-folder-card__action:nth-child(1),
+.enhanced-folder-card:focus-within .enhanced-folder-card__action:nth-child(1) {
+  transition-delay: 20ms;
+}
+
+.enhanced-folder-card:hover .enhanced-folder-card__action:nth-child(2),
+.enhanced-folder-card:focus-within .enhanced-folder-card__action:nth-child(2) {
+  transition-delay: 65ms;
+}
+
+.enhanced-folder-card:hover .enhanced-folder-card__action:nth-child(3),
+.enhanced-folder-card:focus-within .enhanced-folder-card__action:nth-child(3) {
+  transition-delay: 110ms;
+}
+
+/* Overlapping circles */
+
+.enhanced-folder-card__action + .enhanced-folder-card__action {
+  margin-left: -8px;
+}
+
+.enhanced-folder-card__action:nth-child(1) {
+  z-index: 1;
+}
+
+.enhanced-folder-card__action:nth-child(2) {
+  z-index: 2;
+}
+
+.enhanced-folder-card__action:nth-child(3) {
+  z-index: 3;
+}
+
+/* Individual button hover */
+
+.enhanced-folder-card__action:hover {
+  z-index: 20;
+
+  transform: translateY(-4px) scale(1.1) !important;
+
+  box-shadow:
+    0 11px 24px rgba(0, 0, 0, 0.44),
+    0 5px 16px var(--folder-glow);
+}
+
+/* View button */
+
+.enhanced-folder-card__action--view {
+  color: var(--folder-accent);
+}
+
+.enhanced-folder-card__action--view:hover {
+  border-color: var(--folder-accent-border);
+
+  background: var(--folder-accent);
+
+  color: #ffffff;
+}
+
+/* Edit button */
+
+.enhanced-folder-card__action--edit {
+  color: rgba(240, 237, 243, 0.9);
+}
+
+.enhanced-folder-card__action--edit:hover {
+  border-color: rgba(255, 255, 255, 0.96);
+
+  background: #f4f0f7;
+
+  color: #29232f;
+}
+
+/* Delete button */
+
+.enhanced-folder-card__action--delete {
+  color: #ed7d91;
+}
+
+.enhanced-folder-card__action--delete:hover {
+  border-color: #f06a82;
+
+  background: #d94d66;
+
+  color: #ffffff;
+}
+
+/* Keyboard focus */
+
+.enhanced-folder-card__action:focus-visible {
+  outline: 2px solid var(--folder-accent);
+
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .enhanced-folder-wrapper {
+    min-width: 195px;
+    max-width: 250px;
+  }
+
+  .enhanced-folder-card {
+    --action-size: 35px;
+  }
+
+  .enhanced-folder-card__paper--rear {
+    left: 35%;
+    width: 56%;
+  }
+
+  .enhanced-folder-card__paper--image {
+    left: 39%;
+    width: 57%;
+  }
+
+  .enhanced-folder-card__paper--front {
+    left: 45%;
+    width: 51%;
+  }
+
+  .enhanced-folder-card__content {
+    top: 32%;
+    left: 12.7%;
+    right: 10%;
+  }
+
+  .enhanced-folder-card__title {
+    font-size: 16px;
+  }
+
+  .enhanced-folder-card__metadata {
+    font-size: 11.5px;
+  }
+
+  .enhanced-folder-card__description {
+    display: none;
+  }
+
+  .enhanced-folder-card__actions {
+    right: 7%;
+    bottom: 8%;
+  }
+}
+
+/*
+ * Touchscreen devices do not have normal hover.
+ * Actions remain visible so users can click them.
+ */
+@media (hover: none) {
+  .enhanced-folder-card__actions {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transform: none;
+  }
+
+  .enhanced-folder-card__action {
+    opacity: 1;
+
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .enhanced-folder-card,
+  .enhanced-folder-card__paper,
+  .enhanced-folder-card__shape,
+  .enhanced-folder-card__actions,
+  .enhanced-folder-card__action {
+    transition: none;
+  }
+}

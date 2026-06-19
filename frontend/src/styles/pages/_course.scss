@@ -1,0 +1,78 @@
+.course-list {
+  .items::-webkit-scrollbar {
+    display: none;
+  }
+
+  &_content_list {
+    background: rgba(25, 25, 27, 0.3);
+    box-shadow: rgba(255, 255, 255, 0.2) 0px 0px 0px 0.5px inset;
+    box-sizing: border-box;
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+  }
+}
+.handbook-card {
+  &__link {
+    display: block;
+    text-decoration: none;
+  }
+
+  &__wrapper {
+    position: relative;
+
+    &:hover {
+      .handbook-card__background {
+        transform: skewY(15deg);
+        width: 200px;
+      }
+    }
+  }
+
+  &__main {
+    position: relative;
+    width: 240px;
+    height: 280px;
+    backdrop-filter: blur(40px);
+    border-radius: 0px 30px 40px 40px;
+    padding: 20px;
+    background: rgba(31, 31, 71, 0.6);
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 40px 80px, rgba(255, 255, 255, 0.15) 0px 0px 0px 0.5px inset;
+    z-index: 1;
+  }
+
+  &__content {
+    position: relative;
+    display: grid;
+    gap: 12px;
+    text-align: left;
+    max-width: 200px;
+  }
+
+  &__icon-wrapper {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  &__background {
+    position: absolute;
+    width: 220px;
+    height: 280px;
+    border-radius: 0px 40px 40px;
+    transform: skewY(8deg);
+    transform-origin: left top;
+    top: 0;
+    transition: 0.8s cubic-bezier(0.075, 0.82, 0.165, 1);
+  }
+}
+.notes .handbook-card {
+  &__main {
+    width: 280px;
+    height: 320px;
+  }
+  &__content {
+    width: 280px;
+  }
+  &__background {
+    width: 280px;
+    height: 320px;
+  }
+}

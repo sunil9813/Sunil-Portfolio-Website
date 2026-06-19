@@ -12,8 +12,10 @@ import { LuLayoutDashboard } from "react-icons/lu";
 import { TableDesign } from "./design/TableDesign";
 import { DropdownWrapper } from "@/textEditor/common/DropdownWrapper";
 
+// Key for storing recent colors in localStorage
 const RECENT_COLORS_KEY = "tableEditorRecentColors";
 
+// Function to retrieve recently used colors from localStorage
 const getRecentColors = () => {
   try {
     const stored = localStorage.getItem(RECENT_COLORS_KEY);
@@ -24,29 +26,41 @@ const getRecentColors = () => {
 };
 
 export const TableActionPopup = ({ editor }) => {
+  // State for popup visibility and positioning
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  // State for dropdown toggles
   const [showSplitCell, setShowSplitCell] = useState(false);
   const [showTableDesign, setShowTableDesign] = useState(false);
   const [showBorderDropdown, setShowBorderDropdown] = useState(false);
   const [showPaddingDropdown, setShowPaddingDropdown] = useState(false);
   const [showCellColorDropdown, setShowCellColorDropdown] = useState(false);
+
+  // State for table styling properties
   const [borderStyle, setBorderStyle] = useState("solid");
   const [borderWidth, setBorderWidth] = useState(1);
   const [borderColor, setBorderColor] = useState("#ffffff");
   const [padding, setPadding] = useState(10);
   const [borderRadius, setBorderRadius] = useState(0);
+
+  // State for color management
   const [recentlyUsedColors, setRecentlyUsedColors] = useState(getRecentColors());
   const [customColor, setCustomColor] = useState("#ffffff");
 
   const popupRef = useRef(null);
 
+  // Function to find the currently active table in the editor
   const getActiveTable = () => {
     if (!editor) return null;
+    // Get all tables with custom-table class
     const tables = editor.view.dom.querySelectorAll(".custom-table");
     if (!tables.length) return null;
 
+    // Get current cursor position
     const { from } = editor.state.selection;
+
+    // Find the table that contains the current cursor position
     return (
       Array.from(tables).find((table) => {
         const tablePos = editor.view.posAtDOM(table, 0);
@@ -55,10 +69,11 @@ export const TableActionPopup = ({ editor }) => {
           return from >= tablePos && from <= tableEndPos;
         }
         return false;
-      }) || tables[tables.length - 1]
+      }) || tables[tables.length - 1] // Fallback to last table if none found
     );
   };
 
+  // Function to update popup position above the active table
   const updatePopupPosition = () => {
     const table = getActiveTable();
     if (!table || !popupRef.current) return;
@@ -67,22 +82,28 @@ export const TableActionPopup = ({ editor }) => {
     const popupHeight = popupRef.current.offsetHeight || 40;
     const popupWidth = popupRef.current.offsetWidth || 500;
 
+    // Calculate new position (above the table, centered horizontally)
     const newPosition = {
-      top: tableRect.top - popupHeight - 230 + window.scrollY,
-      left: Math.max(0, Math.min(tableRect.left + tableRect.width / 4 - popupWidth / 2 + window.scrollX, window.innerWidth - popupWidth)),
+      top: tableRect.top - popupHeight - 640 + window.scrollY, // Position above table with offset
+      left: Math.max(0, Math.min(tableRect.left + tableRect.width / 4 - popupWidth / 2 + window.scrollX, window.innerWidth - popupWidth)), // Ensure popup stays within viewport
     };
 
     setPosition(newPosition);
   };
 
+  // Function to apply styling properties to table and cells
   const applyPropertiesToTableAndCells = (options = {}) => {
     if (!editor) return;
     const { state } = editor;
     const tr = state.tr;
+
+    // Destructure options for specific styling
     const { applyPaddingToSelectedCells = false, paddingValue, applyBackgroundToSelectedCells = false, backgroundColor } = options;
 
+    // Traverse document to find and update all table nodes
     state.doc.descendants((node, pos) => {
       if (node.type.name === "table") {
+        // Update table node attributes
         tr.setNodeMarkup(pos, null, {
           ...node.attrs,
           borderStyle,
@@ -91,6 +112,7 @@ export const TableActionPopup = ({ editor }) => {
           borderRadius: `${borderRadius}px`,
         });
 
+        // Update all cells in table (if not applying specific cell properties)
         if (!applyPaddingToSelectedCells && !applyBackgroundToSelectedCells) {
           node.descendants((childNode, childPos) => {
             if (childNode.type.name === "tableCell" || childNode.type.name === "tableHeader") {
@@ -107,6 +129,7 @@ export const TableActionPopup = ({ editor }) => {
       }
     });
 
+    // Apply padding to selected cells if specified
     if (applyPaddingToSelectedCells && state.selection instanceof CellSelection) {
       state.selection.forEachCell((cellNode, cellPos) => {
         if (cellNode.type.name === "tableCell" || cellNode.type.name === "tableHeader") {
@@ -118,6 +141,7 @@ export const TableActionPopup = ({ editor }) => {
       });
     }
 
+    // Apply background color to selected cells if specified
     if (applyBackgroundToSelectedCells && state.selection instanceof CellSelection) {
       state.selection.forEachCell((cellNode, cellPos) => {
         if (cellNode.type.name === "tableCell" || cellNode.type.name === "tableHeader") {
@@ -129,11 +153,13 @@ export const TableActionPopup = ({ editor }) => {
       });
     }
 
+    // Dispatch transaction if changes were made
     if (tr.docChanged) {
       editor.view.dispatch(tr);
     }
   };
 
+  // Function to update padding value based on selected cells
   const updatePaddingValue = () => {
     if (!editor || !editor.state.selection || !(editor.state.selection instanceof CellSelection)) {
       setPadding(10);
@@ -141,6 +167,8 @@ export const TableActionPopup = ({ editor }) => {
     }
 
     let firstPadding = null;
+
+    // Get padding value from first selected cell
     editor.state.selection.forEachCell((cellNode) => {
       if (cellNode.type.name === "tableCell" || cellNode.type.name === "tableHeader") {
         const cellPadding = cellNode.attrs.padding ? parseInt(cellNode.attrs.padding, 10) : 10;
@@ -153,9 +181,11 @@ export const TableActionPopup = ({ editor }) => {
     setPadding(firstPadding !== null ? firstPadding : 10);
   };
 
+  // Function to handle cell background color changes
   const handleCellBackgroundColor = (color) => {
     if (!editor) return;
 
+    // Update recently used colors (excluding transparent)
     if (color !== "transparent") {
       setRecentlyUsedColors((prev) => {
         const updatedColors = prev.includes(color) ? prev : [color, ...prev].slice(0, 10);
@@ -164,6 +194,7 @@ export const TableActionPopup = ({ editor }) => {
       });
     }
 
+    // Apply background color to selected cells
     const { state } = editor;
     if (state.selection instanceof CellSelection) {
       editor
@@ -175,14 +206,16 @@ export const TableActionPopup = ({ editor }) => {
     setShowCellColorDropdown(false);
   };
 
+  // Main function to handle all table actions
   const handleAction = (action, value) => {
     if (!editor) return;
     const chain = editor.chain().focus();
 
+    // Switch statement to handle different table operations
     switch (action) {
       case "add-row-before":
         chain.addRowBefore().run();
-        applyPropertiesToTableAndCells();
+        applyPropertiesToTableAndCells(); // Reapply styles after modification
         break;
       case "add-row-after":
         chain.addRowAfter().run();
@@ -210,7 +243,7 @@ export const TableActionPopup = ({ editor }) => {
         break;
       case "delete-table":
         chain.deleteTable().run();
-        setIsVisible(false);
+        setIsVisible(false); // Hide popup after deleting table
         break;
       case "set-border-style":
         setBorderStyle(value);
@@ -243,9 +276,11 @@ export const TableActionPopup = ({ editor }) => {
       default:
         break;
     }
+    // Update popup position after table modifications
     setTimeout(updatePopupPosition, 50);
   };
 
+  // Function to check if split cell button should be shown
   const updateSplitCellVisibility = () => {
     if (!editor || !editor.state.selection) {
       setShowSplitCell(false);
@@ -258,6 +293,7 @@ export const TableActionPopup = ({ editor }) => {
       return;
     }
 
+    // Check if any selected cell has colspan or rowspan > 1
     const hasMergeableCells = selection.someCell((cell, pos) => {
       const cellNode = editor.state.doc.nodeAt(pos);
       return cellNode && (cellNode.attrs.colspan > 1 || cellNode.attrs.rowspan > 1);
@@ -266,9 +302,11 @@ export const TableActionPopup = ({ editor }) => {
     setShowSplitCell(hasMergeableCells);
   };
 
+  // Effect to manage popup visibility and position
   useEffect(() => {
     if (!editor) return;
 
+    // Function to check if table is active and update popup accordingly
     const checkTablePresence = () => {
       const isTableActive = editor.isActive("table");
       setIsVisible(isTableActive);
@@ -278,13 +316,16 @@ export const TableActionPopup = ({ editor }) => {
       }
     };
 
+    // Set up event listeners
     editor.on("transaction", checkTablePresence);
     editor.on("selectionUpdate", checkTablePresence);
     window.addEventListener("scroll", updatePopupPosition);
     window.addEventListener("resize", updatePopupPosition);
 
+    // Initial check
     checkTablePresence();
 
+    // Cleanup event listeners
     return () => {
       editor.off("transaction", checkTablePresence);
       editor.off("selectionUpdate", checkTablePresence);
@@ -293,6 +334,7 @@ export const TableActionPopup = ({ editor }) => {
     };
   }, [editor]);
 
+  // Effect to handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -306,13 +348,20 @@ export const TableActionPopup = ({ editor }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Effect to update padding value when padding dropdown is shown
   useEffect(() => {
     if (showPaddingDropdown) {
       updatePaddingValue();
     }
   }, [showPaddingDropdown, editor, editor?.state.selection]);
 
-  if (!isVisible) return null;
+  // Add early return if editor is not available
+  if (!editor) {
+    return null;
+  }
+
+  // Don't render if table is not active
+  if (!editor || !isVisible) return null;
 
   return (
     <div
@@ -422,7 +471,7 @@ TableActionPopup.propTypes = {
   editor: PropTypes.shape({
     isActive: PropTypes.func.isRequired,
     chain: PropTypes.func.isRequired,
-    focus: PropTypes.func.isRequired,
+    focus: PropTypes.func,
     on: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
     view: PropTypes.shape({
@@ -444,8 +493,8 @@ TableActionPopup.propTypes = {
     state: PropTypes.shape({
       selection: PropTypes.shape({
         from: PropTypes.number,
-        forEachCell: PropTypes.func.isRequired,
-        someCell: PropTypes.func.isRequired,
+        forEachCell: PropTypes.func,
+        someCell: PropTypes.func,
         $anchorCell: PropTypes.object,
         $headCell: PropTypes.object,
       }).isRequired,
@@ -458,16 +507,16 @@ TableActionPopup.propTypes = {
         docChanged: PropTypes.bool.isRequired,
       }).isRequired,
     }).isRequired,
-    addRowBefore: PropTypes.func.isRequired,
-    addRowAfter: PropTypes.func.isRequired,
-    addColumnBefore: PropTypes.func.isRequired,
-    addColumnAfter: PropTypes.func.isRequired,
-    mergeCells: PropTypes.func.isRequired,
-    splitCell: PropTypes.func.isRequired,
-    deleteRow: PropTypes.func.isRequired,
-    deleteColumn: PropTypes.func.isRequired,
-    deleteTable: PropTypes.func.isRequired,
-    setCellAttribute: PropTypes.func.isRequired,
-    setTableDesign: PropTypes.func.isRequired,
+    addRowBefore: PropTypes.func,
+    addRowAfter: PropTypes.func,
+    addColumnBefore: PropTypes.func,
+    addColumnAfter: PropTypes.func,
+    mergeCells: PropTypes.func,
+    splitCell: PropTypes.func,
+    deleteRow: PropTypes.func,
+    deleteColumn: PropTypes.func,
+    deleteTable: PropTypes.func,
+    setCellAttribute: PropTypes.func,
+    setTableDesign: PropTypes.func,
   }).isRequired,
 };

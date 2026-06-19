@@ -1,6 +1,6 @@
 const express = require("express");
 const { protect, admin } = require("../../middleware/authMiddleware");
-const { createTestimonial, updateTestimonial, deleteTestimonial, getAllTestimonialsByAdmin, getTestimonialsByAdmin } = require("../../controllers/portfolio/testimonialCtr");
+const { createTestimonial, updateTestimonial, deleteTestimonial, getAllTestimonialsByAdmin, getTestimonialsByAdmin, getAllTestimonials } = require("../../controllers/portfolio/testimonialCtr");
 const { getuploadAvatarandProjectDoc } = require("../../utils/uploadImg");
 
 const uploadAssetsandAvatar = async (req, res, next) => {
@@ -36,6 +36,7 @@ router.post(
 );
 
 router.get("/admin", protect, admin, getAllTestimonialsByAdmin);
+router.get("/", getAllTestimonials);
 router.get("/admin/:id", protect, admin, getTestimonialsByAdmin);
 router.delete("/", protect, admin, deleteTestimonial);
 router.put("/:id", protect, admin, updateTestimonial);

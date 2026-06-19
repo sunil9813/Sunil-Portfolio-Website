@@ -1,0 +1,61 @@
+/* .profileme .images {
+  box-shadow: -1px 1px 80px -12px rgba(182, 242, 247, 0.982);
+  -webkit-box-shadow: -1px 1px 80px -12px rgba(182, 242, 247, 0.982);
+  -moz-box-shadow: -1px 1px 80px -12px rgba(182, 242, 247, 0.982);
+}
+ */
+.black-custome-box {
+  background: rgba(25, 25, 27, 0.3);
+  box-shadow: rgba(255, 255, 255, 0.2) 0px 0px 0px 0.5px inset;
+  box-sizing: border-box;
+  backdrop-filter: blur(60px);
+  border-radius: 20px;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.3);
+  background-image: linear-gradient(to bottom, #ffffff1a, #fff0);
+  // background-image: linear-gradient(to bottom, #000000, rgba(18, 18, 18, 0.709));
+  position: relative;
+  z-index: 10;
+}
+
+:root {
+  --first-color: #000000;
+  --second-color: #0f7466;
+  --first-gradient: conic-gradient(from 90deg at 80% 50%, var(--first-color), var(--second-color));
+  --second-gradient: conic-gradient(from 270deg at 20% 50%, var(--second-color), var(--first-color));
+}
+
+.about-bg {
+  /* Base styles */
+  position: absolute;
+  width: 100% !important;
+  height: 500px;
+  margin-bottom: -500px;
+  will-change: transform, opacity;
+  pointer-events: none;
+  user-select: none;
+
+  /* Mask */
+  mask-image: radial-gradient(40% 50% at center, black, transparent);
+
+  /* Background setup */
+  background: var(--first-gradient), var(--second-gradient);
+  background-position: 1% 0%, 99% 0%;
+  background-size: 50% 100%, 50% 100%;
+  background-repeat: no-repeat;
+
+  /* Transform */
+  transform: translateY(-360px) rotate(180deg) scale(1) translateZ(0);
+  transform-origin: center center;
+}
+
+.about-bg-second {
+  position: absolute;
+  top: 30%;
+  left: -5%;
+  width: 100%;
+  margin: auto;
+  height: 100px;
+  background: linear-gradient(90deg, rgb(20, 154, 251) 0%, rgb(55, 141, 175) 50%, rgb(56, 237, 172) 100%);
+  opacity: 0.4;
+  filter: blur(100px);
+}

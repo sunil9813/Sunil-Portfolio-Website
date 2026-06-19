@@ -9,7 +9,7 @@ const imageSchema = new mongoose.Schema(
     },
     groupId: {
       type: String,
-      required: true,
+      required: false,
     },
     fileName: { type: String, required: true },
     filePath: { type: String, required: true },
@@ -17,7 +17,7 @@ const imageSchema = new mongoose.Schema(
     publicId: { type: String, required: true },
     folder: { type: String, required: true }, // New field to store the folder name
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const ImageModel = mongoose.model("Image", imageSchema);

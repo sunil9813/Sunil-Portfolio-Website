@@ -19,6 +19,14 @@ export const getAllCourse = createAsyncThunk("courses/all", async (_, thunkAPI) 
     return thunkAPI.rejectWithValue(message);
   }
 });
+export const getAllCourseWithChapters = createAsyncThunk("getAllSubjectsWithChapters/all", async (_, thunkAPI) => {
+  try {
+    return await courseService.getAllCourseWithChapters();
+  } catch (error) {
+    const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
+    return thunkAPI.rejectWithValue(message);
+  }
+});
 export const getUserCourses = createAsyncThunk("courses/user/all", async (_, thunkAPI) => {
   try {
     return await courseService.getUserCourses();
@@ -93,6 +101,22 @@ const courseSlice = createSlice({
         state.courses = action.payload;
       })
       .addCase(getAllCourse.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.courses = null;
+        toast.error(action.payload);
+      })
+      .addCase(getAllCourseWithChapters.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getAllCourseWithChapters.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.courses = action.payload;
+      })
+      .addCase(getAllCourseWithChapters.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;

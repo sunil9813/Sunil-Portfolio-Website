@@ -1,18 +1,21 @@
 import PropTypes from "prop-types";
 import { Header } from "../../router";
 import { Footer } from "./Footer";
+import { ScrollRestoration } from "react-router";
 
 export const Layout = ({ children }) => {
   return (
-    <main style={{ height: "150vh" }}>
-      <Header />
-      <div>{children}</div>
-      <Footer />
-    </main>
+    <>
+      <ScrollRestoration />
+      <main>
+        <Header />
+        <div>{children}</div>
+        <Footer />
+      </main>
+    </>
   );
 };
 
 Layout.propTypes = {
   children: PropTypes.any,
-  title: PropTypes.string,
 };

@@ -49,8 +49,8 @@ LinkForm.propTypes = {
   visible: PropTypes.bool.isRequired,
   onSubmit: PropTypes.func.isRequired,
   initialState: PropTypes.shape({
-    url: PropTypes.string.isRequired,
-    openInNewTab: PropTypes.bool.isRequired,
+    url: PropTypes.string,
+    openInNewTab: PropTypes.bool,
   }),
 };
 export default LinkForm;

@@ -3,21 +3,38 @@ const asyncHandler = require("express-async-handler");
 const { default: ImageModel } = require("../models/ImageModel");
 
 const uploadImageToEditorDes = asyncHandler(async (req, res) => {
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: "At least one image is required." });
+  console.log("=== UPLOAD REQUEST ===");
+  console.log("Body:", req.body);
+  console.log("Files:", req.files ? req.files.length : 0, "files");
+  console.log("=====================");
+
+  // Validate required fields
+  const { folder, groupId } = req.body;
+
+  if (!groupId) {
+    return res.status(400).json({
+      success: false,
+      error: "groupId is required in the request body",
+    });
   }
 
-  const { folder, groupId } = req.body;
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({
+      success: false,
+      error: "At least one image is required.",
+    });
+  }
+
   const uploadFolder = folder ? `Sunil Portfolio/${folder}` : "Sunil Portfolio/Gallary";
 
-  const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg"];
+  const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
   const maxSize = 5 * 1024 * 1024; // 5MB
 
   try {
     // Validate all files before uploading to Cloudinary
     for (const file of req.files) {
       if (!allowedImageTypes.includes(file.mimetype)) {
-        throw new Error("Invalid image format. Supported formats: JPEG, PNG.");
+        throw new Error("Invalid image format. Supported formats: JPEG, PNG, JPG, WEBP.");
       }
       if (file.size > maxSize) {
         throw new Error("Image size should not exceed 5 MB.");
@@ -28,13 +45,24 @@ const uploadImageToEditorDes = asyncHandler(async (req, res) => {
     const uploadedImages = [];
 
     for (const file of req.files) {
-      const uploadedFile = await cloudinary.uploader.upload(file.path, {
+      // Convert buffer to base64 for Cloudinary upload
+      const b64 = Buffer.from(file.buffer).toString("base64");
+      let dataURI = "data:" + file.mimetype + ";base64," + b64;
+
+      // Upload to Cloudinary
+      const uploadedFile = await cloudinary.uploader.upload(dataURI, {
         folder: uploadFolder,
+        resource_type: "auto",
       });
 
       // Extract only the unique public ID from the Cloudinary response
       const publicIdParts = uploadedFile.public_id.split("/");
       const uniquePublicId = publicIdParts[publicIdParts.length - 1];
+
+      // Validate user is authenticated
+      if (!req.user || !req.user._id) {
+        throw new Error("User authentication required");
+      }
 
       const imageData = {
         fileName: file.originalname,
@@ -43,18 +71,53 @@ const uploadImageToEditorDes = asyncHandler(async (req, res) => {
         publicId: uniquePublicId,
         folder: uploadFolder,
         user: req.user._id,
-        groupId: groupId,
+        groupId: groupId, // This should now be validated
       };
+
+      console.log("Saving image data:", {
+        fileName: imageData.fileName,
+        folder: imageData.folder,
+        groupId: imageData.groupId,
+        user: imageData.user,
+      });
 
       const image = new ImageModel(imageData);
       await image.save(); // Save to MongoDB
 
-      uploadedImages.push(imageData);
+      uploadedImages.push({
+        _id: image._id,
+        filePath: image.filePath,
+        fileName: image.fileName,
+        folder: image.folder,
+        createdAt: image.createdAt,
+      });
     }
 
-    res.status(201).json({ message: "Images uploaded successfully", images: uploadedImages });
+    res.status(201).json({
+      success: true,
+      message: "Images uploaded successfully",
+      images: uploadedImages,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Upload error:", error);
+
+    // Handle Mongoose validation errors
+    if (error.name === "ValidationError") {
+      const errors = {};
+      for (const field in error.errors) {
+        errors[field] = error.errors[field].message;
+      }
+      return res.status(400).json({
+        success: false,
+        error: "Validation failed",
+        details: errors,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 });
 

@@ -79,11 +79,11 @@ export const CustomTableButton = ({ editor }) => {
 CustomTableButton.propTypes = {
   editor: PropTypes.shape({
     chain: PropTypes.func.isRequired,
-    focus: PropTypes.func.isRequired,
-    insertTable: PropTypes.func.isRequired,
+    focus: PropTypes.func,
+    insertTable: PropTypes.func,
     isActive: PropTypes.func.isRequired,
-    run: PropTypes.func.isRequired,
-    setNodeSelection: PropTypes.func.isRequired,
+    run: PropTypes.func,
+    setNodeSelection: PropTypes.func,
     view: PropTypes.shape({
       dom: PropTypes.instanceOf(HTMLElement),
       posAtDOM: PropTypes.func.isRequired,

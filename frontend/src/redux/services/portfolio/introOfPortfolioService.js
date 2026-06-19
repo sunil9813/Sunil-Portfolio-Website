@@ -1,4 +1,4 @@
-import { REACT_APP_BACKEND_URL } from "@/utils/Api";
+import { REACT_APP_BACKEND_URL } from "@/utils/api";
 import axios from "axios";
 
 export const API_URL_PortIntro = `${REACT_APP_BACKEND_URL}/portfolio/intro/`;

@@ -1,4 +1,4 @@
-import { REACT_APP_BACKEND_URL } from "@/utils/Api";
+import { REACT_APP_BACKEND_URL } from "@/utils/api";
 import axios from "axios";
 
 export const API_URL = `${REACT_APP_BACKEND_URL}/subject/`;
@@ -11,6 +11,10 @@ const config = {
 
 const getAllCourse = async () => {
   const response = await axios.get(API_URL);
+  return response.data;
+};
+const getAllCourseWithChapters = async () => {
+  const response = await axios.get(`${API_URL}subject-with-chapter`);
   return response.data;
 };
 const getUserCourses = async () => {
@@ -47,6 +51,7 @@ const courseService = {
   updateCourse,
   getUserCourses,
   getChaptersBySubjectSlug,
+  getAllCourseWithChapters,
 };
 
 export default courseService;

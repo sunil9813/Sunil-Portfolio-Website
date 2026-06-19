@@ -1,0 +1,73 @@
+.contact .content {
+  background: rgba(25, 25, 27, 0.3);
+  box-shadow: rgba(255, 255, 255, 0.2) 0px 0px 0px 0.5px inset;
+  box-sizing: border-box;
+  backdrop-filter: blur(60px);
+  border-radius: 20px;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.3);
+  background-image: linear-gradient(to bottom, #ffffff1a, #fff0);
+  position: relative;
+  z-index: 6000;
+}
+.contact-form {
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-image: linear-gradient(to bottom, #ffffff1a, #fff0);
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    z-index: -1;
+  }
+  textarea,
+  input {
+    background: none;
+    border: none;
+    outline: none;
+  }
+}
+.contact .top-bg {
+  width: 900px;
+  height: 300px;
+  background-image: radial-gradient(circle at center, #fffff5 10%, #ffaa81 40%, #ffda9f 60%, rgba(255, 170, 129, 0.8) 75%, rgba(210, 106, 58, 0) 100%);
+  border-radius: 50%;
+  filter: blur(100px);
+  position: absolute;
+  top: -40%;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+.contact .bottom-contact {
+  background-image: url("/image/contactbottom.jpg");
+}
+.bg-color {
+  /* Fallback for browsers that don't support conic gradients */
+  background: linear-gradient(135deg, #ffd9ad 0%, #129ce6 50%, #fd864d 100%);
+
+  /* Safari and iOS support */
+  background: -webkit-conic-gradient(from 0deg at 50% 50%, #ffd9ad 0deg, #129ce6 180deg, #fd864d 360deg);
+
+  /* Standard syntax */
+  background: conic-gradient(from 0deg at 50% 50%, #ffd9ad 0deg, #129ce6 180deg, #fd864d 360deg);
+
+  flex: none;
+  position: absolute;
+  top: 5%;
+  left: 0;
+  right: 0;
+  width: 800px;
+  height: 50%;
+  margin: 0 auto;
+  overflow: hidden;
+
+  /* Filter with vendor prefixes */
+  -webkit-filter: blur(100px);
+  filter: blur(100px);
+
+  /* Ensure proper rendering in Safari */
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0) scale(1, 1);
+}

@@ -20,6 +20,7 @@ import { createCourse, getAllCourse } from "@/redux/slices/universityStructure/c
 import { getAllFaculty } from "@/redux/slices/universityStructure/facultySlice";
 import { getAllUniversity } from "@/redux/slices/universityStructure/universitySlice";
 import { ProgramDropDown } from "../StructureAcademicDropDown";
+import { AccessTypeDropdown } from "@/components/common/dropdown/CustomeDropDown";
 
 const initialState = {
   name: "",
@@ -443,14 +444,7 @@ export const CreateCourse = () => {
               </div>
               <div>
                 <InputLabel className="my-2">Access Type</InputLabel>
-                <select name="accessType" className={`${inputClassName} !px-2 outline-none bg-transparent`} value={subject.accessType} onChange={handleInputChange}>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="unpaid">
-                    Free
-                  </option>
-                  <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="paid">
-                    Paid
-                  </option>
-                </select>
+                <AccessTypeDropdown value={subject.accessType} onChange={handleInputChange} name="accessType" />
               </div>
             </div>
 

@@ -15,6 +15,7 @@
 @use "./components/profile";
 @use "./components/bentoCard";
 @use "./components/stepper";
+@use "./components/categorydashboard.scss";
 @use "./layout/footer";
 @use "./layout/grid";
 @use "./layout/header";
@@ -27,6 +28,10 @@
 @use "./vendors/skeleton";
 @use "./editor/buttonWithTooltip";
 @use "./vendors/react-datepicker";
+@use "./vendors/rechartsjs";
+@use "./base/scrollbar";
+@use "./dashboard/CategoryCard";
+@use "./layout/table/tableTheme";
 
 .reactjs-tiptap-editor .richtext-bg-background {
   .dark & {
@@ -57,3 +62,46 @@
     }
   }
 }
+
+.hljs {
+  border-radius: 20px !important;
+  background: transparent !important;
+  // color: #fff !important;
+  font-size: 14px !important;
+}
+/*
+
+// animation for dashbaord home user name dispayl
+
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 4s ease infinite;
+}
+ */

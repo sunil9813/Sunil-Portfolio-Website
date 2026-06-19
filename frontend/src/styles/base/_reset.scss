@@ -1,5 +1,6 @@
 @use "../abstracts/variables" as *; // Import variables with 'as *' to use them directly
 @import url(https://fonts.googleapis.com/css?family=Poppins:100,100italic,200,200italic,300,300italic,regular,italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic);
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
 
 *,
 *::before,
@@ -9,4 +10,22 @@
 
 body {
   font-family: "Poppins", sans-serif;
+  overflow-x: hidden !important;
+}
+.bebas-neue-regular {
+  font-family: "Bebas Neue", sans-serif;
+}
+.no-visible-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.no-visible-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+@media only screen and (max-width: 768px) {
+  body {
+    overflow-x: hidden !important;
+  }
 }

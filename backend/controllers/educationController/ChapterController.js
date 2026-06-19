@@ -11,7 +11,7 @@ const createChapter = asyncHandler(async (req, res) => {
 
   // Profanity check
   const filter = new Filter();
-  const fieldsToCheck = [title, metaTitle, description, metaDescription];
+  const fieldsToCheck = [title, metaTitle, metaDescription];
   for (const field of fieldsToCheck) {
     if (field && filter.isProfane(field)) {
       return res.status(400).json({

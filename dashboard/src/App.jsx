@@ -56,6 +56,10 @@ import {
   PortfolioServiceDetails,
   AllTestimonial,
   CreateTestimonial,
+  Overview,
+  CategoryOverview,
+  BlogOverview,
+  ProjectOverview,
 } from "./utils/Router";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -96,7 +100,7 @@ function App() {
     {
       path: "/",
       element: (
-        <Layout>
+        <Layout title="Welcome To Dashboard">
           <Home />
         </Layout>
       ),
@@ -137,6 +141,15 @@ function App() {
       errorElement: <ErrorPage />,
     },
     {
+      path: "/overview",
+      element: (
+        <Layout title="User Analytics Dashboard">
+          <Overview />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
       path: "/all-user",
       element: (
         <Layout>
@@ -148,9 +161,9 @@ function App() {
     {
       path: "/create-user",
       element: (
-        <Layout>
+        <LayoutWithOutHeader>
           <CreateUser />
-        </Layout>
+        </LayoutWithOutHeader>
       ),
       errorElement: <ErrorPage />,
     },
@@ -166,9 +179,18 @@ function App() {
 
     // Category Routes
     {
+      path: "/category-overview",
+      element: (
+        <Layout title="Analytics Overview">
+          <CategoryOverview />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
       path: "/all-category",
       element: (
-        <Layout>
+        <Layout title="Categories Overview">
           <CategoryList />
         </Layout>
       ),
@@ -177,7 +199,7 @@ function App() {
     {
       path: "/view-category/:id",
       element: (
-        <Layout>
+        <Layout title="Category Details">
           <ViewCategory />
         </Layout>
       ),
@@ -186,27 +208,36 @@ function App() {
     {
       path: "/create-category",
       element: (
-        <Layout>
+        <LayoutWithOutHeader>
           <AddCategory />
-        </Layout>
+        </LayoutWithOutHeader>
       ),
       errorElement: <ErrorPage />,
     },
     {
       path: "/update-category/:id",
       element: (
-        <Layout>
+        <LayoutWithOutHeader>
           <UpdateCategory />
-        </Layout>
+        </LayoutWithOutHeader>
       ),
       errorElement: <ErrorPage />,
     },
 
     // Blog Routes
     {
+      path: "/blog-overview",
+      element: (
+        <Layout title="Analytics Overview">
+          <BlogOverview />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
+    {
       path: "/all-blog",
       element: (
-        <Layout>
+        <Layout title="Explore Blogs">
           <BlogList />
         </Layout>
       ),
@@ -215,7 +246,7 @@ function App() {
     {
       path: "/view-blog/:slug",
       element: (
-        <Layout>
+        <Layout title="Blog Details">
           <BlogDetails />
         </Layout>
       ),
@@ -224,22 +255,31 @@ function App() {
     {
       path: "/create-blog",
       element: (
-        <Layout>
+        <LayoutWithOutHeader>
           <CreateBlog />
-        </Layout>
+        </LayoutWithOutHeader>
       ),
       errorElement: <ErrorPage />,
     },
     {
       path: "/update-blog/:slug",
       element: (
-        <Layout>
+        <LayoutWithOutHeader>
           <UpdateBlog />
-        </Layout>
+        </LayoutWithOutHeader>
       ),
       errorElement: <ErrorPage />,
     },
     // Project Routes
+    {
+      path: "/overview-project",
+      element: (
+        <Layout title="Manage Projects">
+          <ProjectOverview />
+        </Layout>
+      ),
+      errorElement: <ErrorPage />,
+    },
     {
       path: "/all-project",
       element: (
@@ -587,10 +627,6 @@ function App() {
     <>
       <ToastContainer />
       <RouterProvider router={router} />
-
-      <div className=" fixed bottom-0 left-0 m-5" onClick={() => dispatch(toggleTheme())}>
-        {theme === "dark" ? <button className="bg-indigo-500 px-3 py-1.5 rounded-lg">Dark</button> : <button className="bg-indigo-500 px-3 py-1.5 rounded-lg">light</button>}
-      </div>
     </>
   );
 }

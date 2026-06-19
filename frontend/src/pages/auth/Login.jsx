@@ -60,12 +60,17 @@ export const Login = () => {
   }; */
   return (
     <>
+      {/* <div className=" absolute top-0 left-0 w-full h-full">
+        <div className="flexC">
+          <AuthVideo className="w-[500px] h-[500px]" />
+        </div>
+      </div> */}
       <section className="auth-section">
         {isLoading && <Loader />}
         <div className="auth-section_container">
           <div className="auth-section_container_content">
             <div className="auth-section_container_content_line"></div>
-            <div className="flexC pb-2">
+            <div className="flexC pb-4">
               <Logo />
             </div>
             <h1 className="text-3xl font-semibold xl:text-2xl text-black dark:text-white">Sign in to Bento</h1>
@@ -105,5 +110,19 @@ export const Login = () => {
         </div>
       </section>
     </>
+  );
+};
+
+export const AuthVideo = ({ className }) => {
+  return (
+    <section className="loading">
+      <div className={`rounded-full overflow-hidden w-40 h-40 ${className}`}>
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover">
+          <source src="/image/loading.webm" type="video/webm" />
+          {/* Optional fallback text */}
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </section>
   );
 };

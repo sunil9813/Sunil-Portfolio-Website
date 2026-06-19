@@ -9,7 +9,7 @@ import { MdClose, MdLocationPin } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
 import { BsTelephone } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
-import { createIntro } from "@/redux/slices/portfolio/IntroSlice";
+import { createIntro } from "@/redux/slices/portfolio/introSlice";
 import { PiHandbagFill } from "react-icons/pi";
 import { HiLink } from "react-icons/hi2";
 import { LuNotepadTextDashed } from "react-icons/lu";

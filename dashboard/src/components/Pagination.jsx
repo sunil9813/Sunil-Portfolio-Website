@@ -27,7 +27,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   };
 
   return (
-    <div className="flexbC border-t border-gray-50/10 p-4">
+    <div className="flexbC">
       <h3 className="textColor text-xs 3xl:text-sm opacity-75">
         Page {page} of {totalPages}
       </h3>

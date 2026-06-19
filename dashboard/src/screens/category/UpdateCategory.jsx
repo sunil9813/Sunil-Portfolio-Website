@@ -1,11 +1,12 @@
 import { getallCategory, getCategory, updateCategory } from "@/redux/slices/resources/categorySlice";
-import { isImageValid } from "@/utils";
-import { BreadcrumbsComponent, Loader, Wrapper } from "@/utils/Router";
-import { Button } from "@material-tailwind/react";
+import { Input, InputLabel, InputTitle, Loader, StickyHeaderComponent, Wrapper } from "@/utils/Router";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { IoCameraSharp } from "react-icons/io5";
+import { MdClose } from "react-icons/md";
+import { TypeDropdown } from "@/components/common/dropdown/CustomeDropDown";
 
 export const UpdateCategory = () => {
   const dispatch = useDispatch();
@@ -15,7 +16,8 @@ export const UpdateCategory = () => {
 
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const [updatedCategory, setUpdatedCategory] = useState({ title: "", type: "" });
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState("");
 
   // Fetch category on mount
   useEffect(() => {
@@ -25,36 +27,56 @@ export const UpdateCategory = () => {
   // Set form data when category is available
   useEffect(() => {
     if (category) {
-      setUpdatedCategory({ title: category.title, type: category.type || "" });
+      setTitle(category.title);
+      setType(category.type || "");
       setPreviewImage(category.cover?.filePath || null);
     }
   }, [category]);
 
-  const handleImageChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile && isImageValid(selectedFile)) {
-      setImage(selectedFile);
-      setPreviewImage(URL.createObjectURL(selectedFile));
+  const handleTitleChange = (e) => {
+    const title = e.target.value;
+    if (title.toLowerCase().includes("modal")) {
+      toast.error("Modal can't be your category name. Please choose another name.");
     } else {
-      toast.error("Please select a valid PNG, JPEG, or JPG image.");
+      setTitle(title);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUpdatedCategory((prev) => ({ ...prev, [name]: value }));
+  const handleTypeChange = (e) => {
+    setType(e.target.value);
+  };
+
+  const isImageValid = (file) => {
+    const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
+    return allowedFormats.includes(file.type);
+  };
+
+  const handleImageChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (!isImageValid(selectedFile)) {
+        toast.error("Cover must be a PNG, JPEG, or JPG image.");
+        return;
+      }
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        toast.error("Cover file size exceeds 10MB limit.");
+        return;
+      }
+      setImage(selectedFile);
+      setPreviewImage(URL.createObjectURL(selectedFile));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!updatedCategory.title || !updatedCategory.type) {
-      return toast.error("Please fill all fields.");
+    if (!title.trim() || !type) {
+      return toast.error("Please fill all input fields.");
     }
 
     const formData = new FormData();
-    formData.append("title", updatedCategory.title);
-    formData.append("type", updatedCategory.type);
+    formData.append("title", title);
+    formData.append("type", type);
     if (image) {
       formData.append("cover", image);
     }
@@ -72,65 +94,84 @@ export const UpdateCategory = () => {
     }
   };
 
+  // Clean up object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewImage && previewImage.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
+
   return (
-    <div>
+    <>
+      <StickyHeaderComponent title="Update Category" path="/all-category" btntext="Update Category" handleFunction={handleSubmit} />
+
       {isLoading && <Loader />}
-      <section className="content">
-        <BreadcrumbsComponent text="Update Category" />
 
-        <form onSubmit={handleSubmit}>
-          <Wrapper className="flex justify-between gap-5">
-            <div className="p-5 flex flex-col gap-5 py-10 w-1/2">
-              <div>
-                <span className="text-gray-400 block text-sm mb-2">Title</span>
-                <input type="text" name="title" value={updatedCategory.title} onChange={handleChange} className="w-full p-2.5 border border-white/20 rounded-lg bg-primarybg" />
-              </div>
+      <section className="flex justify-between gap-3">
+        <div className="w-2/3">
+          <Wrapper className="category-list p-5 h-full">
+            <InputTitle className="mb-4">Category details</InputTitle>
 
-              <div>
-                <span className="text-gray-400 block text-sm mb-2">Category Type</span>
-                <select
-                  name="type"
-                  value={updatedCategory.type}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 bg-primarybg border-[1px] border-white/20 outline-none rounded-lg text-moonstone text-sm w-full"
-                >
-                  <option value="">Select Type</option>
-                  <option value="blog">Blog</option>
-                  <option value="project">Project</option>
-                </select>
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <span className="text-gray-400 block text-sm mb-2">Cover</span>
-                <input
-                  type="file"
-                  name="cover"
-                  onChange={handleImageChange}
-                  className="relative m-0 block w-full min-w-0 flex-auto cursor-pointer rounded-lg bg-primarybg border border-white/20 text-primary bg-clip-padding px-3 py-[0.32rem] font-normal leading-[2.15] text-textcolor transition duration-300 ease-in-out file:-mx-3 file:-my-[0.32rem] file:cursor-pointer file:overflow-hidden file:rounded-none file:border-0 file:border-solid file:border-inherit file:bg-neutral-100 file:px-3 file:py-[0.32rem] file:text-neutral-700 file:transition file:duration-150 file:ease-in-out file:[border-inline-end-width:1px] file:[margin-inline-end:0.75rem] hover:file:bg-neutral-200 focus:border-primary focus:text-neutral-700 focus:shadow-te-primary focus:outline-none"
-                />
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-end">
-                <Button type="submit" color="indigo" size="md">
-                  Update
-                </Button>
+            <div className="input">
+              <InputLabel className="my-2">Category Name</InputLabel>
+              <div className="relative">
+                <Input type="text" name="title" value={title} handleChange={handleTitleChange} placeholder="Enter category name" />
               </div>
             </div>
-            <div className="w-1/2 p-5">
-              {/* Image Preview */}
-              {previewImage ? (
-                <div className="h-[60vh]">
-                  <img src={previewImage} alt="Preview" className="rounded-lg w-full h-full object-cover" />
-                </div>
-              ) : (
-                <p className="mt-3 text-gray-400">No image selected for this category</p>
-              )}
+            <div className="input py-3">
+              <InputLabel className="my-2">Category Type</InputLabel>
+              <TypeDropdown value={type} onChange={handleTypeChange} name="type" />
             </div>
           </Wrapper>
-        </form>
+        </div>
+
+        <div className="w-1/3">
+          <Wrapper className="p-5 w-full">
+            <InputTitle className="mb-4">Cover Image</InputTitle>
+            <div className="flex flex-col items-center justify-center w-full h-64 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800">
+              {previewImage ? (
+                <div className="relative w-full h-64 flex items-center justify-center">
+                  <img src={previewImage} alt="Cover Preview" className="w-full h-full rounded-3xl object-cover" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setImage(null);
+                      // Only clear preview if it's a blob URL, otherwise keep the existing image
+                      if (previewImage.startsWith("blob:")) {
+                        URL.revokeObjectURL(previewImage);
+                        setPreviewImage(null);
+                      } else {
+                        // If it's an existing image from the server, we need to clear it differently
+                        setPreviewImage(null);
+                        // You might want to add a flag to indicate the image should be removed
+                      }
+                    }}
+                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                    title="Remove Cover"
+                    aria-label="Remove cover image"
+                  >
+                    <MdClose />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <IoCameraSharp size={30} />
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{category?.cover?.filePath ? "No new image selected" : "No image selected for this category"}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="textColor font-medium cursor-pointer" onClick={() => document.getElementById("cover-input")?.click()}>
+                      Click to browse
+                    </span>
+                  </p>
+                </div>
+              )}
+              <input id="cover-input" type="file" name="cover" className="hidden" onChange={handleImageChange} accept="image/png,image/jpeg,image/jpg" />
+            </div>
+            {category?.cover?.filePath && !previewImage && <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Existing image will be kept. Click the remove button above to delete it.</p>}
+          </Wrapper>
+        </div>
       </section>
-    </div>
+    </>
   );
 };

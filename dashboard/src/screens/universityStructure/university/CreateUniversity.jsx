@@ -1,6 +1,6 @@
+import { TypeVisiDropdown } from "@/components/common/dropdown/CustomeDropDown";
 import { createUniversity, getAllUniversity } from "@/redux/slices/universityStructure/universitySlice";
 import Editor from "@/textEditor/Editor";
-import { inputClassName } from "@/utils";
 import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BiWorld } from "react-icons/bi";
@@ -88,8 +88,12 @@ export const CreateUniversity = () => {
       formData.append("logo", logo);
       formData.append("type", type);
 
+      console.log("Before dispatch");
       const resultAction = await dispatch(createUniversity(formData));
+      console.log("After dispatch, result:", resultAction);
       await dispatch(getAllUniversity());
+      console.log("After getAllUniversity");
+
       if (createUniversity.fulfilled.match(resultAction)) {
         setLogoPreview(null);
         setLogo(null);
@@ -149,20 +153,7 @@ export const CreateUniversity = () => {
 
             <div className="input py-3">
               <InputLabel className="my-2">Type</InputLabel>
-              <select name="type" className={`${inputClassName} !px-2 outline-none bg-transparent`} value={type} onChange={handleInputChange}>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="">
-                  Select Type
-                </option>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="Public">
-                  Public
-                </option>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="Private">
-                  Private
-                </option>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="Autonomous">
-                  Autonomous
-                </option>
-              </select>
+              <TypeVisiDropdown value={type} onChange={handleInputChange} name="type" />
             </div>
           </Wrapper>
         </div>

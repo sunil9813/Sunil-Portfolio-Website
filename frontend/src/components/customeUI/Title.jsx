@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 export const HeadingOne = ({ children, className }) => {
   return (
     <>
-      <h2 className={`capitalize text-2xl font-semibold heading-gardient ${className}`}>{children}</h2>
+      <h2 className={`capitalize text-m md:text-lg lg:text-2xl font-normal lg:font-semibold textColor lg:heading-gardient ${className}`}>{children}</h2>
     </>
   );
 };
@@ -17,7 +17,7 @@ export const HeadingTwo = ({ children, className }) => {
 export const HeadingThree = ({ children, className }) => {
   return (
     <>
-      <h3 className={`capitalize text-lg 3xl:text-xl font-[500] textColor ${className}`}>{children}</h3>
+      <h3 className={`capitalize text-sm lg:text-lg 3xl:text-xl font-[500] textColor ${className}`}>{children}</h3>
     </>
   );
 };

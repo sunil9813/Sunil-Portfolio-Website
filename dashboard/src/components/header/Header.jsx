@@ -28,7 +28,7 @@ export const Header = ({ title }) => {
 
   return (
     <header>
-      <div className="flexbC h-[8vh]">
+      <div className="flexbC h-[8vh] bg-light-surface1 dark:bg-dark-surface1">
         <div className="w-1/2">
           <HeadingTwo>{title}</HeadingTwo>
         </div>
@@ -126,7 +126,7 @@ export const ProfileList = ({ icon, text, link }) => {
 
 UserMenu.propTypes = {
   user: PropTypes.shape({
-    avatar: PropTypes.string.isRequired,
+    avatar: PropTypes.string,
     avatarPublicId: PropTypes.string,
   }),
   username: PropTypes.string,

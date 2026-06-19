@@ -1,5 +1,12 @@
 import PropTypes from "prop-types";
 
+export const HeadingOne = ({ children, className }) => {
+  return (
+    <>
+      <h2 className={`capitalize text-[4rem] font-medium textColor ${className}`}>{children}</h2>
+    </>
+  );
+};
 export const HeadingTwo = ({ children, className }) => {
   return (
     <>
@@ -29,19 +36,23 @@ export const InputLabel = ({ children, className }) => {
   );
 };
 
+HeadingOne.propTypes = {
+  children: PropTypes.any,
+  className: PropTypes.string,
+};
 HeadingThree.propTypes = {
   children: PropTypes.any,
-  className: PropTypes.any,
+  className: PropTypes.string,
 };
 HeadingTwo.propTypes = {
   children: PropTypes.any,
-  className: PropTypes.any,
+  className: PropTypes.string,
 };
 InputLabel.propTypes = {
   children: PropTypes.any,
-  className: PropTypes.any,
+  className: PropTypes.string,
 };
 InputTitle.propTypes = {
   children: PropTypes.any,
-  className: PropTypes.any,
+  className: PropTypes.string,
 };

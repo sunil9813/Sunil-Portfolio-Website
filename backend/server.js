@@ -4,7 +4,7 @@ const cors = require("cors");
 
 const cookieParser = require("cookie-parser");
 const ConnectDB = require("./config/db/Database");
-const { PORT } = require("./utils/variables");
+const PORT = process.env.PORT || 5001;
 
 const { NotFound, ErrorHanlder } = require("./middleware/ErrorHandler");
 const userRoute = require("./routes/users/UserRoute");
@@ -54,7 +54,7 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:3001", "http://localhost:5172", "http://localhost:5173"],
+    origin: ["http://localhost:3001", "http://localhost:5172", "http://localhost:5173", "https://bksuniladmin.netlify.app", "https://bksunil.netlify.app"],
     credentials: true,
   })
 );
@@ -96,7 +96,7 @@ app.use("/api/v1/chapter", ChapterRoute);
 /*  -------  End AcademicComponentsRoute ----------- */
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the Photo Idol");
+  res.send("Welcome to Sunil Portfolio.");
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -104,8 +104,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Error handler
 app.use(NotFound);
 app.use(ErrorHanlder);
+
 // contect to DB
-app.listen(PORT, console.log("Starting Photo viewer on port " + PORT));
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT}`);
+});
 ConnectDB();
 
 const parentFolder = "Sunil Portfolio";

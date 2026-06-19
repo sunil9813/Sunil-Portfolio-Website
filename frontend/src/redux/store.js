@@ -13,12 +13,12 @@ import projectReducer from "./slices/projectSlice";
 // import universityReducer from "./slices/universityStructure/universitySlice";
 // import facultyReducer from "./slices/universityStructure/facultySlice";
 // import programReducer from "./slices/universityStructure/programSlice";
-// import courseReducer from "./slices/universityStructure/courseSlice";
-// import chapterReducer from "./slices/universityStructure/chapterSlice";
+import courseReducer from "./slices/universityStructure/courseSlice";
+import chapterReducer from "./slices/universityStructure/chapterSlice";
 // import introReducer from "./slices/portfolio/introSlice";
 // import resumeReducer from "./slices/portfolio/resumeSlice";
 // import serviceReducer from "./slices/portfolio/portServiceService";
-// import testimonialReducer from "./slices/portfolio/testimonialSlice";
+import testimonialReducer from "./slices/portfolio/testimonialSlice";
 
 export const store = configureStore({
   reducer: {
@@ -36,11 +36,11 @@ export const store = configureStore({
     // university: universityReducer,
     // faculty: facultyReducer,
     // program: programReducer,
-    // course: courseReducer,
-    // chapter: chapterReducer,
+    course: courseReducer,
+    chapter: chapterReducer,
     // intro: introReducer,
     // resume: resumeReducer,
     // service: serviceReducer,
-    // testimonial: testimonialReducer,
+    testimonial: testimonialReducer,
   },
 });

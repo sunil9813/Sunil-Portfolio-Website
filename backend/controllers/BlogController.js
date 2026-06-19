@@ -12,7 +12,7 @@ const createBlog = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
   const filter = new Filter();
-  const fieldsToCheck = [title, description, tags, category, metaDescription];
+  const fieldsToCheck = [title, tags, category, metaDescription];
   for (const field of fieldsToCheck) {
     if (filter.isProfane(field)) {
       return res.status(400).json({

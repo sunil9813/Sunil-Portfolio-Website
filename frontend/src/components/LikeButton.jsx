@@ -3,6 +3,7 @@ import { AiFillLike, AiOutlineLike } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useCallback } from "react";
 import { setInitialLikes, toggleLike, updateLikeLocally } from "@/redux/slices/common/likeSlice";
+import { TertiaryButton } from "./customeUI/Button";
 
 export const LikeButton = ({ resourceType, contentId, initialLikes = [], showtrue }) => {
   const dispatch = useDispatch();
@@ -39,12 +40,8 @@ export const LikeButton = ({ resourceType, contentId, initialLikes = [], showtru
 
   return (
     <>
-      {showtrue && <button onClick={handleLikeToggle}>{isLiked ? <AiFillLike size={18} /> : <AiOutlineLike size={18} />}</button>}
-      {!showtrue && (
-        <button className="button" onClick={handleLikeToggle}>
-          {isLiked ? <AiFillLike size={22} /> : <AiOutlineLike size={22} />}
-        </button>
-      )}
+      {showtrue && <TertiaryButton onClick={handleLikeToggle}>{isLiked ? <AiFillLike size={18} /> : <AiOutlineLike size={18} />}</TertiaryButton>}
+      {!showtrue && <TertiaryButton onClick={handleLikeToggle}>{isLiked ? <AiFillLike size={18} /> : <AiOutlineLike size={18} />}</TertiaryButton>}
     </>
   );
 };

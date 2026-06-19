@@ -10,6 +10,11 @@ header.sticky {
   animation: bounceDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+header .menu-list-active {
+  color: #ddf7ff;
+  text-shadow: rgb(70, 211, 236) 0px 0px 10px, rgb(70, 205, 236) 0px 0px 15px, rgb(70, 236, 236) 0px 0px 20px, rgb(70, 225, 236) 0px 0px 20px;
+}
+
 @keyframes bounceDown {
   0% {
     transform: translateY(-100%);

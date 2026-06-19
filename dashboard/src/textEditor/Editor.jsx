@@ -46,6 +46,13 @@ lowlight.register("js", js);
 lowlight.register("ts", ts);
 
 const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) => {
+  console.log("====================================");
+  console.log("folderName :" + folderName);
+  console.log("folder :" + folder);
+  console.log("subfolder :" + subfolder);
+  console.log("customId :" + customId);
+  console.log("====================================");
+
   const [selectionRange, setSelectionRange] = useState(null);
   const [showGallery, setShowGallery] = useState(false);
   const dispatch = useDispatch();
@@ -67,7 +74,11 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Exclude the extensions that you'll add separately
+        horizontalRule: false,
+        codeBlock: false,
+      }),
       Superscript,
       Subscript,
       Underline,
@@ -177,7 +188,7 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
         <div className="h-[1px] w-full bg-gray-800/10 dark:bg-white/10 my-3"></div>
         {editor && <EditLink editor={editor} />}
         <EditorContent editor={editor} className="min-h-[300px]" />
-        <TableActionPopup editor={editor} />
+        {editor && <TableActionPopup editor={editor} />} {/* Add conditional rendering */}
       </div>
       <GallaryModel
         visible={showGallery}

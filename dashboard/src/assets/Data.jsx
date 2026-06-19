@@ -25,6 +25,10 @@ export const menu = [
     icon: <FaUsers size={17} />,
     childrens: [
       {
+        title: "overview",
+        path: "/overview",
+      },
+      {
         title: "all user",
         path: "/all-user",
       },
@@ -39,6 +43,10 @@ export const menu = [
     icon: <MdOutlineCategory size={17} />,
     childrens: [
       {
+        title: "overview",
+        path: "/category-overview",
+      },
+      {
         title: "all category",
         path: "/all-category",
       },
@@ -52,6 +60,10 @@ export const menu = [
     title: "Blog",
     icon: <CiImageOn size={17} />,
     childrens: [
+      {
+        title: "overview",
+        path: "/blog-overview",
+      },
       {
         title: "all blog",
         path: "/all-blog",

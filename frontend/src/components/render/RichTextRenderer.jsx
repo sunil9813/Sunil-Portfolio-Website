@@ -2,7 +2,8 @@ import React, { useRef, useEffect } from "react";
 import parse, { domToReact } from "html-react-parser";
 import hljs from "highlight.js";
 import PropTypes from "prop-types";
-import MathFormulaParser from "../comment/utils/MathFormulaParser";
+import "highlight.js/styles/atom-one-dark.css"; // <- IMPORTANT: import a stylesheet
+import MathFormulaParser from "@/utils/editor/MathFormulaParser";
 
 export const RichTextRenderer = React.memo(({ content }) => {
   const contentRef = useRef(null);
@@ -129,7 +130,7 @@ export const RichTextRenderer = React.memo(({ content }) => {
 
   return (
     <div className="tiptap" ref={contentRef}>
-      <div className="prose !prose-lg focus:outline-none prose-invert max-w-full mx-auto h-full">{parsedContent}</div>
+      <div className="prose prose-sm focus:outline-none prose-invert max-w-full mx-auto h-full text-white">{parsedContent}</div>
     </div>
   );
 });

@@ -145,7 +145,7 @@ const GalleryPickerComponent = ({ editor, onClose }) => {
 
 GalleryPickerComponent.propTypes = {
   editor: PropTypes.object.isRequired,
-  onClose: PropTypes.func.isRequired,
+  onClose: PropTypes.func,
 };
 
 export default GalleryPickerComponent;

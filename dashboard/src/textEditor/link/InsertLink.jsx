@@ -29,7 +29,7 @@ const InsertLink = ({ onSubmit }) => {
         </Button>
 
         <div className="absolute top-full right-0 mt-4 z-50">
-          <LinkForm visible={visible} onSubmit={handleSubmit} />
+          <LinkForm initialState={{ url: "" }} visible={visible} onSubmit={handleSubmit} />
         </div>
       </div>
     </>

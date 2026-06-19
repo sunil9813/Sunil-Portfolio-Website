@@ -11,7 +11,7 @@ const createSubject = asyncHandler(async (req, res) => {
 
   // Profanity check
   const filter = new Filter();
-  const fieldsToCheck = [name, description, metaDescription];
+  const fieldsToCheck = [name, metaDescription];
   for (const field of fieldsToCheck) {
     if (field && filter.isProfane(field)) {
       return res.status(400).json({
@@ -449,6 +449,63 @@ const getChaptersBySubjectSlug = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllSubjectsWithChapters = asyncHandler(async (req, res) => {
+  try {
+    const subjects = await SubjectModel.find()
+      .sort("-createdAt")
+      .populate({
+        path: "user",
+        select: "avatar name email",
+      })
+      .lean();
+
+    if (!subjects.length) {
+      res.status(404);
+      throw new Error("No subjects found.");
+    }
+
+    // Fetch all chapters at once
+    const chapters = await ChapterModel.find()
+      .sort("createdAt")
+      .populate({
+        path: "user",
+        select: "avatar name email",
+      })
+      .populate({
+        path: "subject",
+        select: "_id",
+      })
+      .lean();
+
+    // Group chapters by subject id
+    const chaptersBySubject = {};
+    chapters.forEach((chapter) => {
+      const subjectId = chapter.subject?._id?.toString();
+      if (!subjectId) return;
+
+      if (!chaptersBySubject[subjectId]) {
+        chaptersBySubject[subjectId] = [];
+      }
+      chaptersBySubject[subjectId].push(chapter);
+    });
+
+    // Attach chapters to each subject
+    const result = subjects.map((subject) => ({
+      ...subject,
+      chapters: chaptersBySubject[subject._id.toString()] || [],
+    }));
+
+    res.status(200).json({
+      success: true,
+      totalSubjects: result.length,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500);
+    throw new Error(error.message || "Failed to fetch subjects with chapters");
+  }
+});
+
 // remain to test
 const updateSubject = asyncHandler(async (req, res) => {
   const { id } = req.params; // Subject ID from URL
@@ -752,4 +809,5 @@ module.exports = {
   deleteSubject,
   getUserSubjects,
   getChaptersBySubjectSlug,
+  getAllSubjectsWithChapters,
 };

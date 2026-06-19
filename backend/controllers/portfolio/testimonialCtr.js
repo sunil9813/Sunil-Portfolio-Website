@@ -213,6 +213,21 @@ const createTestimonial = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllTestimonials = asyncHandler(async (req, res) => {
+  const testimonialList = await testimonialModel
+    .find({ type: "feedback" }) // Only get testimonials with type "feedback"
+    .sort("-createdAt")
+    .populate({
+      path: "user",
+      select: "avatar name email",
+    });
+
+  res.status(200).json({
+    totalTestimonial: testimonialList?.length,
+    testimonialList,
+  });
+});
+
 // Only for Admin
 const getAllTestimonialsByAdmin = asyncHandler(async (req, res) => {
   const testimonialList = await testimonialModel.find().sort("-createdAt").populate({
@@ -359,4 +374,5 @@ module.exports = {
   deleteTestimonial,
   getAllTestimonialsByAdmin,
   getTestimonialsByAdmin,
+  getAllTestimonials,
 };

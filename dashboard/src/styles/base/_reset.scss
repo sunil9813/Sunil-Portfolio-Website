@@ -38,16 +38,23 @@ input {
   border-radius: 20px;
 }
 ::-webkit-scrollbar-track {
-  background: radial-gradient(128px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+  // background: radial-gradient(128px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+  background-color: rgb(48, 48, 48);
   border-radius: 20px;
 }
 /* Handle */
 ::-webkit-scrollbar-thumb {
   border-radius: 20px;
-  background: radial-gradient(128px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+  // background: radial-gradient(128px circle at center, #fffff5 3.5%, #ffaa81 26.5%, #ffda9f 37.5%, rgba(255, 170, 129, 0.5) 49%, rgba(255, 255, 255, 0.2) 92.5%);
+  background-color: rgb(172, 172, 172);
 }
 .rubik-wet-paint-regular {
   font-family: "Rubik Wet Paint", system-ui;
   font-weight: 400;
   font-style: normal;
+}
+.scrollbar {
+  &::-webkit-scrollbar {
+    width: 1.5px !important;
+  }
 }

@@ -3,6 +3,7 @@ import parse, { domToReact } from "html-react-parser";
 import hljs from "highlight.js";
 import MathFormulaParser from "@/utils/MathFormulaParser";
 import PropTypes from "prop-types";
+import "highlight.js/styles/atom-one-dark.css"; // <- IMPORTANT: import a stylesheet
 
 export const RichTextRenderer = React.memo(({ content }) => {
   const contentRef = useRef(null);

@@ -1,10 +1,13 @@
-import { REACT_APP_BACKEND_URL } from "@/utils/Api";
+import { REACT_APP_BACKEND_URL } from "@/utils/api";
 import axios from "axios";
 
 export const API_URL = `${REACT_APP_BACKEND_URL}/portfolio/testimonial`;
 
 const getAllTestimonial = async () => {
-  const response = await axios.get(API_URL + "/admin");
+  const response = await axios.get(API_URL + "/");
+  console.log("====================================");
+  console.log(response);
+  console.log("====================================");
   return response.data;
 };
 const getTestimonial = async (id) => {

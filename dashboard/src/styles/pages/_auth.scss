@@ -9,7 +9,7 @@
   align-items: center;
   text-align: center;
   overflow: hidden;
-  background-image: url("../../../public/image/auth/background.svg");
+  background-image: url("/image/auth/background.svg");
   background-size: cover;
   background-repeat: no-repeat;
   .dark & {
@@ -166,7 +166,7 @@
           left: -105%;
           width: 100%;
           height: 500px;
-          background-image: url("../../../public/image/auth/line1.svg");
+          background-image: url("/image/auth/line1.svg");
           background-size: contain;
           background-repeat: no-repeat;
         }
@@ -177,7 +177,7 @@
           right: -105%;
           width: 100%;
           height: 500px;
-          background-image: url("../../../public/image/auth/line2.svg");
+          background-image: url("/image/auth/line2.svg");
           background-size: contain;
           background-repeat: no-repeat;
         }
@@ -209,7 +209,7 @@
     left: 20%;
     width: 60%;
     height: 50vh;
-    background-image: url("../../../public/image/auth/dots.svg");
+    background-image: url("/image/auth/dots.svg");
     background-size: cover;
     background-position: center;
   }
@@ -220,7 +220,7 @@
     left: 0;
     width: 100%;
     height: 100vh;
-    background-image: url("../../../public/image/auth/bg-entry.webp");
+    background-image: url("/image/auth/bg-entry.webp");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

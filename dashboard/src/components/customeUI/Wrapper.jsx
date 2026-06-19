@@ -4,7 +4,7 @@ import dotImage from "../../assets/image/dots.png";
 export const Wrapper = ({ children, className, dark }) => {
   return (
     <>
-      <div className={`bg-light-surface2 dark:bg-dark-surface2 rounded-3xl relative ${className}`}>
+      <div className={`bg-light-surface2 dark:bg-dark-surface2 rounded-3xl relative ${className} border-1  border-[#e5e5e50a]`}>
         {dark && (
           <>
             <div className="">

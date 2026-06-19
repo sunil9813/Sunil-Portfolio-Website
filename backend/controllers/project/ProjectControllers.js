@@ -334,6 +334,8 @@ const createProject = asyncHandler(async (req, res) => {
     thumbnail: thumbnailData,
     resourceFile: resourceFileData,
   });
+  console.log(data);
+
   res.status(201).json({ message: "Project created successfully", data });
 });
 

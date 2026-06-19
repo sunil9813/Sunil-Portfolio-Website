@@ -58,25 +58,48 @@ const Gallery = ({ images, onSelect, uploading, deleting, selectedImage = "", su
 };
 
 Gallery.propTypes = {
-  images: PropTypes.shape({
-    recentImages: PropTypes.arrayOf(
+  // Accept both array and object formats
+  images: PropTypes.oneOfType([
+    // Object format with recentImages and olderImages
+    PropTypes.shape({
+      recentImages: PropTypes.arrayOf(
+        PropTypes.shape({
+          filePath: PropTypes.string.isRequired,
+          // Add other possible properties
+          src: PropTypes.string,
+          url: PropTypes.string,
+          id: PropTypes.string,
+          _id: PropTypes.string,
+        })
+      ),
+      olderImages: PropTypes.arrayOf(
+        PropTypes.shape({
+          filePath: PropTypes.string.isRequired,
+          // Add other possible properties
+          src: PropTypes.string,
+          url: PropTypes.string,
+          id: PropTypes.string,
+          _id: PropTypes.string,
+        })
+      ),
+    }),
+    // Flat array format
+    PropTypes.arrayOf(
       PropTypes.shape({
-        filePath: PropTypes.string.isRequired,
+        filePath: PropTypes.string,
+        src: PropTypes.string,
+        url: PropTypes.string,
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        _id: PropTypes.string,
       })
-    ).isRequired,
-    olderImages: PropTypes.arrayOf(
-      PropTypes.shape({
-        filePath: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-  }).isRequired,
+    ),
+  ]).isRequired,
   onSelect: PropTypes.func.isRequired,
   deleteImage: PropTypes.func,
   uploading: PropTypes.bool,
-  deleting: PropTypes.bool, // New prop for delete loading
+  deleting: PropTypes.bool,
   selectedImage: PropTypes.string,
   subfolder: PropTypes.string,
   folder: PropTypes.string,
 };
-
 export default Gallery;

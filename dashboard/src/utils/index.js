@@ -116,7 +116,6 @@ export const iconMapping = [
   { label: "Hugo", value: "hugo" },
 
   // Mobile
-  { label: "React Native", value: "react" },
   { label: "Flutter", value: "flutter" },
   { label: "Ionic", value: "ionic" },
   { label: "Xamarin", value: "xamarin" },

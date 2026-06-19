@@ -1,23 +1,42 @@
-import { BreadcrumbsComponent, InputFiled, InputPassword, PrimaryButton, Wrapper } from "@/utils/Router";
+import { BreadcrumbsComponent, GhostButton, HeadingTwo, Input, PrimaryButton, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
+import { useNavigate } from "react-router-dom";
 
 export const CreateUser = () => {
+  const navigate = useNavigate();
+
   return (
     <>
-      <BreadcrumbsComponent text="Create User" />
-      <Wrapper className="p-5">
-        <form action="inner-form">
-          <div className="grid grid-cols-2 gap-5">
-            <div>
-              <InputFiled fieldName="Username" type="text" name="name" placeholder="Jhon Doe" />
+      <StickyHeader>
+        <HeadingTwo>New User</HeadingTwo>
+        <div className="flexC gap-2">
+          <GhostButton onClick={() => navigate("/all-University")}>Cancel</GhostButton>
+          <TertiaryButton>Create</TertiaryButton>
+        </div>
+      </StickyHeader>
+
+      <Wrapper>
+        <div className="px-5 pt-5">
+          <BreadcrumbsComponent currentPage="Create User" space={true} />
+        </div>
+        <form action="inner-form" className="p-5">
+          <div className="flex justify-between items-center w-full gap-5">
+            <div className="w-1/2">
+              <span className="textColor block text-xs 3xl:text-xs mb-2">Full Name</span>
+              <Input type="text" name="name" placeholder="Jhon Doe" />
             </div>
-            <div>
-              <InputFiled fieldName="Email" type="email" name="email" placeholder="example@gmail.com" />
+            <div className="w-1/2">
+              <span className="textColor block text-xs 3xl:text-xs mb-2">Email</span>
+              <Input type="text" name="name" placeholder="example@gmail.com" />
             </div>
-            <div>
-              <InputPassword fieldName="Password" name="password" placeholder="*******" />
+          </div>
+          <div className="flex justify-between items-center w-full gap-5 mt-3">
+            <div className="w-1/2">
+              <span className="textColor block text-xs 3xl:text-xs mb-2">Password </span>
+              <Input type="text" name="password" placeholder="*******" />
             </div>
-            <div>
-              <InputFiled fieldName="Email" type="email" name="email" placeholder="example@gmail.com" />
+            <div className="w-1/2">
+              <span className="textColor block text-xs 3xl:text-xs mb-2">Confirmed Password </span>
+              <Input type="text" name="password" placeholder="*******" />
             </div>
           </div>
           <div className="w-52">

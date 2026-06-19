@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { getUserFavorite, toggleFavorite } from "@/redux/slices/common/favoriteSlice";
+import { TertiaryButton } from "./customeUI/Button";
 
 export const FavoriteButton = ({ resourceType, resourceId, initialFavorited = false }) => {
   const dispatch = useDispatch();
@@ -33,9 +34,9 @@ export const FavoriteButton = ({ resourceType, resourceId, initialFavorited = fa
   };
 
   return (
-    <button onClick={handleFavoriteToggle} disabled={isFavoriteLoading}>
-      {isFavorited ? <FaBookmark /> : <FaRegBookmark />}
-    </button>
+    <TertiaryButton onClick={handleFavoriteToggle} disabled={isFavoriteLoading}>
+      {isFavorited ? <FaBookmark size={15} /> : <FaRegBookmark size={15} />}
+    </TertiaryButton>
   );
 };
 FavoriteButton.propTypes = {

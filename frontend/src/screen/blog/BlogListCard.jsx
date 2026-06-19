@@ -7,7 +7,7 @@ export const BlogListCard = ({ rowData }) => {
   const blogs = rowData;
 
   // Chunk blogs into groups of 19
-  const chunkSize = 19;
+  const chunkSize = 10;
   const blogChunks = [];
   for (let i = 0; i < blogs?.length; i += chunkSize) {
     blogChunks.push(blogs.slice(i, i + chunkSize));

@@ -1,46 +1,28 @@
-import { Card, GlitterCards, GradientWrapper } from "@/components/cards/GlowCard";
-import { ProfileCard } from "@/ui/ProfileCard";
-import { DropdownWrapper, Wrapper } from "@/utils/Router";
-import { useState } from "react";
+import {
+  AchievementBadges,
+  AdvancedAnalyticsEngine,
+  AdvancedFiltering,
+  AdvancedKPIMetrics,
+  AIInsights,
+  DataIntegrationHub,
+  GeographicDistribution,
+  GoalsProgress,
+  PlatformInsights,
+  PredictiveAnalytics,
+  QuickStats,
+  RealTimeActivity,
+  RecentActivity,
+  SecurityComplianceCenter,
+  TopContent,
+} from "@/screens/dashboard/home/Dash";
+import { Overview } from "@/screens/dashboard/home/Overview";
+import { AdvancedTrafficChannelAnalysis } from "@/screens/dashboard/user/TrafficChannel";
+import { WelcomeUser } from "@/utils/Router";
 
 export const Home = () => {
   return (
     <>
-      <Wrapper className="p-5">
-        <h1 className="text-xl font-semibold text-black dark:text-white mb-5">List of Components</h1>
-        <ProfileCard />
-        <div className="flex flex-wrap gap-5 my-8">
-          <DropDownComponent />
-          <GradientWrapper className="w-72">
-            <input type="text" className="bg-none outline-none h-12 px-3 w-full" placeholder="Search here..." />
-          </GradientWrapper>
-          <GlitterCards className="w-72">
-            <p>
-              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Vel sit incidunt sunt recusandae quia obcaecati vero. Iure, eveniet? Blanditiis similique sunt ab eaque accusamus non nemo nobis
-              officia quod. Officia dolorem neque enim minus delectus, eveniet harum iure facilis voluptatem sunt libero corporis quos numquam quia possimus ut aperiam labore!
-            </p>
-          </GlitterCards>
-          <Card></Card>
-        </div>
-      </Wrapper>
-    </>
-  );
-};
-
-export const DropDownComponent = () => {
-  const [isOpenDropdown, setIsOpenDropdown] = useState(false);
-
-  return (
-    <>
-      <div className="relative inline-block">
-        <button className="px-5 py-2 bg-indigo-500 text-sm text-white rounded-full" onClick={() => setIsOpenDropdown(!isOpenDropdown)} aria-expanded={isOpenDropdown}>
-          Open Dropdown
-        </button>
-        <DropdownWrapper align="right" isOpen={isOpenDropdown} onClose={() => setIsOpenDropdown(false)} className="w-60 p-4 bg-white shadow-lg rounded-md">
-          <h1 className="text-lg font-semibold">Home Content</h1>
-          <p className="mt-2">This is your dropdown content</p>
-        </DropdownWrapper>
-      </div>
+      <Overview />
     </>
   );
 };

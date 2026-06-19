@@ -51,25 +51,20 @@ export const BlogList = () => {
 
   return (
     <>
-      <Wrapper className="blogs-list">
-        <div className="px-5 pt-5">
-          <BreadcrumbsComponent currentPage="All Blogs" space={true} />
-        </div>
-        <Table
-          head={TABLE_HEAD}
-          rowData={BlogList}
-          deleteFun={confirmDelete}
-          btntext="Add blog"
-          linktocreate="create-blog"
-          linktoview="view-blog"
-          linktoupdate="update-blog"
-          rowsPerPageNumber={7}
-          comp={<BlogListCard rowData={BlogList} />}
-          type="blog"
-          handleVisibilityToggle={handleVisibilityToggle}
-          handleFeaturedToggle={handleFeaturedToggle}
-        />
-      </Wrapper>
+      <Table
+        head={TABLE_HEAD}
+        rowData={BlogList}
+        deleteFun={confirmDelete}
+        btntext="Add blog"
+        linktocreate="create-blog"
+        linktoview="view-blog"
+        linktoupdate="update-blog"
+        rowsPerPageNumber={6}
+        comp={<BlogListCard rowData={BlogList} />}
+        type="blog"
+        handleVisibilityToggle={handleVisibilityToggle}
+        handleFeaturedToggle={handleFeaturedToggle}
+      />
     </>
   );
 };

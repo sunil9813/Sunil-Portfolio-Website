@@ -7,7 +7,7 @@ const storage = multer.memoryStorage(); // for multiple filed image upload
 // File filter to enforce file type and size limits based on field name
 function fileFilter(req, file, cb) {
   const imageMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
-  if (file.fieldname === "thumbnail" || file.fieldname === "avatar") {
+  if (file.fieldname === "image" || file.fieldname === "thumbnail" || file.fieldname === "avatar" || file.fieldname === "assets" || file.fieldname === "resourceFileUpload") {
     if (!imageMimeTypes.includes(file.mimetype)) {
       return cb(new Error("Invalid file type for thumbnail. Supported types are jpg, png, and jpeg."), false);
     }

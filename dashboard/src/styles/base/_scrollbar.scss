@@ -1,0 +1,44 @@
+/* Ultra‑minimal scrollbar – no arrows, transparent track */
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #b0bec5 transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+/* Forcefully hide the arrow buttons */
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #b0bec5;
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #78909c;
+}
+
+/* Dark mode */
+.dark .custom-scrollbar {
+  scrollbar-color: #546e7a transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #546e7a;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #607d8b;
+}

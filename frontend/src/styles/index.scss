@@ -15,3 +15,45 @@
 @use "./pages/auth";
 @use "./pages/project";
 @use "./pages/blog";
+@use "./pages/course";
+@use "./pages/note";
+@use "./pages/roadmap";
+@use "./pages/contact";
+@use "./pages/about";
+@use "./pages/home";
+@use "./pages/team";
+@use "./editor/table/table";
+
+.loading-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999999999999999;
+  backdrop-filter: blur(5px);
+}
+.loader {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999999999999999;
+}
+
+@keyframes scroll {
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
+.scroller [data-animated="true"] {
+  animation: scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite;
+}
+.hljs {
+  border-radius: 20px !important;
+  background: transparent !important;
+  // color: #fff !important;
+  font-size: 14px !important;
+}

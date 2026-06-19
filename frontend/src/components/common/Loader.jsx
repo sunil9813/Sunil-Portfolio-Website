@@ -1,13 +1,15 @@
-import { Logo } from "./Logo";
+import ReactDOM from "react-dom";
 
 export const Loader = () => {
-  return (
-    <div className="fixed top-0 left-0 w-full h-full z-10 bg-[rgba(63,63,63,0.8)]">
-      <div className="absolute top-[45%] left-1/2 z-50">
-        <div className="custom-loader relative z-50">
-          <Logo size="large" />
-        </div>
+  return ReactDOM.createPortal(
+    <section className="loading-wrapper">
+      <div className="loader rounded-full overflow-hidden w-40 h-40">
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover">
+          <source src="/image/loading.webm" type="video/webm" />
+          Your browser does not support the video tag.
+        </video>
       </div>
-    </div>
+    </section>,
+    document.getElementById("loader")
   );
 };

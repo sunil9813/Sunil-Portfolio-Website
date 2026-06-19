@@ -63,10 +63,10 @@ export const ProjectDetails = () => {
           </div>
           <div className="bg-gradient-to-t h-[50vh] absolute top-0 left-0 w-full bg-dark-primary/90"> </div>
         </div>
-        <div className="container relative">
-          <div className="top-content">
-            <div className="h-[45vh] w-full"></div>
-            <div className="title-desc w-full absolute top-[5%]">
+        <div className="top-content">
+          <div className="h-[45vh] w-full"></div>
+          <div className="title-desc w-full absolute top-56">
+            <div className="container">
               <div className="flex items-center">
                 <h1 className="gardient-text2 text-2xl">{project?.title}</h1>
                 <VscVerifiedFilled size={20} className="text-green-400" />
@@ -101,14 +101,10 @@ export const ProjectDetails = () => {
                     <span className="textSizeSm">Preview</span>
                   </NavLink>
                   <div className=" relative">
-                    <TertiaryButton>
-                      <LikeButton resourceType="project" contentId={project?._id} initialLikes={project?.likes || []} showtrue={true} />
-                    </TertiaryButton>
+                    <LikeButton resourceType="project" contentId={project?._id} initialLikes={project?.likes || []} showtrue={true} />
                     {/* <span className="textSizeSm">{project === 0 ? "0" : project}</span> */}
                   </div>
-                  <TertiaryButton>
-                    <FavoriteButton resourceType="Project" resourceId={project?._id} initialFavorited={isFavorited} />
-                  </TertiaryButton>
+                  <FavoriteButton resourceType="Project" resourceId={project?._id} initialFavorited={isFavorited} />
 
                   <TertiaryButton className="flex items-center gap-2 h-auto p-2.5 px-4">
                     <span className="textSizeSm">Add to cart</span>
@@ -118,14 +114,25 @@ export const ProjectDetails = () => {
               </div>
             </div>
           </div>
+        </div>
+        <div className="container relative">
           <div className="content">
-            <div className="images grid grid-cols-2 gap-5">
-              {project?.assets?.map((image) => (
+            {project?.assets?.length > 1 ? (
+              <div className="images grid grid-cols-2 gap-5">
+                {project?.assets?.map((image) => (
+                  <div className="h-96 3xl:h-[500px] rounded-3xl" key={image?.publicId}>
+                    <img src={image?.filePath} alt={image?.publicId} className="w-full h-full object-cover rounded-3xl" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              project?.assets?.map((image) => (
                 <div className="h-96 3xl:h-[500px] rounded-3xl" key={image?.publicId}>
                   <img src={image?.filePath} alt={image?.publicId} className="w-full h-full object-cover rounded-3xl" />
                 </div>
-              ))}
-            </div>
+              ))
+            )}
+
             <div className="download-btn flex justify-between items-center my-5 highlightbg p-3 rounded-full">
               <div className="flex items-center gap-4">
                 <div className="icon h-9 w-9 3xl:w-10 3xl:h-10 border border-gray-500/20 dark:border-gray-50/20 rounded-full flexC">
@@ -171,8 +178,8 @@ export const ProjectDetails = () => {
                       <BsGrid1X2Fill /> Layout :<span className="text-white capitalize">{project?.layout}</span>
                     </li>
                     <li className="flex gap-2">
-                      <div className="w-32 flex justify-start">
-                        <AiFillTags /> Tags :
+                      <div className="w-16 flex justify-start">
+                        <AiFillTags size={18} /> <span className="ml-1">Tags :</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {project?.tags &&

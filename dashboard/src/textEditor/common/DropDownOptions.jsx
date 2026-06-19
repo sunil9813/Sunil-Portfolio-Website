@@ -129,7 +129,7 @@ export const DropDownOptionsWithIcon = ({ options, head, customClasses = "" }) =
 NoSpaceDropDownOptions.propTypes = {
   options: PropTypes.arrayOf(
     PropTypes.shape({
-      label: PropTypes.string.isRequired,
+      label: PropTypes.any,
       onClick: PropTypes.func.isRequired,
     })
   ).isRequired,
@@ -139,7 +139,7 @@ NoSpaceDropDownOptions.propTypes = {
 DropDownOptions.propTypes = {
   options: PropTypes.arrayOf(
     PropTypes.shape({
-      label: PropTypes.string.isRequired,
+      label: PropTypes.string,
       onClick: PropTypes.func.isRequired,
     })
   ).isRequired,
@@ -148,7 +148,7 @@ DropDownOptions.propTypes = {
 DropDownOptionsWithIcon.propTypes = {
   options: PropTypes.arrayOf(
     PropTypes.shape({
-      label: PropTypes.string.isRequired,
+      label: PropTypes.string,
       onClick: PropTypes.func.isRequired,
     })
   ).isRequired,
@@ -159,7 +159,7 @@ DropDownOptionsWithIcon.propTypes = {
 DropDownForFont.propTypes = {
   options: PropTypes.arrayOf(
     PropTypes.shape({
-      label: PropTypes.string.isRequired,
+      label: PropTypes.string,
       onClick: PropTypes.func.isRequired,
     })
   ).isRequired,

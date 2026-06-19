@@ -52,10 +52,7 @@ export const ChapterOverview = () => {
   };
 
   return (
-    <Wrapper className="projects-list">
-      <div className="px-5 pt-5">
-        <BreadcrumbsComponent currentPage="All Project" space={true} />
-      </div>
+    <div className="projects-list">
       <Table
         head={TABLE_HEAD}
         rowData={allChapters}
@@ -70,7 +67,7 @@ export const ChapterOverview = () => {
         handleVisibilityToggle={handleVisibilityToggle}
         handleFeaturedToggle={handleFeaturedToggle}
       />
-    </Wrapper>
+    </div>
   );
 };
 

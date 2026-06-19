@@ -1,0 +1,326 @@
+/* In your CSS file (e.g., styles.css or within a <style> tag) */
+
+/* Ensure the table wrapper doesn't clip the resize handles */
+.custom-table-wrapper {
+  overflow: hidden;
+  border-radius: var(--table-border-radius, 5px);
+  position: relative; /* Added to ensure z-index works if needed */
+}
+
+/* Style the resize handle */
+.resize-handle {
+  position: absolute;
+  right: -5px;
+  top: 0;
+  width: 10px;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2); /* Semi-transparent for visibility */
+  cursor: col-resize;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+  background-color: rgba(0, 0, 0, 0.4); /* Darker on hover */
+}
+
+/* Ensure table headers have relative positioning */
+.custom-table th {
+  position: relative;
+}
+
+/* ------------- Default Table Design - Styled Table ------------- */
+.table-design-default {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  border-radius: var(--table-border-radius, 8px) !important;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+
+  th {
+    background: #009879 !important;
+    color: #ffffff;
+    transition: background-color 0.3s ease;
+  }
+
+  tr {
+    border-bottom: 1px solid #dddddd;
+    transition: all 0.3s ease;
+    &:nth-of-type(even) {
+      background: #f3f3f3;
+      color: #000;
+    }
+    &:nth-of-type(odd) {
+      background: #0f0f0f;
+      color: #fff;
+    }
+
+    &:last-of-type {
+      border-bottom: 2px solid #009879;
+    }
+
+    &:hover {
+      color: #009879;
+      background: rgba(0, 152, 122, 0.1);
+      cursor: pointer;
+    }
+  }
+}
+/* ------------- Default Table Design - Styled Table ------------- */
+
+/* Ensure wrapper handles border-radius */
+.custom-table-wrapper {
+  overflow: hidden;
+  border-radius: var(--table-border-radius, 5px);
+}
+/* Minimal Design */
+.table-design-minimal {
+  border: none;
+  border-radius: 0px;
+}
+.table-design-minimal th,
+.table-design-minimal td {
+  border-bottom: 1px solid #eee;
+  padding: 12px;
+  text-align: left;
+}
+.table-design-minimal th {
+  background-color: transparent;
+  font-weight: bold;
+}
+
+/* Modern Design */
+.table-design-modern {
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+}
+.table-design-modern th,
+.table-design-modern td {
+  border: none;
+  padding: 12px;
+  text-align: left;
+  color: #000;
+}
+.table-design-modern th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+/* Striped Design */
+.table-design-striped {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.table-design-striped th,
+.table-design-striped td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+.table-design-striped tr:nth-child(even) {
+  background-color: #f9f9f9;
+  color: #000;
+}
+.table-design-striped th {
+  background-color: #e9ecef;
+  font-weight: bold;
+  color: #000;
+}
+
+/* Grid Design */
+.table-design-grid {
+  border: 2px solid #333;
+  border-radius: 0px;
+}
+.table-design-grid th,
+.table-design-grid td {
+  border: 2px solid #333;
+  padding: 8px;
+  text-align: center;
+}
+.table-design-grid th {
+  background-color: #444;
+  color: white;
+  font-weight: bold;
+}
+
+/* Borderless Design */
+.table-design-borderless {
+  border: none !important;
+  border-radius: 0px;
+}
+.table-design-borderless th,
+.table-design-borderless td {
+  border: none !important;
+  padding: 15px;
+  text-align: left;
+}
+.table-design-borderless th {
+  background-color: transparent;
+  font-weight: bold;
+}
+
+/* Professional Design */
+.table-design-professional {
+  border: 1px solid #6c757d;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.table-design-professional th,
+.table-design-professional td {
+  border: 1px solid #6c757d;
+  padding: 12px;
+  text-align: left;
+}
+.table-design-professional th {
+  background-color: #6c757d;
+  color: white;
+  font-weight: bold;
+}
+
+/* Vibrant Design */
+.table-design-vibrant {
+  border-radius: 10px;
+  background-color: #fff3e0;
+}
+.table-design-vibrant th,
+.table-design-vibrant td {
+  border: 1px dashed #ff6f61;
+  padding: 10px;
+  text-align: left;
+  color: #000;
+}
+.table-design-vibrant th {
+  background-color: #ff6f61;
+  color: white;
+  font-weight: bold;
+}
+
+/* Compact Design */
+.table-design-compact {
+  border: 1px solid #adb5bd;
+  border-radius: 2px;
+}
+.table-design-compact th,
+.table-design-compact td {
+  border: 1px solid #adb5bd;
+  padding: 6px;
+  font-size: 0.9em;
+  text-align: left;
+}
+.table-design-compact th {
+  background-color: #e9ecef;
+  font-weight: bold;
+  color: #000;
+}
+
+/* Elegant Design */
+.table-design-elegant {
+  border: none;
+  border-radius: 10px;
+  background-color: #f1f3f5;
+}
+.table-design-elegant th,
+.table-design-elegant td {
+  border-bottom: 2px solid #ced4da;
+  padding: 14px;
+  text-align: left;
+  color: #000;
+}
+.table-design-elegant th {
+  background-color: #343a40;
+  color: white;
+  font-weight: bold;
+}
+
+/* Retro Design */
+.table-design-retro {
+  border: 4px double #8b008b;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+}
+.table-design-retro th,
+.table-design-retro td {
+  border: 1px solid #8b008b;
+  padding: 10px;
+  text-align: left;
+  color: #000;
+}
+.table-design-retro th {
+  background-color: #8b008b;
+  color: white;
+  font-weight: bold;
+}
+
+/* Clean Design */
+.table-design-clean {
+  border: none;
+  border-radius: 0px;
+}
+.table-design-clean th,
+.table-design-clean td {
+  border-bottom: 1px solid #dee2e6;
+  padding: 10px;
+  text-align: left;
+}
+.table-design-clean th {
+  background-color: #e9ecef;
+  font-weight: bold;
+  color: #000;
+}
+
+/* Gradient Design */
+.table-design-gradient {
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  color: white;
+}
+.table-design-gradient th,
+.table-design-gradient td {
+  border: none;
+  padding: 12px;
+  text-align: left;
+}
+.table-design-gradient th {
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: bold;
+}
+
+/* Shadowed Design */
+.table-design-shadowed {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+}
+.table-design-shadowed th,
+.table-design-shadowed td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+.table-design-shadowed th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+/* Rounded Cells Design */
+.table-design-rounded-cells {
+  border: none;
+}
+.table-design-rounded-cells th,
+.table-design-rounded-cells td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #000;
+}
+.table-design-rounded-cells th {
+  background-color: #e9ecef;
+  font-weight: bold;
+}

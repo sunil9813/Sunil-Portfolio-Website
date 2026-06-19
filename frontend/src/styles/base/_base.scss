@@ -12,7 +12,7 @@
   @apply flex justify-between items-center;
 }
 .container {
-  @apply w-4/5 m-auto;
+  @apply w-[90%] lg:w-4/5 m-auto;
 }
 
 body {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent, getMarkRange } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TollBar from "./TollBar/TollBar";
@@ -46,29 +46,83 @@ lowlight.register("js", js);
 lowlight.register("ts", ts);
 
 const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) => {
-  console.log("====================================");
-  console.log("folderName :" + folderName);
-  console.log("folder :" + folder);
-  console.log("subfolder :" + subfolder);
-  console.log("customId :" + customId);
-  console.log("====================================");
+  const editorContainerRef = useRef(null);
+  const toolbarSlotRef = useRef(null);
+  const toolbarRef = useRef(null);
+  const [stickyStyle, setStickyStyle] = useState({});
+  const [toolbarHeight, setToolbarHeight] = useState(0);
+  const [isSticky, setIsSticky] = useState(false);
 
   const [selectionRange, setSelectionRange] = useState(null);
   const [showGallery, setShowGallery] = useState(false);
   const dispatch = useDispatch();
   const { images, isLoadingUpload, isLoadingDelete } = useSelector((state) => state.image); // Updated selector
-  const [isSticky, setIsSticky] = useState(false);
-  const [selectedCellPos, setSelectedCellPos] = useState(null);
 
   useEffect(() => {
-    const handleScroll = () => setIsSticky(window.scrollY > 500);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    let frameId = null;
+
+    const updateStickyToolbar = () => {
+      if (!editorContainerRef.current || !toolbarSlotRef.current || !toolbarRef.current) return;
+
+      const editorRect = editorContainerRef.current.getBoundingClientRect();
+      const slotRect = toolbarSlotRef.current.getBoundingClientRect();
+      const toolbarHeightValue = toolbarRef.current.offsetHeight || 0;
+
+      // chnage margin top value from here
+      const topOffset = 0;
+
+      const shouldStick = slotRect.top <= topOffset && editorRect.bottom > topOffset + toolbarHeightValue + 80;
+
+      setIsSticky(shouldStick);
+      setToolbarHeight(toolbarHeightValue);
+
+      if (shouldStick) {
+        setStickyStyle({
+          position: "fixed",
+          top: `${topOffset}px`,
+          left: `${slotRect.left}px`,
+          width: `${slotRect.width}px`,
+          boxSizing: "border-box",
+        });
+      } else {
+        setStickyStyle({});
+      }
+    };
+
+    const handleScroll = () => {
+      if (frameId) return;
+
+      frameId = requestAnimationFrame(() => {
+        frameId = null;
+        updateStickyToolbar();
+      });
+    };
+
+    updateStickyToolbar();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("scroll", handleScroll, {
+      passive: true,
+      capture: true,
+    });
+    window.addEventListener("resize", updateStickyToolbar);
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", updateStickyToolbar);
+    };
   }, []);
 
   useEffect(() => {
-    dispatch(getAllImages({ folder, subfolder }));
-  }, [dispatch, folder, subfolder]);
+    if (!customId) {
+      return;
+    }
+
+    dispatch(getAllImages({ folder, subfolder, groupId: customId }));
+  }, [dispatch, folder, subfolder, customId]);
 
   const editor = useEditor({
     content: value,
@@ -139,7 +193,23 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
   }, [editor, value]);
 
   const handleImageSelection = (result) => {
-    editor?.chain().focus().setImage({ src: result.src, alt: result.altText }).run();
+    editor
+      ?.chain()
+      .focus()
+      .setImage({
+        src: result.src,
+        alt: result.altText || "",
+        size: "medium",
+        align: "left",
+        display: "inline",
+        objectFit: "cover",
+        borderRadius: 10,
+        flipX: false,
+        flipY: false,
+      })
+      .run();
+
+    setShowGallery(false);
   };
 
   // upload image in description either single or multiple
@@ -157,8 +227,8 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
     formData.append("groupId", customId);
 
     try {
-      await dispatch(uploadImageToEditorDes(formData, folderName)).unwrap(); // Assuming .unwrap() for Redux Toolkit async thunk
-      dispatch(getAllImages({ folder, subfolder }));
+      await dispatch(uploadImageToEditorDes(formData)).unwrap();
+      dispatch(getAllImages({ folder, subfolder, groupId: customId }));
     } catch (error) {
       toast.error("Upload failed: " + error.message);
     }
@@ -167,8 +237,8 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
   // delete image from repository
   const handleImageDelete = async (imageId) => {
     try {
-      await dispatch(deleteImage(imageId)).unwrap(); // Assuming deleteImage takes imageId and folder info
-      dispatch(getAllImages({ folder, subfolder })); // Refetch after deletion
+      await dispatch(deleteImage(imageId)).unwrap();
+      dispatch(getAllImages({ folder, subfolder, groupId: customId }));
     } catch (error) {
       toast.error(error);
     }
@@ -176,19 +246,27 @@ const Editor = ({ value, onChange, folderName, folder, subfolder, customId }) =>
 
   return (
     <>
-      <div className=" relative">
-        {/* <div
-          className={`transition-all duration-300 z-30 backdrop-blur-md ${
-            isSticky ? "relative top-0 right-0 w-[85%] highlightbg shadow-lg p-3 flex justify-center items-center flex-col" : "relative z-10"
-          }`}
-        > */}
-        <div>
-          <TollBar editor={editor} onOpenImageClick={() => setShowGallery(true)} />
+      <div ref={editorContainerRef} className="relative z-10 overflow-visible">
+        <div
+          ref={toolbarSlotRef}
+          style={{
+            minHeight: isSticky ? `${toolbarHeight}px` : "auto",
+          }}
+        >
+          <div
+            ref={toolbarRef}
+            style={stickyStyle}
+            className={`z-[9999] highlightbg backdrop-blur-md p-3 rounded-2xl transition-shadow duration-200 ${isSticky ? "shadow-lg rounded-none" : "relative"}`}
+          >
+            <TollBar editor={editor} onOpenImageClick={() => setShowGallery(true)} />
+          </div>
         </div>
-        <div className="h-[1px] w-full bg-gray-800/10 dark:bg-white/10 my-3"></div>
+
         {editor && <EditLink editor={editor} />}
+
         <EditorContent editor={editor} className="min-h-[300px]" />
-        {editor && <TableActionPopup editor={editor} />} {/* Add conditional rendering */}
+
+        {editor && <TableActionPopup editor={editor} />}
       </div>
       <GallaryModel
         visible={showGallery}

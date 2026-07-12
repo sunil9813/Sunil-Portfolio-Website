@@ -1,604 +1,498 @@
-import { truncateText } from "@/utils";
-import { Chip } from "@material-tailwind/react";
-import { AiFillLike } from "react-icons/ai";
-import { FaComments, FaUser } from "react-icons/fa";
-import { IoEye } from "react-icons/io5";
-import { NavLink } from "react-router-dom";
+import { useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { NavLink } from "react-router-dom";
+import { ArrowUpRight, BookOpen, CalendarDays, Eye, Heart, ImageOff, MessageCircle, Star, UserRound } from "lucide-react";
+import { truncateText } from "@/utils";
 
-export const BentoCard = ({ blogs }) => {
-  // Ensure we have enough blogs, fill with null if needed
-  const paddedBlogs = [...(blogs || []), ...Array(19 - (blogs?.length || 0)).fill(null)];
+const DEFAULT_IMAGE = "https://via.placeholder.com/1200x800?text=Blog";
+
+/*
+ * Only accent elements use these colours:
+ * - top shining line
+ * - category indicator
+ * - Read full article button
+ * - subtle card hover glow
+ *
+ * The card background stays neutral and matches the sidebar.
+ */
+const CARD_PALETTE = [
+  {
+    primary: "#7EA4CC",
+    soft: "rgba(126, 164, 204, 0.09)",
+    border: "rgba(126, 164, 204, 0.24)",
+    glow: "rgba(126, 164, 204, 0.11)",
+  },
+  {
+    primary: "#70B0A3",
+    soft: "rgba(112, 176, 163, 0.09)",
+    border: "rgba(112, 176, 163, 0.24)",
+    glow: "rgba(112, 176, 163, 0.11)",
+  },
+  {
+    primary: "#9B8BC2",
+    soft: "rgba(155, 139, 194, 0.09)",
+    border: "rgba(155, 139, 194, 0.24)",
+    glow: "rgba(155, 139, 194, 0.11)",
+  },
+  {
+    primary: "#C3A06B",
+    soft: "rgba(195, 160, 107, 0.09)",
+    border: "rgba(195, 160, 107, 0.24)",
+    glow: "rgba(195, 160, 107, 0.11)",
+  },
+  {
+    primary: "#C37F86",
+    soft: "rgba(195, 127, 134, 0.09)",
+    border: "rgba(195, 127, 134, 0.24)",
+    glow: "rgba(195, 127, 134, 0.11)",
+  },
+  {
+    primary: "#88A18E",
+    soft: "rgba(136, 161, 142, 0.09)",
+    border: "rgba(136, 161, 142, 0.24)",
+    glow: "rgba(136, 161, 142, 0.11)",
+  },
+];
+
+const blogShape = PropTypes.shape({
+  _id: PropTypes.string,
+  id: PropTypes.string,
+  title: PropTypes.string,
+  slug: PropTypes.string,
+  publicId: PropTypes.string,
+  metaDescription: PropTypes.string,
+  image: PropTypes.string,
+  createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+  featured: PropTypes.bool,
+  isFeatured: PropTypes.bool,
+  visibility: PropTypes.string,
+
+  category: PropTypes.shape({
+    title: PropTypes.string,
+  }),
+
+  user: PropTypes.shape({
+    name: PropTypes.string,
+  }),
+
+  cover: PropTypes.shape({
+    filePath: PropTypes.string,
+    url: PropTypes.string,
+  }),
+
+  numOfViews: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.array]),
+
+  likes: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.array]),
+
+  comments: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.array]),
+
+  numOfComments: PropTypes.number,
+  commentCount: PropTypes.number,
+});
+
+const twoLineClamp = {
+  display: "-webkit-box",
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+};
+
+const getPalette = (index) => CARD_PALETTE[index % CARD_PALETTE.length];
+
+const getCount = (value) => {
+  if (Array.isArray(value)) {
+    return value.length;
+  }
+
+  if (value === undefined || value === null) {
+    return 0;
+  }
+
+  const numericValue = Number(value);
+
+  return Number.isNaN(numericValue) ? 0 : numericValue;
+};
+
+const formatCount = (value) => {
+  const count = getCount(value);
+
+  if (count >= 1_000_000) {
+    return `${(count / 1_000_000).toFixed(1)}M`;
+  }
+
+  if (count >= 1_000) {
+    return `${(count / 1_000).toFixed(1)}K`;
+  }
+
+  return count.toString();
+};
+
+const getCommentCount = (blog) => {
+  if (Array.isArray(blog?.comments)) {
+    return blog.comments.length;
+  }
+
+  return blog?.comments ?? blog?.numOfComments ?? blog?.commentCount ?? 0;
+};
+
+const getImageSource = (blog) => blog?.cover?.filePath || blog?.cover?.url || blog?.image || DEFAULT_IMAGE;
+
+const getBlogLink = (blog) => {
+  const reference = blog?.slug || blog?._id || blog?.id || "";
+
+  return `/view-blog/${reference}`;
+};
+
+const getFormattedDate = (value) => {
+  if (!value) {
+    return "Recently added";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Recently added";
+  }
+
+  return date.toLocaleDateString("en-AU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const getAuthorInitial = (name) => (name || "A").trim().charAt(0).toUpperCase();
+
+const BlogImage = ({ blog }) => {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#171C23] via-[#11161D] to-[#0B0F14]">
+        <span className="flex size-12 items-center justify-center rounded-xl border border-[#2A323C] bg-[#151A21] text-[#687382] shadow-[0_14px_32px_rgba(0,0,0,0.32)]">
+          <ImageOff size={19} />
+        </span>
+      </div>
+    );
+  }
 
   return (
-    <section className="flex flex-col gap-3 mb-6 bento-cards">
-      {/* Row 1 */}
-      <div className="bento-cards_row-first flex w-full justify-between gap-3">
-        <div className="bento-cards_card cardItem w-3/12 flex flex-col-reverse rounded-xl">
-          {paddedBlogs[0] && (
-            <>
-              <div className="image h-56 rounded-xl relative">
-                <img src={paddedBlogs[0].cover?.filePath} alt={paddedBlogs[0].publicId} className="w-full h-full rounded-xl object-cover" />
-                <div className="absolute bottom-0 left-0 m-3">
-                  <Chip value={paddedBlogs[0].category?.title} color="indigo" className="text-xs rounded-sm shadow-sm" />
-                </div>
-              </div>
-              <div className="description p-3 h-auto">
-                <p className="text-[16px] textColor font-semibold"> {truncateText(paddedBlogs[0]?.title, 27)}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-300 py-1">{truncateText(paddedBlogs[0]?.metaDescription, 95)}</p>
-
-                <div className="flex items-center gap-2 py-2">
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <FaUser size={12} />
-                    <span className="text-xs">{paddedBlogs[0]?.user?.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <IoEye />
-                    <span className="text-xs">{paddedBlogs[0]?.numOfViews?.length === 0 ? "0" : paddedBlogs[0]?.numOfViews}</span>
-                  </div>
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <AiFillLike />
-                    <span className="text-xs">{paddedBlogs[0]?.likes?.length === 0 ? "0" : paddedBlogs[0]?.likes?.length}</span>
-                  </div>
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <FaComments />
-                    <span className="text-xs">200</span>
-                  </div>
-                </div>
-
-                <NavLink className="text-xs text-indigo-300 underline" to={`/view-blog/${paddedBlogs[0]?.slug}`}>
-                  View Details
-                </NavLink>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="w-1/2 flex gap-3 flex-col">
-          <div className="bento-cards_card cardItem w-full rounded-xl max-h-56 flex">
-            {paddedBlogs[1] && (
-              <>
-                <div className="image w-1/2 rounded-xl relative">
-                  <img src={paddedBlogs[1].cover?.filePath} alt={paddedBlogs[1].publicId} className="w-full h-full rounded-xl object-cover" />
-                  <div className="absolute bottom-0 left-0 m-3">
-                    <Chip value={paddedBlogs[0].category?.title} color="indigo" className="text-xs rounded-sm shadow-sm" />
-                  </div>
-                </div>
-                <div className="description p-3 w-1/2">
-                  <p className="text-[16px] textColor font-semibold"> {truncateText(paddedBlogs[0]?.title, 27)}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 py-1">{truncateText(paddedBlogs[0]?.metaDescription, 95)}</p>
-
-                  <div className="flex items-center gap-2 py-2">
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <FaUser size={12} />
-                      <span className="text-xs">{paddedBlogs[0]?.user?.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <IoEye />
-                      <span className="text-xs">{paddedBlogs[0]?.numOfViews?.length === 0 ? "0" : paddedBlogs[0]?.numOfViews}</span>
-                    </div>
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <AiFillLike />
-                      <span className="text-xs">{paddedBlogs[0]?.likes?.length === 0 ? "0" : paddedBlogs[0]?.likes?.length}</span>
-                    </div>
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <FaComments />
-                      <span className="text-xs">200</span>
-                    </div>
-                  </div>
-
-                  <NavLink className="text-xs text-indigo-300 underline" to={`/view-blog/${paddedBlogs[0]?.slug}`}>
-                    View Details
-                  </NavLink>
-                </div>
-              </>
-            )}
-          </div>
-          <div className="bento-cards_card cardItem w-full rounded-xl max-h-56 flex flex-row-reverse">
-            {paddedBlogs[2] && (
-              <>
-                <div className="image w-1/2 rounded-xl relative">
-                  <img src={paddedBlogs[2].cover?.filePath} alt={paddedBlogs[2].publicId} className="w-full h-full rounded-xl object-cover" />
-                  <div className="absolute bottom-0 left-0 m-3">
-                    <Chip value={paddedBlogs[0].category?.title} color="indigo" className="text-xs rounded-sm shadow-sm" />
-                  </div>
-                </div>
-                <div className="description p-3 w-1/2">
-                  <p className="text-[16px] textColor font-semibold"> {truncateText(paddedBlogs[0]?.title, 27)}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 py-1">{truncateText(paddedBlogs[0]?.metaDescription, 95)}</p>
-
-                  <div className="flex items-center gap-2 py-2">
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <FaUser size={12} />
-                      <span className="text-xs">{paddedBlogs[0]?.user?.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <IoEye />
-                      <span className="text-xs">{paddedBlogs[0]?.numOfViews?.length === 0 ? "0" : paddedBlogs[0]?.numOfViews}</span>
-                    </div>
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <AiFillLike />
-                      <span className="text-xs">{paddedBlogs[0]?.likes?.length === 0 ? "0" : paddedBlogs[0]?.likes?.length}</span>
-                    </div>
-                    <div className="flex items-center gap-2 capitalize text-gray-400">
-                      <FaComments />
-                      <span className="text-xs">200</span>
-                    </div>
-                  </div>
-
-                  <NavLink className="text-xs text-indigo-300 underline" to={`/view-blog/${paddedBlogs[0]?.slug}`}>
-                    View Details
-                  </NavLink>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="bento-cards_card cardItem w-3/12 rounded-xl">
-          {paddedBlogs[3] && (
-            <>
-              <div className="image h-56 rounded-xl relative">
-                <img src={paddedBlogs[3].cover?.filePath} alt={paddedBlogs[3].publicId} className="w-full h-full rounded-xl object-cover" />
-                <div className="absolute bottom-0 left-0 m-3">
-                  <Chip value={paddedBlogs[0].category?.title} color="indigo" className="text-xs rounded-sm shadow-sm" />
-                </div>
-              </div>
-              <div className="description p-3 h-auto">
-                <p className="text-[16px] textColor font-semibold"> {truncateText(paddedBlogs[0]?.title, 27)}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-300 py-1">{truncateText(paddedBlogs[0]?.metaDescription, 95)}</p>
-
-                <div className="flex items-center gap-2 py-2">
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <FaUser size={12} />
-                    <span className="text-xs">{paddedBlogs[0]?.user?.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <IoEye />
-                    <span className="text-xs">{paddedBlogs[0]?.numOfViews?.length === 0 ? "0" : paddedBlogs[0]?.numOfViews}</span>
-                  </div>
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <AiFillLike />
-                    <span className="text-xs">{paddedBlogs[0]?.likes?.length === 0 ? "0" : paddedBlogs[0]?.likes?.length}</span>
-                  </div>
-                  <div className="flex items-center gap-2 capitalize text-gray-400">
-                    <FaComments />
-                    <span className="text-xs">200</span>
-                  </div>
-                </div>
-
-                <NavLink className="text-xs text-indigo-300 underline" to={`/view-blog/${paddedBlogs[0]?.slug}`}>
-                  View Details
-                </NavLink>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Row 2 */}
-      <div className="bento-cards_row-second flex gap-3 justify-between max-h-56">
-        <div className="bento-cards_card w-1/2 cardItem rounded-xl flex">
-          {paddedBlogs[4] && (
-            <>
-              <div className="description p-3 h-auto w-1/2">
-                <p>{paddedBlogs[4].title}</p>
-                <p>{paddedBlogs[4].view || "View Details"}</p>
-                <p>{paddedBlogs[4].category?.title}</p>
-                <p>{paddedBlogs[4].more || "More + ..."}</p>
-              </div>
-              <div className="image h-56 rounded-xl w-1/2">
-                <img src={paddedBlogs[4].cover?.filePath} alt={paddedBlogs[4].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bento-cards_card w-1/2 cardItem rounded-xl flex">
-          {paddedBlogs[5] && (
-            <>
-              <div className="description p-3 h-auto w-1/2">
-                <p>{paddedBlogs[5].title}</p>
-                <p>{paddedBlogs[5].view || "View Details"}</p>
-                <p>{paddedBlogs[5].category?.title}</p>
-                <p>{paddedBlogs[5].more || "More + ..."}</p>
-              </div>
-              <div className="image h-56 rounded-xl w-1/2">
-                <img src={paddedBlogs[5].cover?.filePath} alt={paddedBlogs[5].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Row 3 */}
-      <div className="bento-cards_row-third flex w-full justify-between gap-3">
-        <div className="bento-cards_card cardItem w-3/12 rounded-xl max-h-60 relative">
-          {paddedBlogs[6] && (
-            <>
-              <div className="image w-full h-full rounded-xl">
-                <img src={paddedBlogs[6].cover?.filePath} alt={paddedBlogs[6].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-              <div className="description p-3 absolute bottom-0 left-0 z-20">
-                <p>{paddedBlogs[6].title}</p>
-                <p>{paddedBlogs[6].view || "View Details"}</p>
-                <p>{paddedBlogs[6].category?.title}</p>
-                <p>{paddedBlogs[6].more || "More + ..."}</p>
-              </div>
-              <div className="absolute bottom-0 w-full h-full z-10 left-0 bg-gradient-to-t from-light-surface2 dark:from-dark-surface2 from-10% via-light-surface2/70 dark:via-dark-surface2/70 via-40% to-transparent to-90%"></div>
-            </>
-          )}
-        </div>
-        <div className="bento-cards_card cardItem w-1/2 rounded-xl max-h-60 flex">
-          {paddedBlogs[7] && (
-            <>
-              <div className="image h-full rounded-xl w-1/2">
-                <img src={paddedBlogs[7].cover?.filePath} alt={paddedBlogs[7].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-              <div className="description p-3 h-auto w-1/2">
-                <p>{paddedBlogs[7].title}</p>
-                <p>{paddedBlogs[7].view || "View Details"}</p>
-                <p>{paddedBlogs[7].category?.title}</p>
-                <p>{paddedBlogs[7].more || "More + ..."}</p>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bento-cards_card cardItem w-3/12 rounded-xl max-h-60 relative">
-          {paddedBlogs[8] && (
-            <>
-              <div className="image w-full h-full rounded-xl">
-                <img src={paddedBlogs[8].cover?.filePath} alt={paddedBlogs[8].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-              <div className="description p-3 absolute top-0 left-0 z-20">
-                <p>{paddedBlogs[8].title}</p>
-                <p>{paddedBlogs[8].view || "View Details"}</p>
-                <p>{paddedBlogs[8].category?.title}</p>
-                <p>{paddedBlogs[8].more || "More + ..."}</p>
-              </div>
-              <div className="absolute bottom-0 w-full h-full z-10 left-0 bg-gradient-to-b from-light-surface2 dark:from-dark-surface2 from-10% via-light-surface2/70 dark:via-dark-surface2/70 via-40% to-transparent to-90%"></div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Row 4 */}
-      <div className="bento-cards_row-fourth flex gap-3 justify-between">
-        <div className="bento-cards_card cardItem w-3/5 rounded-xl max-h-72 flex">
-          {paddedBlogs[9] && (
-            <>
-              <div className="image h-full rounded-xl w-1/2">
-                <img src={paddedBlogs[9].cover?.filePath} alt={paddedBlogs[9].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-              <div className="description p-3 h-auto w-1/2">
-                <p>{paddedBlogs[9].title}</p>
-                <p>{paddedBlogs[9].view || "View Details"}</p>
-                <p>{paddedBlogs[9].category?.title}</p>
-                <p>{paddedBlogs[9].more || "More + ..."}</p>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bento-cards_card cardItem w-2/5 rounded-xl max-h-72 relative">
-          {paddedBlogs[10] && (
-            <>
-              <div className="image w-full h-full rounded-xl">
-                <img src={paddedBlogs[10].cover?.filePath} alt={paddedBlogs[10].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-              <div className="description p-3 absolute bottom-0 left-0 z-20">
-                <p>{paddedBlogs[10].title}</p>
-                <p>{paddedBlogs[10].view || "View Details"}</p>
-                <p>{paddedBlogs[10].category?.title}</p>
-                <p>{paddedBlogs[10].more || "More + ..."}</p>
-              </div>
-              <div className="absolute bottom-0 w-full h-full z-10 left-0 bg-gradient-to-t from-light-surface2 dark:from-dark-surface2 from-10% via-light-surface2/70 dark:via-dark-surface2/70 via-40% to-transparent to-90%"></div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Row 5 */}
-      <div className="bento-cards_row-fifth flex gap-3 justify-between">
-        <div className="bento-cards_card cardItem rounded-xl h-60 max-h-60 w-full relative">
-          {paddedBlogs[11] && (
-            <>
-              <div className="absolute rounded-xl bottom-0 w-full h-full z-10 left-0 bg-gradient-to-t from-indigo-500 via-purple-500 to-pink-500"></div>
-              <div className="description p-3 relative z-20">
-                <p>{paddedBlogs[11].title}</p>
-                <p>{paddedBlogs[11].view || "View Details"}</p>
-                <p>{paddedBlogs[11].category?.title}</p>
-                <p>{paddedBlogs[11].more || "More + ..."}</p>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bento-cards_card cardItem rounded-xl h-60 max-h-60 w-full relative">
-          {paddedBlogs[12] && (
-            <>
-              <div className="absolute rounded-xl bottom-0 w-full h-full z-10 left-0 bg-gradient-to-t from-green-500 via-indigo-500 to-teal-500"></div>
-              <div className="description p-3 relative z-20">
-                <p>{paddedBlogs[12].title}</p>
-                <p>{paddedBlogs[12].view || "View Details"}</p>
-                <p>{paddedBlogs[12].category?.title}</p>
-                <p>{paddedBlogs[12].more || "More + ..."}</p>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bento-cards_card cardItem rounded-xl h-60 max-h-60 w-full relative">
-          {paddedBlogs[13] && (
-            <>
-              <div className="absolute rounded-xl bottom-0 w-full h-full z-10 left-0 bg-gradient-to-t from-blue-500 via-teal-500 to-red-500"></div>
-              <div className="description p-3 relative z-20">
-                <p>{paddedBlogs[13].title}</p>
-                <p>{paddedBlogs[13].view || "View Details"}</p>
-                <p>{paddedBlogs[13].category?.title}</p>
-                <p>{paddedBlogs[13].more || "More + ..."}</p>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Row 6 */}
-      <div className="bento-cards_row-sixth flex gap-3 justify-between">
-        <div className="bento-cards_card cardItem w-2/5 rounded-xl max-h-72 flex">
-          {paddedBlogs[14] && (
-            <>
-              <div className="image w-1/2 rounded-xl">
-                <img src={paddedBlogs[14].cover?.filePath} alt={paddedBlogs[14].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-              <div className="description p-3 w-1/2">
-                <p>{paddedBlogs[14].title}</p>
-                <p>{paddedBlogs[14].view || "View Details"}</p>
-                <p>{paddedBlogs[14].category?.title}</p>
-                <p>{paddedBlogs[14].more || "More + ..."}</p>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bento-cards_card cardItem w-3/5 rounded-xl max-h-72 flex flex-row-reverse">
-          {paddedBlogs[15] && (
-            <>
-              <div className="image w-1/2 rounded-xl">
-                <img src={paddedBlogs[15].cover?.filePath} alt={paddedBlogs[15].publicId} className="w-full h-full rounded-xl object-cover" />
-              </div>
-              <div className="description p-3 w-1/2">
-                <p>{paddedBlogs[15].title}</p>
-                <p>{paddedBlogs[15].view || "View Details"}</p>
-                <p>{paddedBlogs[15].category?.title}</p>
-                <p>{paddedBlogs[15].more || "More + ..."}</p>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Row 7 */}
-      <div className="bento-cards_row-seventh flex gap-3 justify-between">
-        <div className="bento-cards_card cardItem rounded-xl max-h-60 w-full">
-          {paddedBlogs[16] && <img src={paddedBlogs[16].cover?.filePath} alt={paddedBlogs[16].publicId} className="w-full h-full rounded-xl object-cover" />}
-        </div>
-        <div className="bento-cards_card cardItem rounded-xl max-h-60 w-full">
-          {paddedBlogs[17] && <img src={paddedBlogs[17].cover?.filePath} alt={paddedBlogs[17].publicId} className="w-full h-full rounded-xl object-cover" />}
-        </div>
-        <div className="bento-cards_card cardItem rounded-xl max-h-60 w-full">
-          {paddedBlogs[18] && <img src={paddedBlogs[18].cover?.filePath} alt={paddedBlogs[18].publicId} className="w-full h-full rounded-xl object-cover" />}
-        </div>
-      </div>
-    </section>
+    <img
+      src={getImageSource(blog)}
+      alt={blog?.title || blog?.publicId || "Blog cover"}
+      loading="lazy"
+      onError={() => setImageError(true)}
+      className="absolute inset-0 size-full object-cover transition-[transform,filter] duration-700 ease-out group-hover/card:scale-[1.045] group-hover/card:brightness-105"
+    />
   );
 };
 
-export const BentoCards = () => {
-  const image = "https://www.ryrob.com/wp-content/uploads/2021/11/iStock-496848472-1024x1024.jpg";
+BlogImage.propTypes = {
+  blog: blogShape.isRequired,
+};
+
+const CategoryBadge = ({ blog, palette }) => {
+  const category = blog?.category?.title || "General";
+
   return (
-    <section className="flex flex-col gap-3 bento-cards">
-      <div className="bento-cards_row-first flex w-full justify-between gap-3">
-        <div className="bento-cards_card cardItem w-3/12 flex flex-col-reverse bg-light-highlight dark:bg-dark-highlight rounded-xl">
-          <div className="image h-56 rounded-xl">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 h-auto">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
+    <span
+      title={category}
+      className="inline-flex h-7 max-w-[72%] items-center gap-2 rounded-lg border bg-[#0A0E13]/85 px-2.5 text-[7px] font-black uppercase tracking-[0.11em] shadow-[0_8px_22px_rgba(0,0,0,0.3)] backdrop-blur-xl"
+      style={{
+        color: palette.primary,
+        borderColor: palette.border,
+      }}
+    >
+      <span
+        className="size-1.5 shrink-0 rounded-full"
+        style={{
+          background: palette.primary,
+          boxShadow: `0 0 7px ${palette.primary}70`,
+        }}
+      />
+
+      <span className="truncate">{category}</span>
+    </span>
+  );
+};
+
+CategoryBadge.propTypes = {
+  blog: blogShape.isRequired,
+
+  palette: PropTypes.shape({
+    primary: PropTypes.string,
+    border: PropTypes.string,
+  }).isRequired,
+};
+
+const FeaturedBadge = () => (
+  <span className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-white/[0.12] bg-[#0A0E13]/85 px-2.5 text-[7px] font-black uppercase tracking-[0.09em] text-[#D7DCE3] shadow-[0_8px_22px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+    <Star size={9} className="fill-current text-[#D7DCE3]" />
+    Featured
+  </span>
+);
+
+const VisibilityBadge = ({ visibility }) => {
+  const value = visibility || "public";
+
+  const isPublic = value.toLowerCase() === "public";
+
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#29313B] bg-[#151A21] px-2.5 py-1 text-[7px] font-bold capitalize text-[#8F9AA8]">
+      <span className={`size-1.5 rounded-full ${isPublic ? "bg-emerald-400/80" : "bg-amber-400/80"}`} />
+
+      {value}
+    </span>
+  );
+};
+
+VisibilityBadge.propTypes = {
+  visibility: PropTypes.string,
+};
+
+const MetricItem = ({ icon: Icon, label, value }) => (
+  <span title={label} className="inline-flex items-center gap-1.5 text-[8px] font-medium text-[#74808E]">
+    <Icon size={10} className="shrink-0 text-[#586472]" />
+
+    <span className="tabular-nums">{value}</span>
+  </span>
+);
+
+MetricItem.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  label: PropTypes.string.isRequired,
+
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+};
+
+const BlogMetrics = ({ blog }) => (
+  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <MetricItem icon={Eye} label="Views" value={formatCount(blog?.numOfViews)} />
+
+    <MetricItem icon={Heart} label="Likes" value={formatCount(blog?.likes)} />
+
+    <MetricItem icon={MessageCircle} label="Comments" value={formatCount(getCommentCount(blog))} />
+  </div>
+);
+
+BlogMetrics.propTypes = {
+  blog: blogShape.isRequired,
+};
+
+const AuthorInformation = ({ blog }) => {
+  const author = blog?.user?.name || "Admin";
+
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <span className="relative flex size-8 shrink-0 items-center justify-center rounded-lg border border-[#2B333D] bg-[#181D24] text-[10px] font-black text-[#D0D5DC]">
+        {getAuthorInitial(author)}
+
+        <span className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-[#181D24] bg-emerald-400" />
+      </span>
+
+      <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <UserRound size={9} className="shrink-0 text-[#66717E]" />
+
+          <span className="truncate text-[8px] font-bold text-[#B7C0CB]">{author}</span>
         </div>
-        <div className="w-1/2 flex gap-3 flex-col">
-          <div className="bento-cards_card cardItem  w-full bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-56 flex">
-            <div className="image w-1/2 rounded-xl">
-              <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-            </div>
-            <div className="description p-3 w-1/2">
-              <p>Title</p>
-              <p>View</p>
-              <p>Catgeory</p>
-              <p>More + ...</p>
-            </div>
-          </div>
-          <div className="bento-cards_card cardItem w-full bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-56 flex flex-row-reverse">
-            <div className="image w-1/2 rounded-xl">
-              <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-            </div>
-            <div className="description p-3 w-1/2">
-              <p>Title</p>
-              <p>View</p>
-              <p>Catgeory</p>
-              <p>More + ...</p>
-            </div>
-          </div>
+
+        <div className="mt-1 flex items-center gap-1.5 text-[7px] text-[#5F6A77]">
+          <CalendarDays size={8} className="shrink-0" />
+
+          {getFormattedDate(blog?.createdAt)}
         </div>
-        <div className="bento-cards_card cardItem w-3/12 bg-light-highlight dark:bg-dark-highlight rounded-xl">
-          <div className="image h-56 rounded-xl">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
+      </div>
+    </div>
+  );
+};
+
+AuthorInformation.propTypes = {
+  blog: blogShape.isRequired,
+};
+
+const BlogCard = ({ blog, index }) => {
+  const palette = getPalette(index);
+
+  const title = blog?.title || "Untitled blog";
+
+  const description = blog?.metaDescription || "Explore this article and discover useful information, ideas and insights.";
+
+  const isFeatured = blog?.featured || blog?.isFeatured;
+
+  return (
+    <article
+      className="group/card relative flex h-full min-h-[382px] flex-col overflow-hidden rounded-[20px] border bg-[#11161D] shadow-[0_12px_32px_rgba(0,0,0,0.26)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#121820] hover:shadow-[0_22px_50px_rgba(0,0,0,0.42)]"
+      style={{
+        borderColor: "#262E38",
+      }}
+    >
+      {/* Inner border */}
+      <span className="pointer-events-none absolute inset-0 z-30 rounded-[20px] ring-1 ring-inset ring-white/[0.025]" />
+
+      {/* Coloured shining line */}
+      <span
+        className="pointer-events-none absolute inset-x-8 top-0 z-40 h-px"
+        style={{
+          background: `linear-gradient(
+            90deg,
+            transparent,
+            ${palette.primary}30,
+            ${palette.primary},
+            ${palette.primary}30,
+            transparent
+          )`,
+          boxShadow: `0 0 12px ${palette.glow}`,
+        }}
+      />
+
+      {/* Matching hover border */}
+      <span
+        className="pointer-events-none absolute inset-0 z-20 rounded-[20px] opacity-0 transition-opacity duration-300 group-hover/card:opacity-100"
+        style={{
+          boxShadow: `inset 0 0 0 1px ${palette.border}`,
+        }}
+      />
+
+      {/* Matching hover glow */}
+      <span
+        className="pointer-events-none absolute -right-20 -top-20 z-20 size-44 rounded-full opacity-0 blur-[70px] transition-all duration-700 group-hover/card:scale-125 group-hover/card:opacity-100"
+        style={{
+          background: palette.glow,
+        }}
+      />
+
+      {/* Image */}
+      <div className="relative aspect-[16/9] shrink-0 overflow-hidden border-b border-[#242C35] bg-[#0D1218]">
+        <BlogImage blog={blog} />
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080C11]/80 via-transparent to-black/5" />
+
+        <div className="absolute inset-x-3 top-3 z-10 flex items-start justify-between gap-2">
+          <CategoryBadge blog={blog} palette={palette} />
+
+          {isFeatured && <FeaturedBadge />}
         </div>
+
+        <NavLink
+          to={getBlogLink(blog)}
+          aria-label={`Open ${title}`}
+          className="absolute bottom-3 right-3 z-10 flex size-9 translate-y-2 items-center justify-center rounded-xl border border-white/[0.1] bg-[#0B1016]/82 text-white/65 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-all duration-300 hover:border-white/[0.18] hover:bg-[#1A2028] hover:text-white group-hover/card:translate-y-0 group-hover/card:opacity-100"
+        >
+          <ArrowUpRight size={14} />
+        </NavLink>
       </div>
 
-      <div className="bento-cards_row-second flex gap-3 justify-between h-56">
-        <div className="bento-cards_card w-1/2 cardItem bg-light-highlight dark:bg-dark-highlight rounded-xl flex">
-          <div className="description p-3 h-auto w-1/2">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-          <div className="image rounded-xl w-1/2">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-        </div>
-        <div className="bento-cards_card w-1/2 cardItem bg-light-highlight dark:bg-dark-highlight rounded-xl flex">
-          <div className="description p-3 h-auto w-1/2">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-          <div className="image rounded-xl w-1/2">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-        </div>
-      </div>
+      {/* Card content */}
+      <div className="relative z-10 flex flex-1 flex-col p-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <VisibilityBadge visibility={blog?.visibility} />
 
-      <div className="bento-cards_row-third flex w-full justify-between gap-3">
-        <div className="bento-cards_card cardItem w-3/12 bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-60 relative">
-          <div className="image w-full h-full rounded-xl">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 absolute bottom-0 left-0 z-20">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-          <div className="absolute bottom-0 w-full h-full z-10 left-0 bg-gradient-to-t from-light-surface2 dark:from-dark-surface2 from-10% via-light-surface2/70 dark:via-dark-surface2/70 via-40% to-transparent to-90%"></div>
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#29313B] bg-[#151A21] px-2.5 py-1 text-[7px] font-semibold text-[#717C89]">
+            <BookOpen size={8} />
+            Article
+          </span>
         </div>
-        <div className="bento-cards_card  cardItem w-1/2 bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-60 flex">
-          <div className="image h-full rounded-xl w-1/2">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 h-auto w-1/2">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-        </div>
-        <div className="bento-cards_card  cardItem w-3/12 bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-60 relative">
-          <div className="image w-full h-full rounded-xl">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 absolute top-0 left-0 z-20">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-          <div className="absolute bottom-0 w-full h-full z-10 left-0 bg-gradient-to-b from-light-surface2 dark:from-dark-surface2 from-10% via-light-surface2/70 dark:via-dark-surface2/70 via-40% to-transparent to-90%"></div>
-        </div>
-      </div>
 
-      <div className="bento-cards_row-fourth flex gap-3 justify-between">
-        <div className="bento-cards_card  cardItem w-3/5 bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-72 flex">
-          <div className="image h-full rounded-xl w-1/2">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 h-auto w-1/2">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-        </div>
-        <div className="bento-cards_card  cardItem w-2/5 bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-72 relative">
-          <div className="image w-full h-full rounded-xl">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 absolute bottom-0 left-0 z-20">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-          <div className="absolute bottom-0 w-full h-full z-10 left-0 bg-gradient-to-t from-light-surface2 dark:from-dark-surface2 from-10% via-light-surface2/70 dark:via-dark-surface2/70 via-40% to-transparent to-90%"></div>
-        </div>
-      </div>
+        <NavLink to={getBlogLink(blog)} className="mt-3 block">
+          <h3
+            title={title}
+            style={twoLineClamp}
+            className="min-h-[39px] text-[13px] font-black leading-[1.48] tracking-[-0.02em] text-[#E1E5EA] transition-colors duration-300 group-hover/card:text-white"
+          >
+            {truncateText(title, 82)}
+          </h3>
+        </NavLink>
 
-      <div className="bento-cards_row-fifth flex gap-3 justify-between">
-        <div className="bento-cards_card cardItem card1 rounded-xl  h-60  max-h-60 w-full relative">
-          <div className="description p-3 relative z-20">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-        </div>
-        <div className="bento-cards_card cardItem card2 rounded-xl h-60 max-h-60 w-full relative">
-          <div className="description p-3 relative z-20">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-        </div>
-        <div className="bento-cards_card cardItem card3 rounded-xl h-60 max-h-60 w-full relative">
-          <div className="description p-3 relative z-20">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-        </div>
-      </div>
+        <p style={twoLineClamp} className="mt-1.5 min-h-[31px] text-[8px] leading-[1.8] text-[#84909E]">
+          {truncateText(description, 110)}
+        </p>
 
-      <div className="bento-cards_row-sixth flex gap-3 justify-between">
-        <div className="bento-cards_card cardItem w-2/5 bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-72 flex">
-          <div className="image w-1/2 rounded-xl">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 w-1/2">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-        </div>
-        <div className="bento-cards_card cardItem w-3/5 bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-72 flex flex-row-reverse">
-          <div className="image w-1/2 rounded-xl">
-            <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-          </div>
-          <div className="description p-3 w-1/2">
-            <p>Title</p>
-            <p>View</p>
-            <p>Catgeory</p>
-            <p>More + ...</p>
-          </div>
-        </div>
-      </div>
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#232B34] pt-3">
+          <AuthorInformation blog={blog} />
 
-      <div className="bento-cards_row-seventh flex gap-3 justify-between">
-        <div className="bento-cards_card cardItem bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-60 w-full custome-class">
-          <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
+          <BlogMetrics blog={blog} />
         </div>
-        <div className="bento-cards_card cardItem bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-60 w-full custome-class">
-          <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-        </div>
-        <div className="bento-cards_card cardItem bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-60 w-full custome-class">
-          <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
-        </div>
-        <div className="bento-cards_card cardItem bg-light-highlight dark:bg-dark-highlight rounded-xl max-h-60 w-full custome-class">
-          <img src={image} alt="" className="w-full h-full rounded-xl object-cover" />
+
+        {/* Previous coloured button design */}
+        <div className="mt-auto pt-3">
+          <NavLink
+            to={getBlogLink(blog)}
+            className="group/link relative flex h-9 w-full items-center justify-between overflow-hidden rounded-xl border px-3.5 text-[8px] font-black transition-all duration-300 hover:-translate-y-0.5"
+            style={{
+              color: palette.primary,
+              background: palette.soft,
+              borderColor: palette.border,
+              boxShadow: `0 8px 22px ${palette.glow}`,
+            }}
+          >
+            <span
+              className="pointer-events-none absolute -left-10 top-1/2 size-20 -translate-y-1/2 rounded-full opacity-0 blur-2xl transition-opacity duration-300 group-hover/link:opacity-100"
+              style={{
+                background: palette.glow,
+              }}
+            />
+
+            <span className="relative">Read full article</span>
+
+            <span
+              className="relative flex size-6 items-center justify-center rounded-lg border transition-all duration-300 group-hover/link:translate-x-0.5"
+              style={{
+                borderColor: palette.border,
+                background: "rgba(255,255,255,0.025)",
+              }}
+            >
+              <ArrowUpRight size={11} />
+            </span>
+          </NavLink>
         </div>
       </div>
+    </article>
+  );
+};
+
+BlogCard.propTypes = {
+  blog: blogShape.isRequired,
+  index: PropTypes.number.isRequired,
+};
+
+const EmptyBlogCollection = () => (
+  <div className="relative flex min-h-[340px] items-center justify-center overflow-hidden rounded-[22px] border border-dashed border-[#29323C] bg-[#0E141B] px-6 text-center">
+    <span className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-full bg-white/[0.018] blur-[90px]" />
+
+    <div className="relative">
+      <span className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-[#29323C] bg-[#11171E] text-[#687586] shadow-[0_14px_32px_rgba(0,0,0,0.3)]">
+        <BookOpen size={21} />
+      </span>
+
+      <h3 className="mt-4 text-[12px] font-black text-[#D8DEE8]">No blog records found</h3>
+
+      <p className="mt-2 max-w-sm text-[9px] leading-5 text-[#687586]">There are currently no blog articles available to display.</p>
+    </div>
+  </div>
+);
+
+export const BentoCard = ({ blogs = [], startIndex = 0 }) => {
+  const validBlogs = useMemo(() => (Array.isArray(blogs) ? blogs.filter(Boolean) : []), [blogs]);
+
+  if (validBlogs.length === 0) {
+    return <EmptyBlogCollection />;
+  }
+
+  return (
+    <section className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      {validBlogs.map((blog, localIndex) => {
+        const globalIndex = startIndex + localIndex;
+
+        const cardKey = blog?._id || blog?.id || blog?.slug || `${blog?.title}-${globalIndex}`;
+
+        return <BlogCard key={cardKey} blog={blog} index={globalIndex} />;
+      })}
     </section>
   );
 };
 
 BentoCard.propTypes = {
-  blogs: PropTypes.any,
+  blogs: PropTypes.arrayOf(blogShape),
+  startIndex: PropTypes.number,
 };

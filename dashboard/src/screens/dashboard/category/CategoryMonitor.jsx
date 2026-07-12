@@ -1,114 +1,152 @@
-import { HeadingThree, Wrapper } from "@/utils/Router";
-import { FaChartLine, FaHourglassHalf } from "react-icons/fa";
-import { GiCheckMark } from "react-icons/gi";
+import { ChartNoAxesCombined, Target, TrendingUp } from "lucide-react";
+import { Wrapper } from "@/routes";
 
-// Gradient map for icon backgrounds
-const gradientMap = {
-  progress: "from-blue-500 to-purple-600",
-  published: "from-emerald-500 to-green-600",
-  draft: "from-purple-500 to-violet-600",
-};
+/* ==========================================================================
+   REUSABLE DARK CARD SURFACE
+   ========================================================================== */
+
+const baseCardClass = `
+  group
+  relative
+  overflow-hidden
+  border
+  border-white/[0.055]
+  !bg-[#101318]
+  p-6
+  shadow-[0_15px_36px_rgba(0,0,0,0.20)]
+  transition-all
+  duration-300
+  hover:-translate-y-0.5
+  hover:!bg-[#12161c]
+  hover:shadow-[0_20px_45px_rgba(0,0,0,0.28)]
+`;
+
+/* ==========================================================================
+   CATEGORY MONITOR
+   ========================================================================== */
 
 export const CategoryMonitor = () => {
   return (
     <div className="my-3 space-y-3">
-      {/* Monthly Progress Card */}
-      <Wrapper className="p-6 relative overflow-hidden group">
-        {/* Floating glows – blue/purple */}
-        <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
-        <div className="absolute -top-20 -left-20 w-56 h-56 bg-purple-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
+      {/* ================================================================
+          MONTHLY PROGRESS
+          ================================================================ */}
+
+      <Wrapper
+        className={`
+          ${baseCardClass}
+          hover:border-blue-300/[0.13]
+        `}
+      >
+        {/* Restrained internal glows */}
+        <div className="pointer-events-none absolute -bottom-24 -right-20 h-60 w-60 rounded-full bg-blue-500/[0.025] blur-[80px] transition-all duration-700 group-hover:scale-110 group-hover:bg-blue-500/[0.04]" />
+
+        <div className="pointer-events-none absolute -left-20 -top-24 h-60 w-60 rounded-full bg-violet-500/[0.02] blur-[80px] transition-all duration-700 group-hover:scale-110 group-hover:bg-violet-500/[0.032]" />
+
+        {/* Neutral glass highlight */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.018),transparent_30%,transparent_72%,rgba(255,255,255,0.004))]" />
+
+        {/* Inner border */}
+        <div className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/[0.015]" />
+
+        {/* Top accent */}
+        <div className="pointer-events-none absolute left-8 right-8 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/25 to-transparent" />
 
         {/* Header */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`size-10 bg-gradient-to-br ${gradientMap.progress} rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30`}>
-            <FaChartLine size={18} />
+        <div className="relative z-10 mb-5 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-blue-300/[0.11] bg-[linear-gradient(145deg,rgba(48,88,139,0.52),rgba(47,39,91,0.82))] text-blue-100/85 shadow-[0_9px_24px_rgba(49,76,141,0.18)]">
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.075),transparent_48%)]" />
+
+              <ChartNoAxesCombined className="relative z-10" size={18} strokeWidth={1.9} />
+            </div>
+
+            <div className="min-w-0">
+              <h4 className="truncate text-sm font-semibold tracking-[-0.015em] text-white/90">Monthly Progress</h4>
+
+              <p className="mt-0.5 text-[10px] font-medium text-white/28">Category goals and publishing performance</p>
+            </div>
           </div>
+
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-blue-300/[0.11] bg-blue-300/[0.045] px-2.5 py-1 text-[9px] font-semibold text-blue-200/70">
+            <Target size={10} strokeWidth={2} />
+            75% Complete
+          </span>
+        </div>
+
+        {/* Progress information */}
+        <div className="relative z-10 space-y-5">
+          {/* Target */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Monthly Progress</h4>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400">Category goals</p>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold text-white/70">Monthly target</p>
+
+                <p className="mt-0.5 text-[9px] text-white/25">15 of 20 categories completed</p>
+              </div>
+
+              <span className="text-[12px] font-bold tabular-nums text-blue-200/75">75%</span>
+            </div>
+
+            <div className="h-2 overflow-hidden rounded-full border border-white/[0.025] bg-black/25">
+              <div
+                className="relative h-full rounded-full bg-[linear-gradient(90deg,#356d91,#66579a)] shadow-[0_0_12px_rgba(77,103,160,0.22)]"
+                style={{
+                  width: "75%",
+                }}
+                role="progressbar"
+                aria-label="Monthly target progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="75"
+              >
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent)]" />
+              </div>
+            </div>
+          </div>
+
+          {/* Published */}
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold text-white/70">Published this month</p>
+
+                <p className="mt-0.5 text-[9px] text-white/25">12 categories are now active</p>
+              </div>
+
+              <span className="text-[12px] font-bold tabular-nums text-emerald-200/75">12</span>
+            </div>
+
+            <div className="h-2 overflow-hidden rounded-full border border-white/[0.025] bg-black/25">
+              <div
+                className="relative h-full rounded-full bg-[linear-gradient(90deg,#34735f,#3e8a70)] shadow-[0_0_12px_rgba(52,128,100,0.20)]"
+                style={{
+                  width: "60%",
+                }}
+                role="progressbar"
+                aria-label="Published categories this month"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="60"
+              >
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)]" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Progress Bars */}
-        <div className="space-y-4">
-          {/* Target progress */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-500 dark:text-gray-400">Target</span>
-              <span className="font-medium text-purple-600 dark:text-purple-400">75%</span>
-            </div>
-            <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full" style={{ width: "75%" }} />
-            </div>
-          </div>
+        {/* Footer */}
+        <div className="relative z-10 mt-5 flex items-center justify-between gap-3 border-t border-white/[0.05] pt-3 text-[10px]">
+          <span className="text-white/28">
+            Monthly goal: <strong className="font-semibold text-white/48">20 categories</strong>
+          </span>
 
-          {/* Published this month */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-500 dark:text-gray-400">Published this month</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">12</span>
-            </div>
-            <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full" style={{ width: "60%" }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Footer summary */}
-        <div className="mt-4 pt-2 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700/50 flex justify-between">
-          <span>Monthly goal: 20 categories</span>
-          <span>+12% vs last month</span>
+          <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-200/65">
+            <TrendingUp size={11} strokeWidth={2} />
+            +12% vs last month
+          </span>
         </div>
       </Wrapper>
-
-      {/* Status Cards Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Published Card */}
-        <Wrapper className="p-6 relative overflow-hidden group">
-          <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
-          <div className="absolute -top-20 -left-20 w-56 h-56 bg-green-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
-
-          <div className="flex items-center gap-2 mb-3">
-            <div className={`size-10 bg-gradient-to-br ${gradientMap.published} rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30`}>
-              <GiCheckMark size={18} />
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Published</h4>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400">Categories</p>
-            </div>
-          </div>
-
-          <p className="text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">42</p>
-
-          <div className="mt-4 pt-2 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700/50 flex justify-between">
-            <span>+8% this week</span>
-            <span>Active</span>
-          </div>
-        </Wrapper>
-
-        {/* In Draft Card */}
-        <Wrapper className="p-6 relative overflow-hidden group">
-          <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-purple-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
-          <div className="absolute -top-20 -left-20 w-56 h-56 bg-violet-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
-
-          <div className="flex items-center gap-2 mb-3">
-            <div className={`size-10 bg-gradient-to-br ${gradientMap.draft} rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-500/30`}>
-              <FaHourglassHalf size={18} />
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white">In Draft</h4>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400">Categories</p>
-            </div>
-          </div>
-
-          <p className="text-4xl font-extrabold text-purple-600 dark:text-purple-400 mt-2">15</p>
-
-          <div className="mt-4 pt-2 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700/50 flex justify-between">
-            <span>Needs review</span>
-            <span>3 pending</span>
-          </div>
-        </Wrapper>
-      </div>
     </div>
   );
 };

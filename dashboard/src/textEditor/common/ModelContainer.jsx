@@ -1,36 +1,60 @@
-import { useCallback, useEffect, useId } from "react";
+import { useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 
 const ModalContainer = ({ visible, children, onClose }) => {
-  const containerId = useId();
-  const handleClose = useCallback(() => onClose && onClose(), [onClose]);
-
-  const handleClick = ({ target }) => {
-    if (target.id === containerId) handleClose();
-  };
+  const handleClose = useCallback(() => onClose?.(), [onClose]);
 
   useEffect(() => {
-    const closeModal = ({ key }) => key === "Escape" && handleClose();
+    if (!visible) return;
+
+    const closeModal = ({ key }) => {
+      if (key === "Escape") handleClose();
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     document.addEventListener("keydown", closeModal);
-    return () => document.removeEventListener("keydown", closeModal);
-  }, [handleClose]);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener("keydown", closeModal);
+    };
+  }, [visible, handleClose]);
 
   if (!visible) return null;
-  return (
-    <div id={containerId} onClick={handleClick} className="fixed inset-0 bg-primarybg bg-opacity-5 backdrop-blur-[2px] z-50 flex items-center justify-center">
+
+  return createPortal(
+    <div
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) handleClose();
+      }}
+      className="
+        fixed
+        inset-0
+        z-[9999999]
+        flex
+        items-center
+        justify-center
+        bg-black/55
+        px-4
+        py-6
+        backdrop-blur-sm
+      "
+    >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 };
-// PropTypes for type checking
+
 ModalContainer.propTypes = {
   visible: PropTypes.bool,
   onClose: PropTypes.func,
   children: PropTypes.node.isRequired,
 };
 
-// Default props
 ModalContainer.defaultProps = {
   visible: false,
   onClose: () => {},

@@ -1,48 +1,65 @@
 import PropTypes from "prop-types";
 import CheckMark from "../common/CheckMark";
-import { IconButton } from "@material-tailwind/react";
 import { MdDelete } from "react-icons/md";
 import { useState } from "react";
 
 const Image = ({ src, selected, onClick, recentImages, deleteImage, imageId }) => {
   const [hovered, setHovered] = useState(false);
 
-  return (
-    <div className="relative rounded-xl overflow-hidden cursor-pointer" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-      <img src={src} onClick={onClick} alt="overflow" className="bg-white hover:scale-110 transition-transform object-cover rounded-xl" />
+  if (!src) return null;
 
-      {/* Icons - Only visible on hover */}
+  return (
+    <div
+      className={`group/image relative aspect-[4/3] cursor-pointer overflow-hidden rounded-xl border bg-black/25 transition-all duration-300 hover:-translate-y-0.5 ${
+        selected
+          ? "border-emerald-300/40 shadow-[0_0_0_1px_rgba(52,211,153,0.16),0_14px_32px_rgba(16,185,129,0.12)]"
+          : "border-white/[0.05] hover:border-white/[0.1] hover:shadow-[0_14px_32px_rgba(0,0,0,0.35)]"
+      }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+    >
+      <img src={src} alt="Gallery item" className="h-full w-full object-cover transition-transform duration-500 group-hover/image:scale-105" />
+
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-white/[0.04] opacity-70" />
+
       {recentImages && (
-        <div className={`icons flex items-center gap-2 absolute top-0 right-0 m-2 transition-opacity duration-300 ${hovered ? "opacity-100 visible" : "opacity-0 invisible"}`}>
-          <IconButton onClick={() => deleteImage(imageId)} color="red" size="sm" className="rounded-full">
-            <MdDelete size={20} />
-          </IconButton>
-        </div>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            deleteImage(imageId);
+          }}
+          className={`absolute right-2 top-2 flex size-8 items-center justify-center rounded-lg border border-red-300/[0.12] bg-black/55 text-red-200/70 backdrop-blur-xl transition-all duration-300 hover:bg-red-500/15 hover:text-red-100 ${
+            hovered ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <MdDelete size={16} />
+        </button>
       )}
 
-      {/* Checkmark */}
-      <div className="absolute top-2 left-2 rounded-full text-white">
+      <div className="absolute left-2 top-2">
         <CheckMark visible={selected || false} />
       </div>
     </div>
   );
 };
 
-// PropTypes for type checking
 Image.propTypes = {
-  src: PropTypes.string.isRequired,
+  src: PropTypes.string,
   selected: PropTypes.bool,
   recentImages: PropTypes.bool,
   imageId: PropTypes.any,
-  folder: PropTypes.string,
-  subfolder: PropTypes.string,
   onClick: PropTypes.func,
   deleteImage: PropTypes.func,
 };
 
-// Default props
 Image.defaultProps = {
+  src: "",
   selected: false,
+  recentImages: false,
   onClick: () => {},
+  deleteImage: () => {},
 };
+
 export default Image;

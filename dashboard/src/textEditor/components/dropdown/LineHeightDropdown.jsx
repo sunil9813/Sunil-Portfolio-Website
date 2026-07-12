@@ -3,11 +3,9 @@ import { useState, useEffect } from "react";
 import { FaTextHeight } from "react-icons/fa";
 import { AiFillCaretDown } from "react-icons/ai";
 import { NoSpaceDropDownOptions } from "@/textEditor/common/DropDownOptions";
-import { Tooltip } from "@material-tailwind/react"; // Adjust this import based on your actual Tooltip component
 
 const LineHeightDropdown = ({ editor }) => {
   const [currentLineHeight, setCurrentLineHeight] = useState("auto");
-  const [showOptions, setShowOptions] = useState(false);
 
   const lineHeightOptions = [
     { label: "Auto", value: "auto" },
@@ -20,7 +18,6 @@ const LineHeightDropdown = ({ editor }) => {
     { label: "3", value: "3" },
   ];
 
-  // Update current line height when selection changes
   useEffect(() => {
     if (!editor) return;
 
@@ -33,51 +30,37 @@ const LineHeightDropdown = ({ editor }) => {
           height = node.attrs.lineHeight || "auto";
         }
       });
+
       setCurrentLineHeight(height || "auto");
     };
 
+    updateLineHeight();
+
     editor.on("selectionUpdate", updateLineHeight);
-    editor.on("transaction", updateLineHeight); // Add this to catch changes from commands
+    editor.on("transaction", updateLineHeight);
+
     return () => {
       editor.off("selectionUpdate", updateLineHeight);
       editor.off("transaction", updateLineHeight);
     };
   }, [editor]);
 
-  const LineHeightHead = () => {
-    return (
-      <Tooltip
-        content="Line Height"
-        placement="top"
-        animate={{
-          mount: { scale: 1, y: 0 },
-          unmount: { scale: 0, y: 10 },
-        }}
-        className="bg-black text-white px-3 py-2 text-xs shadow-xl rounded-none"
-      >
-        <button
-          onBlur={() => setShowOptions(false)}
-          onMouseDown={() => setShowOptions(!showOptions)}
-          className="flex items-center gap-1 text-xs bg-white dark:bg-black/20 hover:bg-green-400 h-6 3xl:h-8 rounded w-auto px-2 hover:text-white hover:scale-110 hover:shadow-md transition"
-        >
-          <FaTextHeight />
-          <span className="ml-1 text-xs">{currentLineHeight === "auto" ? "Auto" : currentLineHeight}</span>
-          <AiFillCaretDown />
-        </button>
-      </Tooltip>
-    );
-  };
+  const LineHeightHead = () => (
+    <>
+      <FaTextHeight />
+      <span>{currentLineHeight === "auto" ? "Auto" : currentLineHeight}</span>
+      <AiFillCaretDown />
+    </>
+  );
 
   return (
     <NoSpaceDropDownOptions
       options={lineHeightOptions.map(({ label, value }) => ({
         label,
         onClick: () => {
-          editor.chain().focus().setLineHeight(value).run(); // Apply to editor
-          setCurrentLineHeight(value); // Update local state
-          setShowOptions(false); // Close dropdown
+          editor.chain().focus().setLineHeight(value).run();
+          setCurrentLineHeight(value);
         },
-        active: currentLineHeight === value,
       }))}
       head={<LineHeightHead />}
       width="w-[95px]"

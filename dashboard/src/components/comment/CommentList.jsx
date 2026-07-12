@@ -1,7 +1,8 @@
+import PropTypes from "prop-types";
 import { useState } from "react";
 import { AiFillLike } from "react-icons/ai";
 import { FaReply } from "react-icons/fa";
-import PropTypes from "prop-types";
+
 import { CommentEditor } from "./CommentEditor";
 
 const commentsData = [
@@ -93,69 +94,110 @@ const commentsData = [
   },
 ];
 
-// Function to flatten all comments into a list with depth
 const flattenComments = (comment, depth = 0, result = []) => {
-  if (comment.replies) {
-    comment.replies.forEach((reply) => {
-      result.push({ ...reply, depth });
-      flattenComments(reply, depth + 1, result);
-    });
+  if (!comment?.replies?.length) {
+    return result;
   }
+
+  comment.replies.forEach((reply) => {
+    result.push({
+      ...reply,
+      depth,
+    });
+
+    flattenComments(reply, depth + 1, result);
+  });
+
   return result;
 };
 
-// Function to count all nested replies
 const countAllReplies = (comment) => {
   return flattenComments(comment).length;
 };
 
-// Function to get limited replies (up to maxCount) while preserving structure
 const getLimitedReplies = (replies, maxCount, currentCount = { value: 0 }) => {
-  let result = [];
-  for (let reply of replies || []) {
-    if (currentCount.value >= maxCount) break;
-    currentCount.value++;
-    let limitedNested = [];
-    if (reply.replies) {
-      limitedNested = getLimitedReplies(reply.replies, maxCount, currentCount);
+  const result = [];
+
+  for (const reply of replies || []) {
+    if (currentCount.value >= maxCount) {
+      break;
     }
-    result.push({ ...reply, replies: limitedNested });
+
+    currentCount.value += 1;
+
+    const limitedNested = reply?.replies?.length ? getLimitedReplies(reply.replies, maxCount, currentCount) : [];
+
+    result.push({
+      ...reply,
+      replies: limitedNested,
+    });
   }
+
   return result;
 };
 
+const formatCommentDate = (date) => {
+  if (!date) {
+    return "";
+  }
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  return parsedDate.toLocaleString("en-AU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
 export const CommentList = () => {
-  const [activeEditorId, setActiveEditorId] = useState(null); // Track the active editor
-  const [allComments, setAllComments] = useState(commentsData); // Manage all comments state
+  const [activeEditorId, setActiveEditorId] = useState(null);
+  const [allComments, setAllComments] = useState(commentsData);
 
   const handleReplySubmit = (commentId, newReply) => {
     const updateReplies = (comments) => {
-      return comments.map((c) => {
-        if (c.id === commentId) {
-          return { ...c, replies: [...(c.replies || []), newReply] };
+      return comments.map((currentComment) => {
+        if (currentComment.id === commentId) {
+          return {
+            ...currentComment,
+            replies: [...(currentComment.replies || []), newReply],
+          };
         }
-        if (c.replies) {
-          return { ...c, replies: updateReplies(c.replies) };
+
+        if (currentComment?.replies?.length) {
+          return {
+            ...currentComment,
+            replies: updateReplies(currentComment.replies),
+          };
         }
-        return c;
+
+        return currentComment;
       });
     };
 
-    setAllComments((prev) => updateReplies(prev));
-    setActiveEditorId(null); // Hide editor after submission
+    setAllComments((previousComments) => updateReplies(previousComments));
+
+    setActiveEditorId(null);
   };
 
   return (
-    <div className="comment-section">
+    <div className="space-y-3">
       {allComments.map((comment) => (
-        <Comments key={comment.id} comment={comment} activeEditorId={activeEditorId} setActiveEditorId={setActiveEditorId} onReplySubmit={handleReplySubmit} />
+        <CommentItem key={comment.id} comment={comment} activeEditorId={activeEditorId} setActiveEditorId={setActiveEditorId} onReplySubmit={handleReplySubmit} depth={0} />
       ))}
     </div>
   );
 };
 
-export const Comments = ({ comment, activeEditorId, setActiveEditorId, onReplySubmit }) => {
+export const CommentItem = ({ comment, activeEditorId, setActiveEditorId, onReplySubmit, depth = 0 }) => {
   const [showAllReplies, setShowAllReplies] = useState(false);
+
   const totalReplies = countAllReplies(comment);
   const hasMoreThanTwoReplies = totalReplies > 2;
   const isEditorActive = activeEditorId === comment.id;
@@ -163,71 +205,113 @@ export const Comments = ({ comment, activeEditorId, setActiveEditorId, onReplySu
   const displayedReplies = showAllReplies ? comment.replies || [] : getLimitedReplies(comment.replies, 2);
 
   const handleReplyClick = () => {
-    setActiveEditorId(isEditorActive ? null : comment.id); // Toggle editor for this comment
+    setActiveEditorId(isEditorActive ? null : comment.id);
   };
 
   const handleReplySubmit = (newReply) => {
-    onReplySubmit(comment.id, newReply); // Pass new reply up to CommentList
+    onReplySubmit(comment.id, newReply);
   };
 
   return (
-    <>
-      <div className="comment pl-4 my-4">
-        <div className="comment-header flex items-center gap-3">
-          <img src={comment?.img} alt={comment?.name} className="w-12 h-12 rounded-full object-cover" />
-          <div>
-            <strong>{comment?.name}</strong>
-            <h2 className="text-sm text-gray-500">{new Date(comment?.createdAt).toLocaleString()}</h2>
-          </div>
-        </div>
-        <div className="pl-14">
-          <p className="py-2 text-gray-600" dangerouslySetInnerHTML={{ __html: comment?.desc }} />
-          <div className="comment-footer flex items-center gap-5">
-            <button className="flex items-center gap-2 text-gray-700 hover:text-blue-500">
-              <AiFillLike size={18} />
-              <span className="text-sm">{comment?.likes}</span>
-            </button>
-            <button onClick={handleReplyClick} className="flex items-center gap-2 text-gray-700 hover:text-blue-500">
-              <FaReply size={18} />
-              <span className="text-sm">Reply</span>
-            </button>
-          </div>
-        </div>
-        {isEditorActive && <CommentEditor onSubmit={handleReplySubmit} onCancel={() => setActiveEditorId(null)} />}
-        {totalReplies > 0 && (
-          <div className="replies ml-8 pl-4">
-            {displayedReplies.map((reply) => (
-              <Comments key={reply.id} comment={reply} activeEditorId={activeEditorId} setActiveEditorId={setActiveEditorId} onReplySubmit={onReplySubmit} />
-            ))}
+    <article className={`relative ${depth > 0 ? "ml-3 border-l border-gray-200 pl-3 dark:border-white/[0.055] sm:ml-6 sm:pl-5" : ""}`}>
+      <div className="group/comment relative overflow-hidden rounded-2xl border border-gray-200/70 bg-gray-50/45 p-4 transition-all duration-300 hover:border-indigo-300/25 hover:bg-white/75 hover:shadow-[0_12px_28px_rgba(15,23,42,0.06)] dark:border-white/[0.045] dark:bg-white/[0.016] dark:hover:border-indigo-300/[0.10] dark:hover:bg-white/[0.026] dark:hover:shadow-[0_14px_32px_rgba(0,0,0,0.20)]">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.015),transparent_45%,transparent)]" />
 
-            {hasMoreThanTwoReplies && (
-              <button onClick={() => setShowAllReplies(!showAllReplies)} className="mt-2 text-blue-500 hover:text-blue-700 text-sm">
-                {showAllReplies ? "Show less" : `+${totalReplies - 2} more replies`}
-              </button>
-            )}
+        {/* Comment header */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="relative size-11 shrink-0">
+            <img src={comment?.img} alt={comment?.name} className="h-full w-full rounded-full border border-gray-200 object-cover dark:border-white/[0.08]" />
+
+            <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#11151d]" />
           </div>
-        )}
+
+          <div className="min-w-0">
+            <strong className="block truncate text-[12px] font-semibold text-gray-900 dark:text-white/90">{comment?.name}</strong>
+
+            <p className="mt-0.5 text-[9px] text-gray-500 dark:text-white/25">{formatCommentDate(comment?.createdAt)}</p>
+          </div>
+        </div>
+
+        {/* Comment content */}
+        <div className="relative z-10 mt-3 sm:pl-14">
+          <p
+            className="text-[11px] leading-6 text-gray-600 dark:text-white/45"
+            dangerouslySetInnerHTML={{
+              __html: comment?.desc,
+            }}
+          />
+
+          {/* Actions */}
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-full border border-gray-200/70 bg-white/50 px-2.5 py-1.5 text-[9px] font-medium text-gray-600 transition-all hover:border-rose-300/25 hover:bg-rose-500/[0.05] hover:text-rose-700 dark:border-white/[0.045] dark:bg-white/[0.018] dark:text-white/35 dark:hover:border-rose-300/[0.10] dark:hover:text-rose-200/65"
+            >
+              <AiFillLike size={12} />
+
+              <span className="tabular-nums">{comment?.likes}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleReplyClick}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[9px] font-medium transition-all ${
+                isEditorActive
+                  ? "border-indigo-300/25 bg-indigo-500/[0.07] text-indigo-700 dark:border-indigo-300/[0.10] dark:bg-indigo-300/[0.045] dark:text-indigo-200/70"
+                  : "border-gray-200/70 bg-white/50 text-gray-600 hover:border-indigo-300/25 hover:bg-indigo-500/[0.05] hover:text-indigo-700 dark:border-white/[0.045] dark:bg-white/[0.018] dark:text-white/35 dark:hover:border-indigo-300/[0.10] dark:hover:text-indigo-200/65"
+              }`}
+            >
+              <FaReply size={10} />
+
+              <span>{isEditorActive ? "Cancel reply" : "Reply"}</span>
+            </button>
+          </div>
+        </div>
       </div>
-    </>
+
+      {/* Reply editor */}
+      {isEditorActive && (
+        <div className="mt-3 rounded-2xl border border-indigo-300/20 bg-indigo-500/[0.025] p-3 dark:border-indigo-300/[0.08] dark:bg-indigo-300/[0.018]">
+          <CommentEditor onSubmit={handleReplySubmit} onCancel={() => setActiveEditorId(null)} />
+        </div>
+      )}
+
+      {/* Replies */}
+      {totalReplies > 0 && (
+        <div className="mt-3 space-y-3">
+          {displayedReplies.map((reply) => (
+            <CommentItem key={reply.id} comment={reply} activeEditorId={activeEditorId} setActiveEditorId={setActiveEditorId} onReplySubmit={onReplySubmit} depth={depth + 1} />
+          ))}
+
+          {hasMoreThanTwoReplies && (
+            <button
+              type="button"
+              onClick={() => setShowAllReplies((currentValue) => !currentValue)}
+              className="ml-3 rounded-full border border-indigo-300/20 bg-indigo-500/[0.04] px-3 py-1.5 text-[9px] font-semibold text-indigo-700 transition-all hover:bg-indigo-500/[0.09] dark:border-indigo-300/[0.09] dark:bg-indigo-300/[0.035] dark:text-indigo-200/65"
+            >
+              {showAllReplies ? "Show fewer replies" : `+${totalReplies - 2} more replies`}
+            </button>
+          )}
+        </div>
+      )}
+    </article>
   );
 };
 
-const commentShape = {
+const commentShape = PropTypes.shape({
   id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   name: PropTypes.string.isRequired,
   img: PropTypes.string.isRequired,
   createdAt: PropTypes.string.isRequired,
   desc: PropTypes.string.isRequired,
   likes: PropTypes.number.isRequired,
-  replies: PropTypes.arrayOf(PropTypes.shape({})),
-};
-commentShape.replies = PropTypes.arrayOf(PropTypes.shape(commentShape));
+  replies: PropTypes.array,
+});
 
-CommentList.propTypes = {};
-
-Comments.propTypes = {
-  comment: PropTypes.shape(commentShape).isRequired,
+CommentItem.propTypes = {
+  comment: commentShape.isRequired,
   activeEditorId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   setActiveEditorId: PropTypes.func.isRequired,
   onReplySubmit: PropTypes.func.isRequired,
+  depth: PropTypes.number,
 };

@@ -1,16 +1,21 @@
-import { updateUniversity, getAllUniversity, getUniversity } from "@/redux/slices/universityStructure/universitySlice";
-import Editor from "@/textEditor/Editor";
-import { inputClassName } from "@/utils";
-import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { BiWorld } from "react-icons/bi";
 import { CiCalendar } from "react-icons/ci";
 import { FaUniversity } from "react-icons/fa";
 import { IoCameraSharp } from "react-icons/io5";
 import { MdClose, MdLocationPin } from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+
+import { getAllUniversity, getUniversity, updateUniversity } from "@/redux/slices/universityStructure/universitySlice";
+import Editor from "@/textEditor/Editor";
+import { inputClassName } from "@/utils";
+import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/routes";
+
+const MAX_LOGO_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_IMAGE_FORMATS = ["image/png", "image/jpeg", "image/jpg"];
 
 const initialState = {
   name: "",
@@ -19,107 +24,196 @@ const initialState = {
   location: "",
   website: "",
   type: "",
+  groupId: "",
+};
+
+const LoadingSkeleton = () => {
+  return (
+    <>
+      <div className="mb-3 h-16 animate-pulse rounded-2xl bg-gray-200 dark:bg-white/[0.035]" />
+
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <Wrapper className="p-5 sm:p-6">
+          <div className="space-y-5">
+            <div className="h-5 w-40 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+
+            {[...Array(4)].map((_, index) => (
+              <div key={index}>
+                <div className="mb-2 h-3 w-24 animate-pulse rounded bg-gray-200 dark:bg-white/[0.04]" />
+                <div className="h-11 animate-pulse rounded-2xl bg-gray-200 dark:bg-white/[0.04]" />
+              </div>
+            ))}
+          </div>
+        </Wrapper>
+
+        <div className="space-y-3">
+          <Wrapper className="p-5">
+            <div className="mb-4 h-5 w-28 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+            <div className="h-64 animate-pulse rounded-3xl bg-gray-200 dark:bg-white/[0.04]" />
+          </Wrapper>
+
+          <Wrapper className="p-5">
+            <div className="mb-2 h-3 w-20 animate-pulse rounded bg-gray-200 dark:bg-white/[0.04]" />
+            <div className="h-11 animate-pulse rounded-2xl bg-gray-200 dark:bg-white/[0.04]" />
+          </Wrapper>
+        </div>
+      </section>
+
+      <Wrapper className="mt-3 p-5">
+        <div className="mb-4 h-5 w-28 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+        <div className="h-80 animate-pulse rounded-2xl bg-gray-200 dark:bg-white/[0.04]" />
+      </Wrapper>
+    </>
+  );
 };
 
 export const UpdateUniversity = () => {
   const logoInputRef = useRef(null);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { slug } = useParams();
 
-  const [university, setUniversity] = useState(initialState);
-  const [logo, setLogo] = useState(null);
-  const [logoPreview, setLogoPreview] = useState("");
-  const [description, setDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { name, edate, location, website, type } = university;
-
-  // Get data from Redux store
   const { university: currentUniversity } = useSelector((state) => state.university);
 
-  // Load initial data
+  const [university, setUniversity] = useState(initialState);
+  const [description, setDescription] = useState("");
+  const [logo, setLogo] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { name, edate, location, website, type, groupId } = university;
+
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
+    const loadUniversity = async () => {
+      if (!slug) {
+        return;
+      }
+
       try {
-        await dispatch(getUniversity(slug));
-        await dispatch(getAllUniversity());
+        setIsLoading(true);
+
+        await dispatch(getUniversity(slug)).unwrap();
+        await dispatch(getAllUniversity()).unwrap();
       } catch (error) {
-        toast.error(error || "Failed to load university data");
+        toast.error(error?.message || error || "Failed to load university data.");
       } finally {
         setIsLoading(false);
       }
     };
-    loadData();
+
+    loadUniversity();
   }, [dispatch, slug]);
 
-  // Set initial values when currentUniversity is available
   useEffect(() => {
-    if (currentUniversity) {
-      setUniversity({
-        name: currentUniversity.name || "",
-        description: currentUniversity.description || "",
-        edate: currentUniversity.edate || "",
-        location: currentUniversity.location || "",
-        website: currentUniversity.website || "",
-        type: currentUniversity.type || "",
-        groupId: currentUniversity.groupId || "",
-      });
-      setDescription(currentUniversity.description || "");
-      setLogoPreview(currentUniversity.logo?.filePath || "");
+    if (!currentUniversity) {
+      return;
     }
+
+    setUniversity({
+      name: currentUniversity.name || "",
+      description: currentUniversity.description || "",
+      edate: currentUniversity.edate || "",
+      location: currentUniversity.location || "",
+      website: currentUniversity.website || "",
+      type: currentUniversity.type || "",
+      groupId: currentUniversity.groupId || "",
+    });
+
+    setDescription(currentUniversity.description || "");
+    setLogoPreview(currentUniversity.logo?.filePath || "");
   }, [currentUniversity]);
 
-  // Clean up object URLs
   useEffect(() => {
     return () => {
-      if (logoPreview && logoPreview.startsWith("blob:")) {
+      if (logoPreview?.startsWith("blob:")) {
         URL.revokeObjectURL(logoPreview);
       }
     };
   }, [logoPreview]);
 
-  const isImageValid = (file) => {
-    const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
-    return allowedFormats.includes(file.type);
-  };
+  const isImageValid = useCallback((file) => {
+    return ALLOWED_IMAGE_FORMATS.includes(file?.type);
+  }, []);
 
-  const handleLogoChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
+  const processLogo = useCallback(
+    (selectedFile) => {
+      if (!selectedFile) {
+        return;
+      }
+
       if (!isImageValid(selectedFile)) {
         toast.error("Logo must be a PNG, JPEG, or JPG image.");
         return;
       }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("Logo file size exceeds 10MB limit.");
+
+      if (selectedFile.size > MAX_LOGO_SIZE) {
+        toast.error("Logo file size exceeds the 10MB limit.");
         return;
       }
+
+      setLogoPreview((currentPreview) => {
+        if (currentPreview?.startsWith("blob:")) {
+          URL.revokeObjectURL(currentPreview);
+        }
+
+        return URL.createObjectURL(selectedFile);
+      });
+
       setLogo(selectedFile);
-      setLogoPreview(URL.createObjectURL(selectedFile));
+    },
+    [isImageValid],
+  );
+
+  const handleLogoChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+
+    if (selectedFile) {
+      processLogo(selectedFile);
     }
+
+    event.target.value = "";
   };
 
-  const handleDropLogo = useCallback((event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) handleLogoChange({ target: { files: [file] } });
-  }, []);
+  const handleDropLogo = useCallback(
+    (event) => {
+      event.preventDefault();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUniversity({ ...university, [name]: value });
+      const selectedFile = event.dataTransfer.files?.[0];
+
+      if (selectedFile) {
+        processLogo(selectedFile);
+      }
+    },
+    [processLogo],
+  );
+
+  const handleRemoveSelectedLogo = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setLogo(null);
+
+    setLogoPreview(currentUniversity?.logo?.filePath || "");
+  };
+
+  const handleInputChange = (event) => {
+    const { name: fieldName, value } = event.target;
+
+    setUniversity((previousUniversity) => ({
+      ...previousUniversity,
+      [fieldName]: value,
+    }));
   };
 
   const handleUpdate = async () => {
     if (!name.trim()) {
-      toast.error("University name is required");
+      toast.error("University name is required.");
       return;
     }
 
     if (!type) {
-      toast.error("University type is required");
+      toast.error("University type is required.");
       return;
     }
 
@@ -127,143 +221,259 @@ export const UpdateUniversity = () => {
       setIsLoading(true);
 
       const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
+
+      formData.append("name", name.trim());
+      formData.append("description", description || "");
       formData.append("edate", edate);
-      formData.append("location", location);
-      formData.append("website", website);
+      formData.append("location", location.trim());
+      formData.append("website", website.trim());
       formData.append("type", type);
 
       if (logo) {
         formData.append("logo", logo);
       }
 
-      await dispatch(updateUniversity({ slug, formData })).unwrap();
-      await dispatch(getAllUniversity());
+      await dispatch(
+        updateUniversity({
+          slug,
+          formData,
+        }),
+      ).unwrap();
+
+      await dispatch(getAllUniversity()).unwrap();
+
+      toast.success("University updated successfully.");
       navigate("/all-university");
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error?.message || error || "Failed to update university.");
     } finally {
       setIsLoading(false);
     }
   };
 
   if (isLoading || !currentUniversity) {
-    return <div>Loading...</div>;
+    return <LoadingSkeleton />;
   }
 
   return (
     <>
       <StickyHeader>
         <HeadingTwo>Update University</HeadingTwo>
-        <div className="flexC gap-2">
-          <GhostButton onClick={() => navigate("/all-university")}>Cancel</GhostButton>
-          <TertiaryButton onClick={handleUpdate}>Update University</TertiaryButton>
+
+        <div className="flex items-center gap-2">
+          <GhostButton type="button" onClick={() => navigate("/all-university")}>
+            Cancel
+          </GhostButton>
+
+          <TertiaryButton type="button" onClick={handleUpdate}>
+            Update University
+          </TertiaryButton>
         </div>
       </StickyHeader>
 
-      <section className="flex justify-between gap-3">
-        <div className="w-2/3">
-          <Wrapper className="p-5 h-full">
-            <InputTitle className="mb-4">University details</InputTitle>
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        {/* University details */}
+        <Wrapper className="group relative h-full overflow-hidden p-5 sm:p-6">
+          {/* Wrapper background remains unchanged */}
 
-            <div className="input">
-              <InputLabel className="my-2">Name</InputLabel>
-              <div className="relative">
-                <Input type="text" name="name" className="pl-12" value={name} handleChange={handleInputChange} placeholder="University name" />
-                <div className="icon h-9 w-9 bg-green-300 rounded-full flexC text-white absolute top-1 left-1">
-                  <FaUniversity size={18} />
-                </div>
-              </div>
+          <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-emerald-500/[0.014] blur-[90px] transition-all duration-700 group-hover:bg-emerald-500/[0.024]" />
+
+          <div className="pointer-events-none absolute -bottom-24 -left-24 size-64 rounded-full bg-indigo-500/[0.012] blur-[90px] transition-all duration-700 group-hover:bg-indigo-500/[0.022]" />
+
+          <div className="relative z-10">
+            <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+              <InputTitle className="mb-1">University details</InputTitle>
+
+              <p className="text-[9px] leading-5 text-gray-400 dark:text-white/25">Update the institution name, location, website and university type.</p>
             </div>
 
-            <div className="input py-3">
-              <InputLabel className="my-2">Address</InputLabel>
-              <div className="relative">
-                <Input type="text" name="location" className="pl-12" value={location} handleChange={handleInputChange} placeholder="Searcy, AR, USA" />
-                <div className="icon h-9 w-9 bg-purple-300 rounded-full flexC text-white absolute top-1 left-1">
-                  <MdLocationPin size={18} />
+            <div className="space-y-5">
+              {/* Name */}
+              <div>
+                <InputLabel className="mb-2">University name</InputLabel>
+
+                <div className="relative">
+                  <Input type="text" name="name" className="pl-12" value={name} handleChange={handleInputChange} placeholder="University name" />
+
+                  <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-emerald-300/20 bg-emerald-500/[0.10] text-emerald-700 dark:border-emerald-300/[0.10] dark:bg-emerald-300/[0.055] dark:text-emerald-200/75">
+                    <FaUniversity size={16} />
+                  </span>
                 </div>
               </div>
-            </div>
 
-            <div className="input">
-              <InputLabel className="my-2">Website URL</InputLabel>
-              <div className="relative">
-                <Input type="text" name="website" className="pl-12" value={website} handleChange={handleInputChange} placeholder="www.example.com" />
-                <div className="icon h-9 w-9 bg-blue-300 rounded-full flexC text-white absolute top-1 left-1">
-                  <BiWorld size={18} />
+              {/* Address */}
+              <div>
+                <InputLabel className="mb-2">Address</InputLabel>
+
+                <div className="relative">
+                  <Input type="text" name="location" className="pl-12" value={location} handleChange={handleInputChange} placeholder="Searcy, AR, USA" />
+
+                  <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-violet-300/20 bg-violet-500/[0.10] text-violet-700 dark:border-violet-300/[0.10] dark:bg-violet-300/[0.055] dark:text-violet-200/75">
+                    <MdLocationPin size={17} />
+                  </span>
                 </div>
               </div>
-            </div>
 
-            <div className="input py-3">
-              <InputLabel className="my-2">Type</InputLabel>
-              <select name="type" className={`${inputClassName} !px-2 outline-none bg-transparent`} value={type} onChange={handleInputChange} required>
-                <option value="">Select Type</option>
-                <option value="Public">Public</option>
-                <option value="Private">Private</option>
-                <option value="Autonomous">Autonomous</option>
-              </select>
+              {/* Website */}
+              <div>
+                <InputLabel className="mb-2">Website URL</InputLabel>
+
+                <div className="relative">
+                  <Input type="text" name="website" className="pl-12" value={website} handleChange={handleInputChange} placeholder="https://www.example.com" />
+
+                  <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-blue-300/20 bg-blue-500/[0.10] text-blue-700 dark:border-blue-300/[0.10] dark:bg-blue-300/[0.055] dark:text-blue-200/75">
+                    <BiWorld size={17} />
+                  </span>
+                </div>
+              </div>
+
+              {/* University type */}
+              <div>
+                <InputLabel className="mb-2">University type</InputLabel>
+
+                <select
+                  name="type"
+                  value={type}
+                  onChange={handleInputChange}
+                  required
+                  className={`${inputClassName} !rounded-2xl !border-gray-200/80 !bg-gray-50/55 !px-3 !text-[11px] text-gray-700 outline-none transition-all focus:!border-indigo-400/40 dark:!border-white/[0.055] dark:!bg-white/[0.02] dark:!text-white/65 dark:focus:!border-indigo-300/[0.13]`}
+                >
+                  <option value="" className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90">
+                    Select university type
+                  </option>
+
+                  <option value="Public" className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90">
+                    Public
+                  </option>
+
+                  <option value="Private" className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90">
+                    Private
+                  </option>
+
+                  <option value="Autonomous" className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90">
+                    Autonomous
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </Wrapper>
+
+        {/* Right column */}
+        <div className="space-y-3">
+          {/* Logo */}
+          <Wrapper className="group relative overflow-hidden p-5">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-violet-500/[0.014] blur-[80px] transition-all duration-700 group-hover:bg-violet-500/[0.024]" />
+
+            <div className="relative z-10">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <InputTitle className="mb-1">Logo image</InputTitle>
+
+                  <p className="text-[9px] text-gray-400 dark:text-white/25">PNG, JPG or JPEG</p>
+                </div>
+
+                <span className="rounded-full border border-gray-200/70 bg-gray-50/60 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.08em] text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.02] dark:text-white/30">
+                  Max 10MB
+                </span>
+              </div>
+
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Upload university logo"
+                onClick={() => logoInputRef.current?.click()}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    logoInputRef.current?.click();
+                  }
+                }}
+                onDrop={handleDropLogo}
+                onDragOver={(event) => event.preventDefault()}
+                className="relative flex h-64 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-gray-300/80 bg-gray-50/60 text-center transition-all duration-300 hover:border-violet-400/40 hover:bg-violet-500/[0.025] focus:outline-none focus:ring-4 focus:ring-violet-500/[0.05] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-violet-300/[0.15] dark:hover:bg-violet-300/[0.025]"
+              >
+                {logoPreview ? (
+                  <>
+                    <img src={logoPreview} alt="University logo preview" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.015]" />
+
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/10" />
+
+                    <span className="absolute bottom-3 left-3 rounded-lg border border-white/[0.12] bg-black/45 px-2.5 py-1.5 text-[9px] font-medium text-white/90 backdrop-blur-xl">
+                      {logo ? "New logo preview" : "Current university logo"}
+                    </span>
+
+                    {logo && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveSelectedLogo}
+                        title="Restore existing logo"
+                        aria-label="Restore existing university logo"
+                        className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/85 text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
+                      >
+                        <MdClose size={15} />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex max-w-[250px] flex-col items-center px-5">
+                    <span className="relative flex size-14 items-center justify-center overflow-hidden rounded-2xl border border-violet-300/20 bg-violet-500/[0.07] text-violet-600 shadow-[0_10px_26px_rgba(124,58,237,0.10)] dark:border-violet-300/[0.10] dark:bg-violet-300/[0.045] dark:text-violet-200/70">
+                      <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.10] to-transparent" />
+
+                      <IoCameraSharp className="relative z-10" size={25} />
+                    </span>
+
+                    <p className="mt-4 text-[11px] font-medium text-gray-600 dark:text-white/50">Drag and drop a logo</p>
+
+                    <p className="mt-1.5 text-[9px] text-gray-400 dark:text-white/25">or click to browse your files</p>
+                  </div>
+                )}
+
+                <input ref={logoInputRef} id="logo" type="file" name="logo" className="hidden" onChange={handleLogoChange} accept="image/png,image/jpeg,image/jpg" />
+              </div>
             </div>
           </Wrapper>
-        </div>
 
-        <div className="w-1/3">
-          <Wrapper className="p-5 w-full">
-            <InputTitle className="mb-4">Logo Image</InputTitle>
-            <div
-              onDrop={handleDropLogo}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center w-full h-64 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
-              onClick={() => logoInputRef.current.click()}
-            >
-              {logoPreview ? (
-                <div className="relative w-full h-64 flex items-center justify-center">
-                  <img src={logoPreview} alt="Logo Preview" className="w-full h-full rounded-3xl object-cover" />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLogo(null);
-                      setLogoPreview(currentUniversity.logo?.filePath || "");
-                    }}
-                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    title="Remove Logo"
-                    aria-label="Remove logo image"
-                  >
-                    <MdClose />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <IoCameraSharp size={30} />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Drag and drop an image or
-                    <span className="textColor font-medium cursor-pointer pl-1">click to browse</span>
-                  </p>
-                </div>
-              )}
-              <input ref={logoInputRef} id="logo" type="file" name="logo" className="hidden" onChange={handleLogoChange} accept="image/png,image/jpeg,image/jpg" />
-            </div>
-          </Wrapper>
+          {/* Founded date */}
+          <Wrapper className="group relative overflow-hidden p-5">
+            {/* Wrapper background remains unchanged */}
 
-          <Wrapper className="p-5 w-full mt-3">
-            <div className="input">
-              <InputLabel className="my-2">Founded</InputLabel>
+            <div className="pointer-events-none absolute -bottom-20 -right-20 size-48 rounded-full bg-teal-500/[0.012] blur-[75px]" />
+
+            <div className="relative z-10">
+              <InputLabel className="mb-2">Founded</InputLabel>
+
               <div className="relative">
-                <Input type="text" name="edate" className="pl-12" value={edate} handleChange={handleInputChange} placeholder="1999 August 24" />
-                <div className="icon h-9 w-9 bg-teal-300 rounded-full flexC text-white absolute top-1 left-1">
+                <Input type="text" name="edate" className="pl-12" value={edate} handleChange={handleInputChange} placeholder="24 August 1999" />
+
+                <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-teal-300/20 bg-teal-500/[0.10] text-teal-700 dark:border-teal-300/[0.10] dark:bg-teal-300/[0.055] dark:text-teal-200/75">
                   <CiCalendar size={18} />
-                </div>
+                </span>
               </div>
             </div>
           </Wrapper>
         </div>
       </section>
 
-      <Wrapper className="p-5 mt-3">
-        <InputTitle className="mb-4">Description</InputTitle>
-        <Editor customId={currentUniversity.groupId} value={description} onChange={setDescription} folderName="university/description" folder="university" subfolder="description" />
+      {/* Description editor */}
+      <Wrapper className="group relative mt-3 overflow-hidden p-5 sm:p-6">
+        {/* Wrapper background remains unchanged */}
+
+        <div className="pointer-events-none absolute -bottom-24 -right-24 size-72 rounded-full bg-indigo-500/[0.014] blur-[95px] transition-all duration-700 group-hover:bg-indigo-500/[0.024]" />
+
+        <div className="relative z-10">
+          <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+            <InputTitle className="mb-1">Description</InputTitle>
+
+            <p className="text-[9px] text-gray-400 dark:text-white/25">Update the full overview and information about this university.</p>
+          </div>
+
+          <div className="min-h-[400px] rounded-2xl border border-gray-200/70 bg-gray-50/35 p-2 dark:border-white/[0.045] dark:bg-white/[0.014]">
+            <Editor customId={groupId || currentUniversity?.groupId} value={description} onChange={setDescription} folderName="university/description" folder="university" subfolder="description" />
+          </div>
+        </div>
       </Wrapper>
     </>
   );

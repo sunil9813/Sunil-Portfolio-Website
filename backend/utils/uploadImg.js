@@ -1,5 +1,15 @@
 const multer = require("multer");
 const AssetLimitConfigModel = require("../models/project/AssetLimitConfigModel");
+const fs = require("fs");
+const path = require("path");
+
+const profileUploadDirectory = path.join(process.cwd(), "uploads");
+
+if (!fs.existsSync(profileUploadDirectory)) {
+  fs.mkdirSync(profileUploadDirectory, {
+    recursive: true,
+  });
+}
 
 // Use memory storage for Cloudinary uploads
 const storage = multer.memoryStorage(); // for multiple filed image upload
@@ -195,4 +205,54 @@ const getuploadAvatarandProjectDoc = async () => {
   }
 };
 
-module.exports = { upload, uploadFile, getUploadAssetsandThumbnail, getUploadFileandThumbnail, getUploadVideoandThumbnail, getUploadCVandAvatar, getuploadAvatarandProjectDoc };
+const profileImageStorage = multer.diskStorage({
+  destination(req, file, callback) {
+    callback(null, profileUploadDirectory);
+  },
+
+  filename(req, file, callback) {
+    const extension = path.extname(file.originalname);
+
+    const uniqueName = [file.fieldname, Date.now(), Math.round(Math.random() * 1e9)].join("-");
+
+    callback(null, `${uniqueName}${extension}`);
+  },
+});
+
+const profileImageFilter = (req, file, callback) => {
+  const allowedFields = ["avatar", "cover"];
+
+  const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+
+  if (!allowedFields.includes(file.fieldname)) {
+    return callback(new Error(`Unexpected field: ${file.fieldname}. Only avatar and cover are allowed.`), false);
+  }
+
+  if (!allowedTypes.includes(file.mimetype)) {
+    return callback(new Error("Only PNG, JPG, JPEG and WEBP images are allowed."), false);
+  }
+
+  callback(null, true);
+};
+
+const uploadProfileImage = multer({
+  storage: profileImageStorage,
+  fileFilter: profileImageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1,
+  },
+});
+
+module.exports = {
+  upload,
+  uploadFile,
+  getUploadAssetsandThumbnail,
+  getUploadFileandThumbnail,
+  getUploadVideoandThumbnail,
+  getUploadCVandAvatar,
+  getuploadAvatarandProjectDoc,
+  profileImageStorage,
+  profileImageFilter,
+  uploadProfileImage,
+};

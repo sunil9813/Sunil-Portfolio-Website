@@ -1,219 +1,362 @@
-import { HeadingTwo, Wrapper } from "@/utils/Router";
-import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { useEffect, useMemo, useState } from "react";
 import { FaEye, FaEyeSlash, FaList } from "react-icons/fa";
-import { Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, CartesianGrid } from "recharts";
+import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Wrapper } from "@/routes";
 
-// New color palette for categories – pink, teal, coral, slate
+/* ==========================================================================
+   MUTED DARK-THEME COLOURS
+   ========================================================================== */
+
 const colors = {
   total: {
-    current: "#EC4899", // pink
-    last: "#BE185D",
-    gradient: "linear-gradient(180deg, #EC4899 0%, #DB2777 100%)",
-    light: "#FCE7F3",
+    current: "#3D8293",
+    soft: "#315F6B",
+    glow: "rgba(61, 130, 147, 0.22)",
   },
+
   published: {
-    current: "#14B8A6", // teal
-    last: "#0F766E",
-    gradient: "linear-gradient(180deg, #14B8A6 0%, #0D9488 100%)",
-    light: "#CCFBF1",
+    current: "#42806E",
+    soft: "#315F53",
+    glow: "rgba(66, 128, 110, 0.20)",
   },
+
   draft: {
-    current: "#F97316", // orange/coral
-    last: "#C2410C",
-    gradient: "linear-gradient(180deg, #F97316 0%, #EA580C 100%)",
-    light: "#FFEDD5",
+    current: "#9A7446",
+    soft: "#705433",
+    glow: "rgba(154, 116, 70, 0.20)",
   },
+
   archived: {
-    current: "#64748B", // slate
-    last: "#334155",
-    gradient: "linear-gradient(180deg, #64748B 0%, #475569 100%)",
-    light: "#F1F5F9",
+    current: "#74659A",
+    soft: "#544A70",
+    glow: "rgba(116, 101, 154, 0.20)",
   },
 };
 
-// Text color classes for active/inactive states
+/*
+ * Static classes are used so Tailwind keeps every colour
+ * when the production build is generated.
+ */
 const COLOR_CLASSES = {
   total: {
-    active: "text-pink-500",
-    inactive: "text-gray-600 dark:text-gray-400",
+    active: "border-cyan-300/[0.12] bg-cyan-300/[0.055] text-cyan-100/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]",
+
+    inactive: "border-transparent text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 dark:text-white/25 dark:hover:bg-white/[0.035] dark:hover:text-white/55",
   },
+
   published: {
-    active: "text-teal-500",
-    inactive: "text-gray-600 dark:text-gray-400",
+    active: "border-emerald-300/[0.12] bg-emerald-300/[0.055] text-emerald-100/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]",
+
+    inactive: "border-transparent text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 dark:text-white/25 dark:hover:bg-white/[0.035] dark:hover:text-white/55",
   },
+
   draft: {
-    active: "text-orange-500",
-    inactive: "text-gray-600 dark:text-gray-400",
+    active: "border-amber-300/[0.12] bg-amber-300/[0.055] text-amber-100/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]",
+
+    inactive: "border-transparent text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 dark:text-white/25 dark:hover:bg-white/[0.035] dark:hover:text-white/55",
   },
+
   archived: {
-    active: "text-slate-500",
-    inactive: "text-gray-600 dark:text-gray-400",
+    active: "border-violet-300/[0.12] bg-violet-300/[0.055] text-violet-100/75 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]",
+
+    inactive: "border-transparent text-gray-600 hover:bg-gray-100/60 hover:text-gray-900 dark:text-white/25 dark:hover:bg-white/[0.035] dark:hover:text-white/55",
   },
 };
 
-// Custom tooltip
+const getSeriesLabel = (dataKey) => {
+  switch (dataKey) {
+    case "total":
+      return "Total Categories";
+
+    case "published":
+      return "Published";
+
+    case "draft":
+      return "Draft";
+
+    case "archived":
+      return "Archived";
+
+    default:
+      return dataKey;
+  }
+};
+
+/* ==========================================================================
+   CUSTOM TOOLTIP
+   ========================================================================== */
+
 const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="p-3 rounded-lg shadow-lg backdrop-blur-2xl border border-gray-200 dark:border-gray-700 min-w-[260px]">
-        <div className="flex items-center gap-3 mb-4">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{
-              backgroundColor: "#FCE7F3",
-              border: "1px solid #EC489940",
-            }}
-          >
-            <FaList size={16} className="text-pink-500" />
+  if (!active || !payload || payload.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="min-w-[245px] overflow-hidden rounded-[17px] border border-gray-200/80 bg-white/95 shadow-[0_20px_50px_rgba(15,23,42,0.18)] backdrop-blur-2xl dark:border-white/[0.075] dark:bg-[#0d1117]/95 dark:shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
+      {/* Muted top highlight */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent" />
+
+      <div className="p-3.5">
+        {/* Tooltip header */}
+        <div className="mb-3 flex items-center gap-3 border-b border-gray-200/70 pb-3 dark:border-white/[0.055]">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-cyan-300/[0.11] bg-[linear-gradient(145deg,rgba(39,102,116,0.32),rgba(18,24,32,0.88))] text-cyan-100/75 shadow-[0_8px_20px_rgba(0,0,0,0.22)]">
+            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.055),transparent_48%)]" />
+
+            <FaList className="relative" size={14} />
           </div>
-          <div>
-            <p className="font-bold text-gray-900 dark:text-white text-lg">{label}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Category Performance</p>
+
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold text-gray-900 dark:text-white/90">{label}</p>
+
+            <p className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.13em] text-gray-500 dark:text-white/25">Category performance</p>
           </div>
         </div>
 
-        <div className="space-y-3">
+        {/* Tooltip series */}
+        <div className="space-y-1.5">
           {payload.map((entry, index) => (
-            <div key={index} className="bg-white/5 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
-                  {entry.dataKey === "total" ? "Total Categories" : entry.dataKey === "published" ? "Published" : entry.dataKey === "draft" ? "Draft" : "Archived"}
-                </span>
+            <div
+              key={`${entry.dataKey}-${index}`}
+              className="flex items-center justify-between gap-6 rounded-[11px] border border-gray-200/60 bg-gray-50/80 px-3 py-2.5 dark:border-white/[0.045] dark:bg-white/[0.022]"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: entry.color,
+                    boxShadow: `0 0 8px ${entry.color}45`,
+                  }}
+                />
+
+                <span className="truncate text-[10px] font-medium text-gray-600 dark:text-white/35">{getSeriesLabel(entry.dataKey)}</span>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{entry.value}</p>
+
+              <span className="shrink-0 text-[14px] font-bold tabular-nums tracking-[-0.02em] text-gray-900 dark:text-white/85">{Number(entry.value).toLocaleString()}</span>
             </div>
           ))}
         </div>
       </div>
-    );
-  }
-  return null;
+    </div>
+  );
 };
 
-// Real-time data simulation (includes archived)
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.array,
+  label: PropTypes.string,
+};
+
+/* ==========================================================================
+   REAL-TIME DATA
+   ========================================================================== */
+
 const useRealTimeData = (initialData, interval = 5000) => {
   const [data, setData] = useState(initialData);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setData((prevData) => {
-        const newData = [...prevData];
-        const lastIndex = newData.length - 1;
+      setData((previousData) => {
+        if (!previousData.length) {
+          return previousData;
+        }
 
-        newData[lastIndex] = {
-          ...newData[lastIndex],
-          total: Math.max(200, newData[lastIndex].total + Math.floor(Math.random() * 10) - 5),
-          published: Math.max(30, newData[lastIndex].published + Math.floor(Math.random() * 5) - 2),
-          draft: Math.max(120, newData[lastIndex].draft + Math.floor(Math.random() * 8) - 4),
-          archived: Math.max(20, newData[lastIndex].archived + Math.floor(Math.random() * 5) - 2),
+        const updatedData = [...previousData];
+
+        const lastIndex = updatedData.length - 1;
+
+        updatedData[lastIndex] = {
+          ...updatedData[lastIndex],
+
+          total: Math.max(200, updatedData[lastIndex].total + Math.floor(Math.random() * 10) - 5),
+
+          published: Math.max(30, updatedData[lastIndex].published + Math.floor(Math.random() * 5) - 2),
+
+          draft: Math.max(120, updatedData[lastIndex].draft + Math.floor(Math.random() * 8) - 4),
+
+          archived: Math.max(20, updatedData[lastIndex].archived + Math.floor(Math.random() * 5) - 2),
         };
-        return newData;
+
+        return updatedData;
       });
     }, interval);
 
-    return () => clearInterval(intervalId);
-  }, []);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [interval]);
 
   return data;
 };
 
-// Generate initial data
+/* ==========================================================================
+   INITIAL DATA
+   ========================================================================== */
+
 const generateCategoryData = () => {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
   return months.map((month, index) => ({
     month,
+
     total: 200 + Math.floor(Math.random() * 150),
+
     published: 30 + Math.floor(Math.random() * 40),
+
     draft: 150 + Math.floor(Math.random() * 50),
+
     archived: 20 + Math.floor(Math.random() * 20),
+
     timestamp: new Date(2024, index).getTime(),
   }));
 };
 
+/* ==========================================================================
+   CATEGORY TREND CHART
+   ========================================================================== */
+
 export const CategoryTrendsChart = () => {
   const [showDraftTrend, setShowDraftTrend] = useState(true);
+
   const [showPublishedTrend, setShowPublishedTrend] = useState(true);
+
   const [showTotalTrend, setShowTotalTrend] = useState(true);
+
   const [showArchivedTrend, setShowArchivedTrend] = useState(false);
+
   const [chartType, setChartType] = useState("area");
 
-  const yearlyData = useRealTimeData(generateCategoryData());
+  /*
+   * Generates chart data only once.
+   */
+  const initialData = useMemo(() => generateCategoryData(), []);
 
-  // Calculate summary stats for footer
-  const avgTotal = Math.round(yearlyData.reduce((acc, d) => acc + d.total, 0) / yearlyData.length);
-  const peakMonthData = [...yearlyData].sort((a, b) => b.total - a.total)[0];
-  const peakMonth = peakMonthData?.month || "Dec";
+  const yearlyData = useRealTimeData(initialData);
+
+  const avgTotal = yearlyData.length ? Math.round(yearlyData.reduce((total, item) => total + item.total, 0) / yearlyData.length) : 0;
+
+  const peakMonthData = [...yearlyData].sort((firstItem, secondItem) => secondItem.total - firstItem.total)[0];
+
+  const peakMonth = peakMonthData?.month || "—";
+
+  const axisTick = {
+    fill: "#69717E",
+    fontSize: 10,
+    fontWeight: 500,
+  };
+
+  const chartMargin = {
+    top: 14,
+    right: 8,
+    left: 0,
+    bottom: 4,
+  };
+
+  const tooltipCursor = {
+    stroke: "rgba(148,163,184,0.10)",
+    strokeWidth: 1,
+    strokeDasharray: "4 4",
+  };
 
   return (
-    <Wrapper className="p-6 relative overflow-hidden group">
-      {/* Floating glow backgrounds – pink and teal */}
-      <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-pink-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
-      <div className="absolute -top-20 -left-20 w-56 h-56 bg-teal-500/10 rounded-full blur-3xl opacity-70 group-hover:scale-125 transition-all duration-700" />
+    <Wrapper className="group relative overflow-hidden p-6">
+      {/* Restrained background glow */}
+      <div className="pointer-events-none absolute -bottom-24 -right-20 h-60 w-60 rounded-full bg-cyan-500/[0.018] blur-[85px] transition-all duration-700 group-hover:scale-110 group-hover:bg-cyan-500/[0.027]" />
 
-      {/* Header with icon + title and toggles */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="size-10 bg-gradient-to-br from-pink-500 to-teal-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-pink-500/30">
-            <FaList size={18} />
+      <div className="pointer-events-none absolute -left-20 -top-24 h-60 w-60 rounded-full bg-violet-500/[0.014] blur-[85px] transition-all duration-700 group-hover:scale-110 group-hover:bg-violet-500/[0.022]" />
+
+      {/* Neutral glass surface */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.014),transparent_28%,transparent_72%,rgba(255,255,255,0.004))]" />
+
+      {/* Header */}
+      <div className="relative z-10 mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-cyan-300/[0.09] bg-[linear-gradient(145deg,rgba(39,101,116,0.34),rgba(22,28,37,0.9))] text-cyan-100/75 shadow-[0_8px_22px_rgba(0,0,0,0.22)]">
+            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.055),transparent_48%)]" />
+
+            <FaList className="relative" size={16} />
           </div>
-          <div>
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Category Performance Analytics</h4>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400">Real-time category trends</p>
+
+          <div className="min-w-0">
+            <h4 className="truncate text-sm font-semibold tracking-[-0.015em] text-gray-900 dark:text-white/90">Category Performance Analytics</h4>
+
+            <p className="mt-0.5 text-[10px] text-gray-500 dark:text-white/27">Real-time category trends</p>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          {/* Visibility buttons */}
-          <div className="flex border border-gray-200 dark:border-gray-700/50 rounded-full p-1">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          {/* Series visibility */}
+          <div className="flex flex-wrap rounded-full border border-gray-200 bg-gray-50/60 p-1 dark:border-white/[0.055] dark:bg-black/15">
             <button
-              onClick={() => setShowTotalTrend(!showTotalTrend)}
-              className={`px-2 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 ${showTotalTrend ? COLOR_CLASSES.total.active : COLOR_CLASSES.total.inactive}`}
+              type="button"
+              onClick={() => setShowTotalTrend((current) => !current)}
+              className={`flex items-center gap-2 rounded-full border px-2.5 py-2 text-[10px] font-medium transition-all duration-300 ${
+                showTotalTrend ? COLOR_CLASSES.total.active : COLOR_CLASSES.total.inactive
+              }`}
             >
-              {showTotalTrend ? <FaEye size={12} /> : <FaEyeSlash size={12} />}
+              {showTotalTrend ? <FaEye size={11} /> : <FaEyeSlash size={11} />}
+
               <span>Total</span>
             </button>
+
             <button
-              onClick={() => setShowPublishedTrend(!showPublishedTrend)}
-              className={`px-2 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 ${
+              type="button"
+              onClick={() => setShowPublishedTrend((current) => !current)}
+              className={`flex items-center gap-2 rounded-full border px-2.5 py-2 text-[10px] font-medium transition-all duration-300 ${
                 showPublishedTrend ? COLOR_CLASSES.published.active : COLOR_CLASSES.published.inactive
               }`}
             >
-              {showPublishedTrend ? <FaEye size={12} /> : <FaEyeSlash size={12} />}
+              {showPublishedTrend ? <FaEye size={11} /> : <FaEyeSlash size={11} />}
+
               <span>Published</span>
             </button>
+
             <button
-              onClick={() => setShowDraftTrend(!showDraftTrend)}
-              className={`px-2 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 ${showDraftTrend ? COLOR_CLASSES.draft.active : COLOR_CLASSES.draft.inactive}`}
+              type="button"
+              onClick={() => setShowDraftTrend((current) => !current)}
+              className={`flex items-center gap-2 rounded-full border px-2.5 py-2 text-[10px] font-medium transition-all duration-300 ${
+                showDraftTrend ? COLOR_CLASSES.draft.active : COLOR_CLASSES.draft.inactive
+              }`}
             >
-              {showDraftTrend ? <FaEye size={12} /> : <FaEyeSlash size={12} />}
+              {showDraftTrend ? <FaEye size={11} /> : <FaEyeSlash size={11} />}
+
               <span>Draft</span>
             </button>
+
             <button
-              onClick={() => setShowArchivedTrend(!showArchivedTrend)}
-              className={`px-2 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 ${
+              type="button"
+              onClick={() => setShowArchivedTrend((current) => !current)}
+              className={`flex items-center gap-2 rounded-full border px-2.5 py-2 text-[10px] font-medium transition-all duration-300 ${
                 showArchivedTrend ? COLOR_CLASSES.archived.active : COLOR_CLASSES.archived.inactive
               }`}
             >
-              {showArchivedTrend ? <FaEye size={12} /> : <FaEyeSlash size={12} />}
+              {showArchivedTrend ? <FaEye size={11} /> : <FaEyeSlash size={11} />}
+
               <span>Archived</span>
             </button>
           </div>
 
-          {/* Chart type toggle */}
-          <div className="flex border border-gray-200 dark:border-gray-700/50 rounded-full p-1">
+          {/* Chart type selector */}
+          <div className="flex rounded-full border border-gray-200 bg-gray-50/60 p-1 dark:border-white/[0.055] dark:bg-black/15">
             <button
+              type="button"
               onClick={() => setChartType("area")}
-              className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                chartType === "area" ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white" : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+              className={`rounded-full px-4 py-2 text-[10px] font-medium transition-all duration-300 ${
+                chartType === "area"
+                  ? "bg-gray-200/80 text-gray-900 shadow-sm dark:bg-white/[0.065] dark:text-white/80"
+                  : "text-gray-600 hover:text-gray-900 dark:text-white/27 dark:hover:bg-white/[0.025] dark:hover:text-white/50"
               }`}
             >
               Area
             </button>
+
             <button
+              type="button"
               onClick={() => setChartType("line")}
-              className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                chartType === "line" ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white" : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+              className={`rounded-full px-4 py-2 text-[10px] font-medium transition-all duration-300 ${
+                chartType === "line"
+                  ? "bg-gray-200/80 text-gray-900 shadow-sm dark:bg-white/[0.065] dark:text-white/80"
+                  : "text-gray-600 hover:text-gray-900 dark:text-white/27 dark:hover:bg-white/[0.025] dark:hover:text-white/50"
               }`}
             >
               Line
@@ -222,92 +365,254 @@ export const CategoryTrendsChart = () => {
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="h-[400px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === "area" ? (
-            <AreaChart data={yearlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} className="dark:stroke-gray-700" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 11 }} className="dark:text-gray-400" height={30} dy={5} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} className="dark:text-gray-400" width={30} dx={-3} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+      {/* Chart surface */}
+      <div className="relative z-10 overflow-hidden rounded-[18px] border border-gray-200/60 bg-gray-50/40 px-1 pb-1 pt-3 dark:border-white/[0.045] dark:bg-black/[0.08]">
+        <div className="h-[380px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === "area" ? (
+              <AreaChart data={yearlyData} margin={chartMargin}>
+                <defs>
+                  <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={colors.total.current} stopOpacity={0.22} />
 
-              {showTotalTrend && <Area type="monotone" dataKey="total" stroke={colors.total.current} fill="url(#totalGradient)" strokeWidth={2} name="Total Categories" />}
-              {showPublishedTrend && <Area type="monotone" dataKey="published" stroke={colors.published.current} fill="url(#publishedGradient)" strokeWidth={2} name="Published" />}
-              {showDraftTrend && <Area type="monotone" dataKey="draft" stroke={colors.draft.current} fill="url(#draftGradient)" strokeWidth={2} name="Draft" />}
-              {showArchivedTrend && <Area type="monotone" dataKey="archived" stroke={colors.archived.current} fill="url(#archivedGradient)" strokeWidth={2} name="Archived" />}
+                    <stop offset="55%" stopColor={colors.total.soft} stopOpacity={0.07} />
 
-              <defs>
-                <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={colors.total.current} stopOpacity={0.8} />
-                  <stop offset="100%" stopColor={colors.total.current} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="publishedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={colors.published.current} stopOpacity={0.8} />
-                  <stop offset="100%" stopColor={colors.published.current} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="draftGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={colors.draft.current} stopOpacity={0.8} />
-                  <stop offset="100%" stopColor={colors.draft.current} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="archivedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={colors.archived.current} stopOpacity={0.8} />
-                  <stop offset="100%" stopColor={colors.archived.current} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-            </AreaChart>
-          ) : (
-            <LineChart data={yearlyData} margin={{ top: 10, right: 5, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} className="dark:stroke-gray-700" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 11 }} className="dark:text-gray-400" height={30} dy={5} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: "#6B7280", fontSize: 10 }} className="dark:text-gray-400" width={30} dx={-3} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                    <stop offset="100%" stopColor={colors.total.soft} stopOpacity={0} />
+                  </linearGradient>
 
-              {showTotalTrend && (
-                <Line
-                  type="monotone"
-                  dataKey="total"
-                  stroke={colors.total.current}
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: colors.total.current, strokeWidth: 0 }}
-                  activeDot={{ r: 6 }}
-                  name="Total Categories"
+                  <linearGradient id="publishedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={colors.published.current} stopOpacity={0.2} />
+
+                    <stop offset="55%" stopColor={colors.published.soft} stopOpacity={0.065} />
+
+                    <stop offset="100%" stopColor={colors.published.soft} stopOpacity={0} />
+                  </linearGradient>
+
+                  <linearGradient id="draftGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={colors.draft.current} stopOpacity={0.19} />
+
+                    <stop offset="55%" stopColor={colors.draft.soft} stopOpacity={0.06} />
+
+                    <stop offset="100%" stopColor={colors.draft.soft} stopOpacity={0} />
+                  </linearGradient>
+
+                  <linearGradient id="archivedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={colors.archived.current} stopOpacity={0.18} />
+
+                    <stop offset="55%" stopColor={colors.archived.soft} stopOpacity={0.055} />
+
+                    <stop offset="100%" stopColor={colors.archived.soft} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+
+                <CartesianGrid strokeDasharray="4 7" stroke="rgba(148,163,184,0.06)" vertical={false} />
+
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={axisTick} height={30} dy={6} />
+
+                <YAxis axisLine={false} tickLine={false} tick={axisTick} width={34} dx={-4} />
+
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={tooltipCursor}
+                  wrapperStyle={{
+                    outline: "none",
+                  }}
                 />
-              )}
-              {showPublishedTrend && (
-                <Line
-                  type="monotone"
-                  dataKey="published"
-                  stroke={colors.published.current}
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: colors.published.current, strokeWidth: 0 }}
-                  activeDot={{ r: 6 }}
-                  name="Published"
+
+                {showTotalTrend && (
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke={colors.total.current}
+                    fill="url(#totalGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.total.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Total Categories"
+                  />
+                )}
+
+                {showPublishedTrend && (
+                  <Area
+                    type="monotone"
+                    dataKey="published"
+                    stroke={colors.published.current}
+                    fill="url(#publishedGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.published.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Published"
+                  />
+                )}
+
+                {showDraftTrend && (
+                  <Area
+                    type="monotone"
+                    dataKey="draft"
+                    stroke={colors.draft.current}
+                    fill="url(#draftGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.draft.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Draft"
+                  />
+                )}
+
+                {showArchivedTrend && (
+                  <Area
+                    type="monotone"
+                    dataKey="archived"
+                    stroke={colors.archived.current}
+                    fill="url(#archivedGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.archived.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Archived"
+                  />
+                )}
+              </AreaChart>
+            ) : (
+              <LineChart data={yearlyData} margin={chartMargin}>
+                <CartesianGrid strokeDasharray="4 7" stroke="rgba(148,163,184,0.06)" vertical={false} />
+
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={axisTick} height={30} dy={6} />
+
+                <YAxis axisLine={false} tickLine={false} tick={axisTick} width={34} dx={-4} />
+
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={tooltipCursor}
+                  wrapperStyle={{
+                    outline: "none",
+                  }}
                 />
-              )}
-              {showDraftTrend && (
-                <Line type="monotone" dataKey="draft" stroke={colors.draft.current} strokeWidth={2.5} dot={{ r: 3, fill: colors.draft.current, strokeWidth: 0 }} activeDot={{ r: 6 }} name="Draft" />
-              )}
-              {showArchivedTrend && (
-                <Line
-                  type="monotone"
-                  dataKey="archived"
-                  stroke={colors.archived.current}
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: colors.archived.current, strokeWidth: 0 }}
-                  activeDot={{ r: 6 }}
-                  name="Archived"
-                />
-              )}
-            </LineChart>
-          )}
-        </ResponsiveContainer>
+
+                {showTotalTrend && (
+                  <Line
+                    type="monotone"
+                    dataKey="total"
+                    stroke={colors.total.current}
+                    strokeWidth={2.1}
+                    dot={{
+                      r: 2.1,
+                      fill: colors.total.current,
+                      strokeWidth: 0,
+                    }}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.total.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Total Categories"
+                  />
+                )}
+
+                {showPublishedTrend && (
+                  <Line
+                    type="monotone"
+                    dataKey="published"
+                    stroke={colors.published.current}
+                    strokeWidth={2.1}
+                    dot={{
+                      r: 2.1,
+                      fill: colors.published.current,
+                      strokeWidth: 0,
+                    }}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.published.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Published"
+                  />
+                )}
+
+                {showDraftTrend && (
+                  <Line
+                    type="monotone"
+                    dataKey="draft"
+                    stroke={colors.draft.current}
+                    strokeWidth={2.1}
+                    dot={{
+                      r: 2.1,
+                      fill: colors.draft.current,
+                      strokeWidth: 0,
+                    }}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.draft.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Draft"
+                  />
+                )}
+
+                {showArchivedTrend && (
+                  <Line
+                    type="monotone"
+                    dataKey="archived"
+                    stroke={colors.archived.current}
+                    strokeWidth={2.1}
+                    dot={{
+                      r: 2.1,
+                      fill: colors.archived.current,
+                      strokeWidth: 0,
+                    }}
+                    activeDot={{
+                      r: 4.5,
+                      fill: colors.archived.current,
+                      stroke: "rgba(255,255,255,0.5)",
+                      strokeWidth: 1,
+                    }}
+                    animationDuration={700}
+                    name="Archived"
+                  />
+                )}
+              </LineChart>
+            )}
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* Footer with summary */}
-      <div className="mt-4 pt-2 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700/50 flex justify-between">
-        <span>Peak month: {peakMonth}</span>
-        <span>Avg. total: {avgTotal} categories</span>
+      {/* Footer */}
+      <div className="relative z-10 mt-4 flex items-center justify-between border-t border-gray-200 pt-3 text-[10px] text-gray-500 dark:border-white/[0.05] dark:text-white/27">
+        <span>
+          Peak month: <strong className="font-semibold text-gray-700 dark:text-white/48">{peakMonth}</strong>
+        </span>
+
+        <span>
+          Avg. total: <strong className="font-semibold text-gray-700 dark:text-white/48">{avgTotal.toLocaleString()} categories</strong>
+        </span>
       </div>
     </Wrapper>
   );

@@ -1,197 +1,280 @@
-import { InputFiled, InputPassword, Logo, PrimaryButton } from "@/utils/Router";
-import { FaGithub } from "react-icons/fa";
-import { NavLink } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BsCheckAll } from "react-icons/bs";
+import { FiLock, FiMail, FiUser } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import { AuthInputField, AuthInputPassword } from "@/components/common/input/AuthInput";
+import { Loader, PrimaryButton } from "@/routes";
+
 import { validateEmail } from "@/redux/services/authService";
 import { register, RESET, sendVerificationEmail } from "@/redux/slices/authSlice";
-import { AuthUserInfo } from "./Login";
-import { FcGoogle } from "react-icons/fc";
+import { AuthLayout, AuthSocialButtons } from "./Login";
 
-const initialSate = {
+const INITIAL_STATE = {
   name: "",
-  password: "",
   email: "",
+  password: "",
   confirmPassword: "",
 };
 
 export const Signup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isSuccess, isLoggedIn } = useSelector((state) => state.auth);
 
-  const [formData, setFormData] = useState(initialSate);
+  const { isLoading, isSuccess, isLoggedIn } = useSelector((state) => state.auth);
+
+  const [formData, setFormData] = useState(INITIAL_STATE);
   const [upperCase, setUpperCase] = useState(false);
   const [number, setNumber] = useState(false);
   const [specialChar, setSpecialChar] = useState(false);
   const [passwordLength, setPasswordLength] = useState(false);
 
-  const { name, password, email, confirmPassword } = formData;
+  const { name, email, password, confirmPassword } = formData;
 
-  const wrongIcon = <BsCheckAll size={18} />;
-  const checkIcon = <BsCheckAll size={18} className="text-green-500" />;
+  useEffect(() => {
+    setUpperCase(!!password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/));
+    setNumber(!!password.match(/[0-9]/));
+    setSpecialChar(!!password.match(/[!,%,&,@,#,$,^,*,?,_,~]/));
+    setPasswordLength(password.length >= 8);
+  }, [password]);
 
-  const switchIcon = (condition) => {
-    if (condition) {
-      return checkIcon;
+  const passwordRules = useMemo(
+    () => [
+      {
+        id: "case",
+        label: "Upper & lower case",
+        active: upperCase,
+      },
+      {
+        id: "number",
+        label: "Number 0-9",
+        active: number,
+      },
+      {
+        id: "special",
+        label: "Special character",
+        active: specialChar,
+      },
+      {
+        id: "length",
+        label: "Minimum 8 characters",
+        active: passwordLength,
+      },
+    ],
+    [upperCase, number, specialChar, passwordLength],
+  );
+
+  const activeRules = passwordRules.filter((rule) => rule.active).length;
+  const passwordStrength = (activeRules / passwordRules.length) * 100;
+
+  const strengthLabel = useMemo(() => {
+    if (!password) return "Empty";
+    if (activeRules <= 1) return "Weak";
+    if (activeRules === 2) return "Fair";
+    if (activeRules === 3) return "Good";
+    return "Strong";
+  }, [activeRules, password]);
+
+  const strengthLevel = useMemo(() => {
+    if (!password) return "empty";
+    if (activeRules <= 1) return "weak";
+    if (activeRules === 2) return "fair";
+    if (activeRules === 3) return "good";
+    return "strong";
+  }, [activeRules, password]);
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((currentData) => ({
+      ...currentData,
+      [name]: value,
+    }));
+  };
+
+  const registerUser = async (event) => {
+    event.preventDefault();
+
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName || !trimmedEmail || !password || !confirmPassword) {
+      toast.error("All fields are required");
+      return;
     }
-    return wrongIcon;
+
+    if (!validateEmail(trimmedEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      await dispatch(
+        register({
+          name: trimmedName,
+          email: trimmedEmail,
+          password,
+        }),
+      ).unwrap();
+
+      await dispatch(sendVerificationEmail()).unwrap();
+    } catch (error) {
+      toast.error(error?.message || "Something went wrong. Please try again.");
+    }
   };
 
   useEffect(() => {
-    //check lowercase and uppercase
-    if (password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) {
-      setUpperCase(true);
-    } else {
-      setUpperCase(false);
-    }
-    //check for number
-    if (password.match(/([0-9])/)) {
-      setNumber(true);
-    } else {
-      setNumber(false);
-    }
-    // Check for special character
-    if (password.match(/([!,%,&,@,#,$,^,*,?,_,~])/)) {
-      setSpecialChar(true);
-    } else {
-      setSpecialChar(false);
-    }
-    // Check for PASSWORD LENGTH
-    if (password.length > 8) {
-      setPasswordLength(true);
-    } else {
-      setPasswordLength(false);
-    }
-  }, [password]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const registerUser = async (e) => {
-    e.preventDefault();
-    if (!name || !email || !password) {
-      return toast.error("All fields are required");
-    }
-    if (password.length < 8) {
-      return toast.error("Password length should be 8 or more");
-    }
-    if (password !== confirmPassword) {
-      return toast.error("Passwords do not match");
-    }
-    if (!validateEmail(email)) {
-      return toast.error("Email is not valid");
-    }
-    const userData = {
-      name,
-      email,
-      password,
+    return () => {
+      dispatch(RESET());
     };
-    await dispatch(register(userData));
-    // add its in last
-    await dispatch(sendVerificationEmail());
-  };
+  }, [dispatch]);
 
   useEffect(() => {
     if (isSuccess && isLoggedIn) {
       navigate("/");
     }
+  }, [isSuccess, isLoggedIn, navigate]);
 
-    dispatch(RESET());
-  }, [dispatch, isLoggedIn, isSuccess, navigate]);
   return (
     <>
-      <section className="auth-section">
-        <div className="auth-section_container 3xl:-mt-16 2xl:!w-[450px] 3xl:!w-[500px]">
-          <div className="auth-section_container_content">
-            <div className="auth-section_container_content_line"></div>
-            <div className="flexC pb-2">
-              <Logo />
-            </div>
-            <h1 className="text-3xl font-semibold xl:text-2xl text-black dark:text-white">Sign in to Bento</h1>
-            <form className="inputs flex flex-col mt-6 xl:mt-3" onSubmit={registerUser}>
-              <div className="flex gap-3">
-                <div className="w-full">
-                  <InputFiled fieldNameType={false} type="text" value={name} name="name" onChange={handleInputChange} placeholder="John Doe" />
-                </div>
-                <div className="w-full">
-                  <InputFiled fieldNameType={false} type="email" value={email} name="email" onChange={handleInputChange} placeholder="example@gmail.com" />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-3">
-                <div className="w-full">
-                  <InputPassword fieldNameType={false} name="password" value={password} onChange={handleInputChange} placeholder="*******" />
-                </div>
-                <div className="w-full">
-                  <InputPassword
-                    fieldNameType={false}
-                    name="confirmPassword"
-                    value={confirmPassword}
-                    onChange={handleInputChange}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      toast.error("Cannot paste into input field");
-                      return false;
-                    }}
-                    placeholder="*******"
-                  />
-                </div>
-              </div>
+      {isLoading && <Loader />}
 
-              <PrimaryButton text="create account" />
+      <AuthLayout
+        title="Create an account"
+        subtitle="Join Bento and start your learning journey securely."
+        badgeText="Secure signup"
+        shellClassName="mono-auth-shell--signup"
+        cardClassName="mono-auth-card--signup"
+        contentClassName="mono-auth-card__content--signup"
+        footer={
+          <p className="mono-auth-signup">
+            Already have an account? <NavLink to="/login">Sign in</NavLink>
+          </p>
+        }
+      >
+        <form className="mono-auth-form mono-auth-form--signup" onSubmit={registerUser} noValidate>
+          <div className="mono-auth-signup-grid">
+            <AuthInputField
+              type="text"
+              value={name}
+              name="name"
+              onChange={handleInputChange}
+              placeholder="Full name"
+              autoComplete="name"
+              ariaLabel="Full name"
+              leadingIcon={<FiUser size={17} aria-hidden="true" />}
+              required
+            />
 
-              <ul className="box my-3 border border-gray-200 dark:border-gray-300/20 p-3 rounded-lg">
-                <li className={`text-[12px] ${upperCase ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
-                  {switchIcon(upperCase)}
-                  Lowercase & Uppercase
-                </li>
-                <li className={`text-[12px] ${number ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
-                  {switchIcon(number)}
-                  Number (0-9)
-                </li>
-                <li className={`text-[12px] ${specialChar ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
-                  {switchIcon(specialChar)}
-                  Special Character (!@#$%^&*)
-                </li>
-                <li className={`text-[12px] ${passwordLength ? "text-green-500" : "text-gray-700 dark:text-gray-500"} flex items-center gap-2`}>
-                  {switchIcon(passwordLength)}
-                  At least 8 Character
-                </li>
-              </ul>
-            </form>
-            <div className="flexC my-3 gap-3">
-              <div className="auth-line line1 w-full h-[1px] rounded-full"></div>
-              <span className="text-textcolor dark:text-white">OR</span>
-              <div className="auth-line line2 w-full h-[1px] rounded-full"></div>
-            </div>
-
-            <div className="flex gap-1">
-              <button className="button flex items-center gap-2">
-                <FcGoogle size={20} />
-                <span className="font-normal xl:text-xs">Sign in with Google</span>
-              </button>
-              <button className="button flex items-center gap-2">
-                <FaGithub size={20} />
-                <span className="font-normal xl:text-xs">Sign in with Github</span>
-              </button>
-            </div>
-            <p className="text-gray-400 text-xs text-center pt-3">
-              Already have an account?
-              <NavLink to="/login" className="text-black dark:text-white px-0.5">
-                Sign in
-              </NavLink>
-            </p>
+            <AuthInputField
+              type="email"
+              value={email}
+              name="email"
+              onChange={handleInputChange}
+              placeholder="Email address"
+              autoComplete="email"
+              ariaLabel="Email address"
+              leadingIcon={<FiMail size={17} aria-hidden="true" />}
+              required
+            />
           </div>
+
+          <div className="mono-auth-signup-grid mono-auth-signup-grid--password">
+            <AuthInputPassword
+              value={password}
+              name="password"
+              onChange={handleInputChange}
+              placeholder="Password"
+              autoComplete="new-password"
+              ariaLabel="Password"
+              leadingIcon={<FiLock size={17} aria-hidden="true" />}
+              required
+            />
+
+            <AuthInputPassword
+              value={confirmPassword}
+              name="confirmPassword"
+              onChange={handleInputChange}
+              placeholder="Confirm password"
+              autoComplete="new-password"
+              ariaLabel="Confirm password"
+              leadingIcon={<FiLock size={17} aria-hidden="true" />}
+              onPaste={(event) => {
+                event.preventDefault();
+                toast.error("Cannot paste into input field");
+              }}
+              required
+            />
+          </div>
+
+          <section className={`mono-auth-password-card mono-auth-password-card--${strengthLevel}`}>
+            <div className="mono-auth-password-card__top">
+              <div>
+                <span className="mono-auth-password-card__eyebrow">Password security</span>
+                <h3>Password strength</h3>
+                <p>Complete all requirements for a safer account.</p>
+              </div>
+
+              <div className={`mono-auth-password-card__score mono-auth-password-card__score--${strengthLevel}`}>
+                <strong>{activeRules}</strong>
+                <span>/ 4</span>
+                <small>{strengthLabel}</small>
+              </div>
+            </div>
+
+            <div className="mono-auth-password-card__meter">
+              <span style={{ width: `${passwordStrength}%` }} />
+            </div>
+
+            <div className="mono-auth-password-card__segments" aria-hidden="true">
+              {passwordRules.map((rule) => (
+                <span key={rule.id} className={rule.active ? "is-active" : ""} />
+              ))}
+            </div>
+
+            <ul className="mono-auth-password-checks">
+              {passwordRules.map((rule) => (
+                <PasswordRule key={rule.id} active={rule.active} text={rule.label} />
+              ))}
+            </ul>
+          </section>
+
+          <div className="auth-submit">
+            <PrimaryButton text={isLoading ? "Creating account..." : "Create account"} />
+          </div>
+        </form>
+
+        <div className="mono-auth-divider" aria-hidden="true">
+          <span />
+          <p>or</p>
+          <span />
         </div>
-        <div className="absolute bottom-5 flex flex-col items-center gap-5">
-          <AuthUserInfo />
-        </div>
-      </section>
+
+        <AuthSocialButtons />
+      </AuthLayout>
     </>
+  );
+};
+
+const PasswordRule = ({ active, text }) => {
+  return (
+    <li className={active ? "is-valid" : ""}>
+      <span className="mono-auth-password-checks__icon">
+        <BsCheckAll size={16} aria-hidden="true" />
+      </span>
+      <span>{text}</span>
+    </li>
   );
 };

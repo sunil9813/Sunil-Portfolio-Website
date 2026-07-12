@@ -1,4 +1,4 @@
-import { BreadcrumbsComponent, Table, Wrapper } from "@/utils/Router";
+import { BreadcrumbsComponent, Table, Wrapper } from "@/routes";
 import { useEffect } from "react";
 import { confirmAlert } from "react-confirm-alert";
 import { useDispatch, useSelector } from "react-redux";

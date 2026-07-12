@@ -7,132 +7,133 @@ import { BlogViewStats } from "./BlogViewStats";
 import { CategoryAndTagCharts } from "./PopularPosts";
 import { TotalLikesCard } from "./TotalLikesCard";
 import { UserTypeViews } from "./UserTypeViews";
-import { Wrapper } from "@/utils/Router";
+import PropTypes from "prop-types";
+import { FaArrowDown, FaArrowUp, FaChartLine, FaEye } from "react-icons/fa";
+import { Wrapper } from "@/routes";
 
-import { FaEye, FaArrowUp, FaArrowDown, FaChartLine, FaHeart } from "react-icons/fa";
-
-// Fresh color palette for Total Views – emerald and cyan
-const gradientMap = {
-  views: "from-emerald-500 via-teal-500 to-cyan-500",
-  likes: "from-rose-500 via-pink-500 to-fuchsia-500",
-};
-
-const textColorMap = {
-  views: "text-emerald-600 dark:text-emerald-400",
-  likes: "text-rose-600 dark:text-rose-400",
-};
-
-const glowMap = {
-  views: "bg-emerald-500/10",
-  likes: "bg-rose-500/10",
-};
-
-const accentColorMap = {
-  views: "bg-emerald-500",
-  likes: "bg-rose-500",
+const viewsTheme = {
+  icon: "from-[#286f69] via-[#245f60] to-[#274d59]",
+  iconBorder: "border-emerald-300/[0.12]",
+  iconShadow: "shadow-[0_10px_24px_rgba(16,185,129,0.12)]",
+  value: "text-emerald-700 dark:text-emerald-200/80",
+  accent: "bg-[#579589]",
+  glow: "bg-emerald-500/[0.025]",
+  trend: "border-emerald-300/20 bg-emerald-500/[0.06] text-emerald-700 dark:border-emerald-300/[0.10] dark:bg-emerald-300/[0.045] dark:text-emerald-200/70",
 };
 
 export const TotalViewsCard = ({ value = "87.2K", unit = "views", trend = "+15%", footerLeft = "All time", footerRight = "+15% YoY", compact = false }) => {
-  // Size classes based on compact mode
   const wrapperPadding = compact ? "p-4" : "p-6";
-  const iconSize = compact ? "size-8" : "size-10";
+  const iconSize = compact ? "size-9" : "size-11";
   const iconInnerSize = compact ? 14 : 18;
   const valueSize = compact ? "text-2xl" : "text-4xl";
   const labelSize = compact ? "text-[8px]" : "text-[10px]";
   const trendSize = compact ? "text-[8px]" : "text-[9px]";
-  const glowSize = compact ? "w-48 h-48" : "w-64 h-64";
-  const glowOffset = compact ? "-bottom-16 -right-16" : "-bottom-20 -right-20";
-  const glowOffset2 = compact ? "-top-16 -left-16" : "-top-20 -left-20";
+  const contentGap = compact ? "mb-2" : "mb-3";
 
-  // Determine trend direction
-  const isPositive = trend.startsWith("+");
+  const trendValue = String(trend);
+  const isPositive = trendValue.startsWith("+");
   const TrendIcon = isPositive ? FaArrowUp : FaArrowDown;
 
   return (
-    <Wrapper className={`${wrapperPadding} relative overflow-hidden group my-3 hover:shadow-xl transition-all duration-300`}>
-      {/* Animated gradient background on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-cyan-500/5 animate-pulse" />
-      </div>
+    <Wrapper className={`${wrapperPadding} group relative my-3 overflow-hidden transition-all duration-300 hover:shadow-[0_18px_44px_rgba(0,0,0,0.18)]`}>
+      {/* Wrapper background remains unchanged */}
 
-      {/* Floating glows with enhanced blur and animation */}
-      <div className={`absolute ${glowOffset} ${glowSize} ${glowMap.views} rounded-full blur-3xl opacity-60 group-hover:scale-150 group-hover:opacity-80 transition-all duration-1000`} />
-      <div className={`absolute ${glowOffset2} ${glowSize} ${glowMap.views} rounded-full blur-3xl opacity-60 group-hover:scale-150 group-hover:opacity-80 transition-all duration-1000`} />
+      {/* Subtle colour wash */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(16,185,129,0.018),transparent_38%,transparent_72%,rgba(6,182,212,0.012))] opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
 
-      {/* Subtle noise texture overlay */}
-      <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjc0IiBudW1PY3RhdmVzPSIzIiAvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNmKSIgb3BhY2l0eT0iMC4xIiAvPjwvc3ZnPg==')] bg-repeat opacity-20" />
-      </div>
+      {/* Background glows */}
+      <div
+        className={`pointer-events-none absolute ${compact ? "-bottom-16 -right-16 size-48" : "-bottom-24 -right-20 size-64"} ${
+          viewsTheme.glow
+        } rounded-full blur-[85px] transition-all duration-700 group-hover:scale-110 group-hover:bg-emerald-500/[0.04]`}
+      />
 
-      {/* Diagonal pattern overlay (refined) */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700 pointer-events-none">
-        <svg className="w-full h-full">
-          <defs>
-            <pattern id="diagonal-views" patternUnits="userSpaceOnUse" width={compact ? 30 : 50} height={compact ? 30 : 50} patternTransform="rotate(35)">
-              <line x1="0" y1="0" x2="0" y2={compact ? 30 : 50} stroke="currentColor" strokeWidth="0.5" className="text-emerald-500/30 dark:text-emerald-400/30" />
-              <circle cx={compact ? 15 : 25} cy={compact ? 15 : 25} r={compact ? 1 : 2} fill="currentColor" className="text-emerald-500/20 dark:text-emerald-400/20" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#diagonal-views)" />
-        </svg>
-      </div>
+      <div
+        className={`pointer-events-none absolute ${
+          compact ? "-left-16 -top-16 size-48" : "-left-20 -top-24 size-64"
+        } rounded-full bg-cyan-500/[0.016] blur-[85px] transition-all duration-700 group-hover:scale-110 group-hover:bg-cyan-500/[0.025]`}
+      />
 
-      {/* Header with enhanced styling */}
-      <div className="flex items-start justify-between mb-3 relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="relative">
+      {/* Subtle top accent */}
+      <div className="pointer-events-none absolute left-7 right-7 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/25 to-transparent" />
+
+      {/* Header */}
+      <div className={`relative z-10 flex items-start justify-between gap-3 ${contentGap}`}>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative shrink-0">
             <div
-              className={`${iconSize} bg-gradient-to-br ${gradientMap.views} rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}
+              className={`${iconSize} relative flex items-center justify-center overflow-hidden rounded-xl border bg-gradient-to-br text-white/90 transition-all duration-300 group-hover:scale-105 ${viewsTheme.icon} ${viewsTheme.iconBorder} ${viewsTheme.iconShadow}`}
             >
-              <FaEye size={iconInnerSize} />
+              <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.10] via-transparent to-black/[0.08]" />
+
+              <FaEye className="relative z-10" size={iconInnerSize} />
             </div>
-            {/* Pulse ring effect */}
-            <div className={`absolute -inset-0.5 ${accentColorMap.views} rounded-xl opacity-0 group-hover:opacity-30 blur-sm transition-opacity duration-500 animate-pulse`} />
+
+            <div className="pointer-events-none absolute -inset-1 -z-10 rounded-xl bg-emerald-400/[0.08] opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100" />
           </div>
-          <div>
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">Total Views</h4>
-            <p className={`${labelSize} text-gray-500 dark:text-gray-400 flex items-center gap-1`}>
-              <FaChartLine size={compact ? 8 : 10} className="opacity-50" />
+
+          <div className="min-w-0">
+            <h4 className={`truncate font-semibold tracking-[-0.015em] text-gray-900 dark:text-white/90 ${compact ? "text-xs" : "text-sm"}`}>Total Views</h4>
+
+            <p className={`${labelSize} mt-0.5 flex items-center gap-1.5 text-gray-500 dark:text-white/30`}>
+              <FaChartLine size={compact ? 8 : 9} className="text-emerald-600/60 dark:text-emerald-200/45" />
               Lifetime analytics
             </p>
           </div>
         </div>
 
-        {/* Trend badge with glass morphism */}
-        <span
-          className={`${trendSize} font-semibold px-2 py-1 rounded-full backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 border border-white/20 dark:border-gray-700/50 ${textColorMap.views} flex items-center gap-1 shadow-sm`}
-        >
-          <TrendIcon size={compact ? 8 : 10} />
-          {trend}
+        {/* Trend badge */}
+        <span className={`${trendSize} inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 font-semibold backdrop-blur-sm ${viewsTheme.trend}`}>
+          <TrendIcon size={compact ? 8 : 9} />
+          {trendValue}
         </span>
       </div>
 
-      {/* Value with enhanced styling */}
-      <div className="mb-2 group-hover:translate-x-1 transition-transform duration-300 relative z-10">
-        <span className={`${valueSize} font-extrabold tracking-tight ${textColorMap.views} drop-shadow-lg`}>{value}</span>
-        {unit && <span className={`${labelSize} text-gray-500 dark:text-gray-400 ml-1 uppercase tracking-wider font-medium`}>{unit}</span>}
-      </div>
+      {/* Main value */}
+      <div className="relative z-10 mb-3 transition-transform duration-300 group-hover:translate-x-0.5">
+        <div className="flex items-baseline gap-1.5">
+          <span className={`${valueSize} font-extrabold leading-none tracking-[-0.045em] tabular-nums ${viewsTheme.value}`}>{value}</span>
 
-      {/* Mini progress bar (visual interest) */}
-      <div className="w-full h-1 bg-gray-200/50 dark:bg-gray-700/50 rounded-full mb-3 overflow-hidden">
-        <div className={`h-full ${accentColorMap.views} rounded-full w-3/4 opacity-60 group-hover:opacity-100 transition-opacity duration-300`} />
-      </div>
-
-      {/* Footer with glass morphism */}
-      <div className="mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/30 flex justify-between text-[10px] backdrop-blur-sm rounded-b-lg relative z-10">
-        <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/30 dark:bg-gray-800/30">
-          <FaEye size={compact ? 8 : 10} className="opacity-70 text-emerald-500 dark:text-emerald-400" />
-          <span className={labelSize}>{footerLeft}</span>
-        </div>
-        <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/30 dark:bg-gray-800/30">
-          <FaChartLine size={compact ? 8 : 10} className="opacity-70 text-emerald-500 dark:text-emerald-400" />
-          <span className={labelSize}>{footerRight}</span>
+          {unit && <span className={`${labelSize} font-medium uppercase tracking-[0.08em] text-gray-500 dark:text-white/25`}>{unit}</span>}
         </div>
       </div>
 
-      {/* Shimmer effect on hover */}
-      <div className="absolute inset-0 opacity-100 group-hover:opacity-100 pointer-events-none overflow-hidden">
-        <div className="absolute -inset-full top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 group-hover:animate-shimmer" />
+      {/* Progress */}
+      <div className="relative z-10 mb-3">
+        <div className="mb-1.5 flex items-center justify-between gap-3">
+          <span className={`${labelSize} font-medium text-gray-500 dark:text-white/27`}>View performance</span>
+
+          <span className={`${labelSize} font-semibold tabular-nums text-emerald-700 dark:text-emerald-200/65`}>75%</span>
+        </div>
+
+        <div className="h-1.5 w-full overflow-hidden rounded-full border border-gray-200/50 bg-gray-200/70 dark:border-white/[0.025] dark:bg-black/25">
+          <div
+            className={`h-full w-3/4 rounded-full ${viewsTheme.accent} transition-all duration-700 group-hover:w-[78%]`}
+            style={{
+              boxShadow: "0 0 10px rgba(87,149,137,0.25)",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="relative z-10 mt-3 flex items-center justify-between gap-2 border-t border-gray-200/70 pt-3 dark:border-white/[0.05]">
+        <div className="flex min-w-0 items-center gap-1.5 rounded-lg border border-gray-200/60 bg-gray-50/55 px-2 py-1.5 dark:border-white/[0.04] dark:bg-white/[0.016]">
+          <FaEye size={compact ? 8 : 9} className="shrink-0 text-emerald-600 dark:text-emerald-200/55" />
+
+          <span className={`${labelSize} truncate text-gray-600 dark:text-white/35`}>{footerLeft}</span>
+        </div>
+
+        <div className="flex min-w-0 items-center gap-1.5 rounded-lg border border-gray-200/60 bg-gray-50/55 px-2 py-1.5 dark:border-white/[0.04] dark:bg-white/[0.016]">
+          <FaChartLine size={compact ? 8 : 9} className="shrink-0 text-emerald-600 dark:text-emerald-200/55" />
+
+          <span className={`${labelSize} truncate font-medium text-gray-600 dark:text-white/35`}>{footerRight}</span>
+        </div>
+      </div>
+
+      {/* Restrained hover shimmer */}
+      <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-2xl">
+        <div className="absolute inset-y-0 left-0 w-1/3 -translate-x-[140%] skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/[0.045] to-transparent transition-transform duration-1000 group-hover:translate-x-[400%]" />
       </div>
     </Wrapper>
   );
@@ -170,4 +171,13 @@ export const BlogOverview = () => {
       <BlogInsightsPanel />
     </>
   );
+};
+
+TotalViewsCard.propTypes = {
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  unit: PropTypes.string,
+  trend: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  footerLeft: PropTypes.string,
+  footerRight: PropTypes.string,
+  compact: PropTypes.bool,
 };

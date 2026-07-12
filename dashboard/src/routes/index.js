@@ -1,3 +1,9 @@
+export { ProtectedRoute } from "./ProtectedRoute";
+export { PublicRoute } from "./PublicRoute";
+export { MyProfile } from "@/screens/profile/MyProfile";
+export { Layout, LayoutWithOutHeader, DashboardLayoutWithOutHeader } from "../components/common/Layout";
+export { ChangePassword } from "@/screens/auth/ChangePassword";
+
 export { ProjectOverview } from "@/screens/dashboard/project/ProjectOverview";
 
 export { BlogOverview } from "@/screens/dashboard/blog/BlogOverview";
@@ -59,7 +65,6 @@ export { Table } from "@/components/table/Table";
 
 /* ---- ##########  Pages ########## -----------*/
 export { Home } from "../pages/home/Home";
-export { Layout, LayoutWithOutHeader } from "../components/common/Layout";
 
 /* -----------  Auth ----------- */
 export { ResetPassword } from "@/screens/auth/ResetPassword";

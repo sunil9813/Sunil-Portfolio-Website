@@ -124,31 +124,34 @@ const uploadImageToEditorDes = asyncHandler(async (req, res) => {
 const getAllImages = asyncHandler(async (req, res) => {
   try {
     const { folder, subfolder } = req.params;
+    const { groupId } = req.query;
 
     if (!folder) {
       return res.status(400).json({ error: "Folder name is required." });
     }
 
+    if (!groupId) {
+      return res.status(400).json({ error: "groupId is required." });
+    }
+
     const folderPath = subfolder ? `Sunil Portfolio/${folder}/${subfolder}` : `Sunil Portfolio/${folder}`;
 
-    // Get today's start and end time
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Fetch images
     const images = await ImageModel.find({
       folder: { $regex: `^${folderPath}` },
       user: req.user._id,
-    }).populate("user", "name email");
+      groupId,
+    })
+      .sort("-createdAt")
+      .populate("user", "name email");
 
-    if (!images || images.length === 0) {
-      return res.status(404).json({ error: "No images found in the specified folder." });
-    }
-
-    // Separate recent (uploaded today) and older images
     const recentImages = images.filter((img) => new Date(img.createdAt) >= today && new Date(img.createdAt) < tomorrow);
+
     const olderImages = images.filter((img) => new Date(img.createdAt) < today);
 
     res.status(200).json({
@@ -159,7 +162,6 @@ const getAllImages = asyncHandler(async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 const deleteImage = asyncHandler(async (req, res) => {
   try {
     const { imageId } = req.params; // Get image ID from request parameters

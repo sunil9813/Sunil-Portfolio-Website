@@ -1,5 +1,5 @@
 import { deleteService, getAllService } from "@/redux/slices/portfolio/portServiceService";
-import { BreadcrumbsComponent, Table, Wrapper } from "@/utils/Router";
+import { Table, Wrapper } from "@/routes";
 import { useEffect } from "react";
 import { confirmAlert } from "react-confirm-alert";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,10 +40,6 @@ export const AllPortfolioService = () => {
   return (
     <>
       <Wrapper className="university-list">
-        <div className="px-5 pt-5">
-          <BreadcrumbsComponent currentPage="All University" space={true} />
-        </div>
-
         <Table
           head={TABLE_HEAD}
           rowData={servicesList}

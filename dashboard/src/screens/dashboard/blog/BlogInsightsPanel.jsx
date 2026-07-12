@@ -1,135 +1,245 @@
-import { Wrapper } from "@/utils/Router";
-import { FaEye, FaHeart, FaComment } from "react-icons/fa";
-import { GiTrophy, GiGrowth, GiNewBorn } from "react-icons/gi";
+import PropTypes from "prop-types";
+import { Wrapper } from "@/routes";
+import { FaComment, FaEye } from "react-icons/fa";
+import { GiGrowth, GiNewBorn } from "react-icons/gi";
 
-// Enhanced gradient map with richer colors
-const gradientMap = {
-  top: "from-amber-500 via-orange-500 to-red-500",
-  liked: "from-blue-500 via-cyan-500 to-teal-500",
-  trending: "from-green-500 via-emerald-500 to-teal-500",
-  views: "from-purple-500 via-violet-500 to-fuchsia-500",
-  comments: "from-pink-500 via-rose-500 to-red-500",
-  new: "from-teal-500 via-cyan-500 to-sky-500",
+/* ==========================================================================
+   DARK-THEME COLOUR PALETTE
+   ========================================================================== */
+
+const colorMap = {
+  trending: {
+    gradient: "from-[#34735f] via-[#35695b] to-[#294f48]",
+    glow: "bg-emerald-500/[0.03]",
+    border: "border-emerald-300/20 dark:border-emerald-300/[0.10]",
+    text: "text-emerald-700 dark:text-emerald-200/80",
+    badge: "border-emerald-300/20 bg-emerald-500/[0.06] text-emerald-700 dark:border-emerald-300/[0.10] dark:bg-emerald-300/[0.045] dark:text-emerald-200/70",
+    footerIcon: "text-emerald-600 dark:text-emerald-200/55",
+    accent: "via-emerald-300/25",
+  },
+
+  comments: {
+    gradient: "from-[#8b485f] via-[#9b4f66] to-[#713a4c]",
+    glow: "bg-rose-500/[0.03]",
+    border: "border-rose-300/20 dark:border-rose-300/[0.10]",
+    text: "text-rose-700 dark:text-rose-200/80",
+    badge: "border-rose-300/20 bg-rose-500/[0.06] text-rose-700 dark:border-rose-300/[0.10] dark:bg-rose-300/[0.045] dark:text-rose-200/70",
+    footerIcon: "text-rose-600 dark:text-rose-200/55",
+    accent: "via-rose-300/25",
+  },
+
+  new: {
+    gradient: "from-[#34747a] via-[#376d78] to-[#2a505d]",
+    glow: "bg-cyan-500/[0.03]",
+    border: "border-cyan-300/20 dark:border-cyan-300/[0.10]",
+    text: "text-cyan-700 dark:text-cyan-200/80",
+    badge: "border-cyan-300/20 bg-cyan-500/[0.06] text-cyan-700 dark:border-cyan-300/[0.10] dark:bg-cyan-300/[0.045] dark:text-cyan-200/70",
+    footerIcon: "text-cyan-600 dark:text-cyan-200/55",
+    accent: "via-cyan-300/25",
+  },
 };
 
-// Text color classes
-const textColorMap = {
-  top: "text-amber-600 dark:text-amber-400",
-  liked: "text-blue-600 dark:text-blue-400",
-  trending: "text-green-600 dark:text-green-400",
-  views: "text-purple-600 dark:text-purple-400",
-  comments: "text-pink-600 dark:text-pink-400",
-  new: "text-teal-600 dark:text-teal-400",
-};
+/* ==========================================================================
+   CARD DATA
+   ========================================================================== */
 
-// Glow backgrounds
-const glowMap = {
-  top: "bg-amber-500/10",
-  liked: "bg-blue-500/10",
-  trending: "bg-green-500/10",
-  views: "bg-purple-500/10",
-  comments: "bg-pink-500/10",
-  new: "bg-teal-500/10",
-};
-
-// Card data with enhanced details
 const cards = [
   {
     id: "trending",
     title: "Trending",
     icon: GiGrowth,
-    gradientKey: "trending",
-    main: { label: "Next.js 14", value: "+32%", unit: "growth" },
-    footerLeft: { icon: GiGrowth, text: "Weekly growth" },
-    footerRight: { icon: FaEye, text: "+32% vs last" },
+    colorKey: "trending",
+    main: {
+      label: "Next.js 14",
+      value: "+32%",
+      unit: "growth",
+    },
+    footerLeft: {
+      icon: GiGrowth,
+      text: "Weekly growth",
+    },
+    footerRight: {
+      icon: FaEye,
+      text: "+32% vs last",
+    },
     trend: "+32%",
   },
-
   {
     id: "comments",
     title: "Comments",
     icon: FaComment,
-    gradientKey: "comments",
-    main: { value: "1,284", unit: "comments" },
-    footerLeft: { icon: FaComment, text: "This month" },
-    footerRight: { icon: GiGrowth, text: "Avg 42/day" },
+    colorKey: "comments",
+    main: {
+      value: "1,284",
+      unit: "comments",
+    },
+    footerLeft: {
+      icon: FaComment,
+      text: "This month",
+    },
+    footerRight: {
+      icon: GiGrowth,
+      text: "Avg 42/day",
+    },
     trend: "+5%",
   },
   {
     id: "new",
     title: "New Posts",
     icon: GiNewBorn,
-    gradientKey: "new",
-    main: { value: "5", unit: "posts" },
-    footerLeft: { icon: GiNewBorn, text: "This week" },
-    footerRight: { icon: GiGrowth, text: "+2 vs last" },
+    colorKey: "new",
+    main: {
+      value: "5",
+      unit: "posts",
+    },
+    footerLeft: {
+      icon: GiNewBorn,
+      text: "This week",
+    },
+    footerRight: {
+      icon: GiGrowth,
+      text: "+2 vs last",
+    },
     trend: "+2",
   },
 ];
 
+/* ==========================================================================
+   INSIGHT CARD
+   ========================================================================== */
+
+const InsightCard = ({ card }) => {
+  const theme = colorMap[card.colorKey];
+
+  const CardIcon = card.icon;
+  const FooterLeftIcon = card.footerLeft.icon;
+  const FooterRightIcon = card.footerRight.icon;
+
+  return (
+    <Wrapper className="group relative h-full overflow-hidden p-6">
+      {/* Wrapper background remains unchanged */}
+
+      {/* Existing coloured background glows */}
+      <div
+        className={`pointer-events-none absolute -bottom-20 -right-20 size-64 rounded-full ${theme.glow} opacity-70 blur-[85px] transition-all duration-1000 group-hover:scale-125 group-hover:opacity-100`}
+      />
+
+      <div
+        className={`pointer-events-none absolute -left-20 -top-20 size-64 rounded-full ${theme.glow} opacity-60 blur-[85px] transition-all duration-1000 group-hover:scale-125 group-hover:opacity-90`}
+      />
+
+      {/* Subtle colour surface */}
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-[0.018] transition-opacity duration-500 group-hover:opacity-[0.035]`} />
+
+      {/* Top accent */}
+      <div className={`pointer-events-none absolute left-7 right-7 top-0 h-px bg-gradient-to-r from-transparent to-transparent ${theme.accent}`} />
+
+      {/* Existing diagonal pattern */}
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-[0.10]">
+        <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id={`diagonal-${card.id}`} patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="40" stroke="currentColor" strokeWidth="0.6" className="text-gray-400 dark:text-white/20" />
+            </pattern>
+          </defs>
+
+          <rect width="100%" height="100%" fill={`url(#diagonal-${card.id})`} />
+        </svg>
+      </div>
+
+      <div className="relative z-10 flex h-full min-h-[190px] flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative shrink-0">
+              <div
+                className={`relative flex size-10 items-center justify-center overflow-hidden rounded-xl border bg-gradient-to-br text-white/90 shadow-[0_8px_22px_rgba(0,0,0,0.22)] transition-all duration-300 group-hover:scale-105 ${theme.gradient} ${theme.border}`}
+              >
+                <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-black/[0.10]" />
+
+                <CardIcon className="relative z-10" size={17} />
+              </div>
+
+              <div className={`pointer-events-none absolute -inset-1 -z-10 rounded-xl ${theme.glow} opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100`} />
+            </div>
+
+            <div className="min-w-0">
+              <h4 className="truncate text-sm font-semibold tracking-[-0.015em] text-gray-900 dark:text-white/90">{card.title}</h4>
+
+              {card.main.label && <p className="mt-0.5 max-w-[120px] truncate text-[10px] text-gray-500 transition-colors dark:text-white/30">{card.main.label}</p>}
+            </div>
+          </div>
+
+          {/* Trend badge */}
+          <span className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-[9px] font-semibold tabular-nums backdrop-blur-sm ${theme.badge}`}>{card.trend}</span>
+        </div>
+
+        {/* Main value */}
+        <div className="mt-6 transition-transform duration-300 group-hover:translate-x-0.5">
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-4xl font-extrabold leading-none tracking-[-0.045em] tabular-nums ${theme.text}`}>{card.main.value}</span>
+
+            {card.main.unit && <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-gray-500 dark:text-white/27">{card.main.unit}</span>}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto grid grid-cols-2 gap-2 border-t border-gray-200/70 pt-4 text-[10px] text-gray-500 dark:border-white/[0.05] dark:text-white/30">
+          <div className="flex min-w-0 items-center gap-1.5 rounded-lg border border-gray-200/60 bg-gray-50/50 px-2 py-1.5 dark:border-white/[0.04] dark:bg-white/[0.018]">
+            <FooterLeftIcon size={9} className={`shrink-0 ${theme.footerIcon}`} />
+
+            <span className="truncate">{card.footerLeft.text}</span>
+          </div>
+
+          <div className="flex min-w-0 items-center justify-end gap-1.5 rounded-lg border border-gray-200/60 bg-gray-50/50 px-2 py-1.5 dark:border-white/[0.04] dark:bg-white/[0.018]">
+            <FooterRightIcon size={9} className={`shrink-0 ${theme.footerIcon}`} />
+
+            <span className="truncate">{card.footerRight.text}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Subtle hover shimmer */}
+      <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-2xl">
+        <div className="absolute inset-y-0 left-0 w-1/3 -translate-x-[140%] skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent transition-transform duration-1000 group-hover:translate-x-[400%]" />
+      </div>
+    </Wrapper>
+  );
+};
+
+InsightCard.propTypes = {
+  card: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    icon: PropTypes.elementType.isRequired,
+    colorKey: PropTypes.oneOf(["trending", "comments", "new"]).isRequired,
+    main: PropTypes.shape({
+      label: PropTypes.string,
+      value: PropTypes.string.isRequired,
+      unit: PropTypes.string,
+    }).isRequired,
+    footerLeft: PropTypes.shape({
+      icon: PropTypes.elementType.isRequired,
+      text: PropTypes.string.isRequired,
+    }).isRequired,
+    footerRight: PropTypes.shape({
+      icon: PropTypes.elementType.isRequired,
+      text: PropTypes.string.isRequired,
+    }).isRequired,
+    trend: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
+/* ==========================================================================
+   BLOG INSIGHTS PANEL
+   ========================================================================== */
+
 export const BlogInsightsPanel = () => {
   return (
-    <div className="grid grid-cols-3 gap-3 mb-3">
-      {cards.map((card) => {
-        const gradient = gradientMap[card.gradientKey];
-        const textColor = textColorMap[card.gradientKey];
-        const glowClass = glowMap[card.gradientKey];
-
-        return (
-          <Wrapper key={card.id} className="p-6 relative overflow-hidden group">
-            {/* Floating glows with enhanced blur */}
-            <div className={`absolute -bottom-20 -right-20 w-64 h-64 ${glowClass} rounded-full blur-3xl opacity-60 group-hover:scale-150 transition-all duration-1000`} />
-            <div className={`absolute -top-20 -left-20 w-64 h-64 ${glowClass} rounded-full blur-3xl opacity-60 group-hover:scale-150 transition-all duration-1000`} />
-
-            {/* Subtle diagonal pattern overlay on hover */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <pattern id={`diagonal-${card.id}`} patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(45)">
-                    <line x1="0" y1="0" x2="0" y2="40" stroke="currentColor" strokeWidth="1" className="text-gray-400" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill={`url(#diagonal-${card.id})`} />
-              </svg>
-            </div>
-
-            {/* Header */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className={`size-10 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  <card.icon size={18} />
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{card.title}</h4>
-                  {card.main.label && (
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[100px] group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">{card.main.label}</p>
-                  )}
-                </div>
-              </div>
-              {/* Small trend badge */}
-              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-white/50 dark:bg-gray-800/50 ${textColor}`}>{card.trend}</span>
-            </div>
-
-            {/* Value with subtle hover effect */}
-            <div className="mb-1 group-hover:translate-x-0.5 transition-transform duration-300">
-              <span className={`text-4xl font-bold ${textColor}`}>{card.main.value}</span>
-              {card.main.unit && <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-1">{card.main.unit}</span>}
-            </div>
-
-            {/* Enhanced footer with icons */}
-            <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700/50 flex justify-between text-[10px] text-gray-500 dark:text-gray-400">
-              <div className="flex items-center gap-1">
-                <card.footerLeft.icon size={10} className="opacity-70" />
-                <span>{card.footerLeft.text}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <card.footerRight.icon size={10} className="opacity-70" />
-                <span>{card.footerRight.text}</span>
-              </div>
-            </div>
-          </Wrapper>
-        );
-      })}
+    <div className="mb-3 grid auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {cards.map((card) => (
+        <InsightCard key={card.id} card={card} />
+      ))}
     </div>
   );
 };

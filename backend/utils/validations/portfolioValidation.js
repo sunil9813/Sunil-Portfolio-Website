@@ -15,8 +15,6 @@ const introductionValidation = yup.object().shape({
   address: yup.string().trim().required("Address is required."),
 });
 
-const yup = require("yup");
-
 const educationValidation = yup.object().shape({
   school: yup.string().trim().required("School name is required."),
   degree: yup.string().trim().required("Degree is required."),

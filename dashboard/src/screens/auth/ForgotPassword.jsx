@@ -1,58 +1,78 @@
 import { validateEmail } from "@/redux/services/authService";
 import { forgotPassword, RESET } from "@/redux/slices/authSlice";
-import { InputFiled, Loader, Logo, PrimaryButton } from "@/utils/Router";
+import { Loader, PrimaryButton } from "@/routes";
+
 import { useState } from "react";
+import { FiMail } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import { AuthUserInfo } from "./Login";
 import { NavLink } from "react-router-dom";
+import { toast } from "react-toastify";
+import { AuthLayout } from "./Login";
+import { AuthInputField } from "@/components/common/input/AuthInput";
 
 export const ForgotPassword = () => {
   const dispatch = useDispatch();
+
   const { isLoading } = useSelector((state) => state.auth);
 
-  const [email, setEmail] = useState();
+  const [email, setEmail] = useState("");
 
-  const forgot = async (e) => {
-    e.preventDefault();
-    if (!email) {
-      return toast.error("Email field is required");
+  const forgot = async (event) => {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
+      toast.error("Email field is required");
+      return;
     }
-    if (!validateEmail(email)) {
-      return toast.error("Email is not valid");
+
+    if (!validateEmail(normalizedEmail)) {
+      toast.error("Email is not valid");
+      return;
     }
 
-    const userData = {
-      email,
-    };
+    await dispatch(
+      forgotPassword({
+        email: normalizedEmail,
+      }),
+    );
 
-    await dispatch(forgotPassword(userData));
     await dispatch(RESET());
   };
+
   return (
     <>
-      <section className="auth-section">
-        {isLoading && <Loader />}
-        <div className="auth-section_container 3xl:-mt-16">
-          <div className="auth-section_container_content">
-            <div className="auth-section_container_content_line"></div>
-            <div className="flexC pb-2">
-              <Logo />
-            </div>
-            <h1 className="text-3xl my-5 mb-10 font-semibold xl:text-2xl text-black dark:text-white">Forgot Password</h1>
-            <form className="inputs flex flex-col mt-6 xl:mt-3" onSubmit={forgot}>
-              <InputFiled fieldName="Email" type="email" value={email} name="email" onChange={(e) => setEmail(e.target.value)} placeholder="example@gmail.com" />
-              <PrimaryButton text="Get Reset Email" />
-            </form>
-            <NavLink to="/login" className="text-black mt-5 block dark:text-white px-0.5">
-              Go back
-            </NavLink>
+      {isLoading && <Loader />}
+
+      <AuthLayout
+        title="Forgot password?"
+        subtitle="Enter your email address and we’ll send you a secure reset link."
+        badgeText="Account recovery"
+        footer={
+          <p className="mono-auth-signup">
+            Remember your password? <NavLink to="/login">Back to login</NavLink>
+          </p>
+        }
+      >
+        <form className="mono-auth-form" onSubmit={forgot} noValidate>
+          <AuthInputField
+            type="email"
+            value={email}
+            name="email"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Email address"
+            autoComplete="email"
+            ariaLabel="Email address"
+            leadingIcon={<FiMail size={17} aria-hidden="true" />}
+            required
+          />
+
+          <div className="auth-submit">
+            <PrimaryButton text={isLoading ? "Sending..." : "Get Reset Email"} />
           </div>
-        </div>
-        <div className="absolute bottom-5 flex flex-col items-center gap-5">
-          <AuthUserInfo />
-        </div>
-      </section>
+        </form>
+      </AuthLayout>
     </>
   );
 };

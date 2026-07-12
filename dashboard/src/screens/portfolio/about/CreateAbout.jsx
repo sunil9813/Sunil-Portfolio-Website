@@ -1,18 +1,26 @@
+import PropTypes from "prop-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
+
 import { BiWorld } from "react-icons/bi";
-import { IoCameraSharp, IoLanguageOutline } from "react-icons/io5";
-import { MdClose, MdLocationPin } from "react-icons/md";
-import { FaUser } from "react-icons/fa";
 import { BsTelephone } from "react-icons/bs";
-import { MdEmail } from "react-icons/md";
-import { createIntro } from "@/redux/slices/portfolio/introSlice";
+import { FaUser } from "react-icons/fa";
+import { FiFileText, FiPlus, FiUploadCloud } from "react-icons/fi";
+import { HiLink, HiOutlineCheckCircle, HiOutlineIdentification, HiOutlineSparkles } from "react-icons/hi2";
+import { IoCameraSharp, IoLanguageOutline } from "react-icons/io5";
+import { MdClose, MdEmail, MdLocationPin } from "react-icons/md";
 import { PiHandbagFill } from "react-icons/pi";
-import { HiLink } from "react-icons/hi2";
 import { LuNotepadTextDashed } from "react-icons/lu";
+
+import { createIntro } from "@/redux/slices/portfolio/introSlice";
+import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/routes";
+
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
+const MAX_CV_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_IMAGE_FORMATS = ["image/png", "image/jpeg", "image/jpg"];
 
 const initialState = {
   fullname: "",
@@ -21,157 +29,355 @@ const initialState = {
   position: "",
   country: "",
   address: "",
-  emails: [], // Empty array to match backend default
-  phones: [], // Empty array to match backend default
-  languages: [], // Empty array to match backend default
-  socialslinks: [], // Empty array to match backend default
+  emails: [],
+  phones: [],
+  languages: [],
+  socialslinks: [],
+};
+
+const revokeObjectUrl = (url) => {
+  if (url?.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+};
+
+const formatFileSize = (size = 0) => {
+  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const getErrorMessage = (error, fallback) => {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  return error?.message || error?.error || error?.data?.message || fallback;
+};
+
+const SectionHeading = ({ icon: Icon, title, description, badge, accentClass }) => {
+  return (
+    <div className="mb-5 flex flex-col gap-3 border-b border-gray-200/70 pb-4 dark:border-white/[0.05] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <span className={`flex size-10 shrink-0 items-center justify-center rounded-2xl border ${accentClass}`}>
+          <Icon size={18} />
+        </span>
+
+        <div>
+          <InputTitle className="mb-1">{title}</InputTitle>
+
+          <p className="text-[9px] leading-4 text-gray-400 dark:text-white/25">{description}</p>
+        </div>
+      </div>
+
+      {badge && (
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-gray-200/70 bg-gray-50/60 px-3 py-1.5 text-[7px] font-semibold uppercase tracking-[0.1em] text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.02] dark:text-white/30">
+          <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-300/70" />
+          {badge}
+        </span>
+      )}
+    </div>
+  );
+};
+
+SectionHeading.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  badge: PropTypes.string,
+  accentClass: PropTypes.string.isRequired,
+};
+
+const DynamicFieldSection = ({ title, description, entries, field, itemKey, type, placeholder, icon: Icon, accentClass, addLabel, onAdd, onChange, onRemove }) => {
+  return (
+    <Wrapper className="group relative overflow-hidden p-5">
+      <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-indigo-500/[0.012] blur-[85px]" />
+
+      <div className="relative z-10">
+        <SectionHeading icon={Icon} title={title} description={description} accentClass={accentClass} />
+
+        <div className="space-y-2.5">
+          {entries.length > 0 ? (
+            entries.map((entry, index) => (
+              <div key={`${field}-${index}`} className="relative">
+                <Input type={type} value={entry?.[itemKey] || ""} handleChange={(event) => onChange(index, field, itemKey, event.target.value)} placeholder={placeholder} className="pl-12 pr-12" />
+
+                <span className={`absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border 3xl:size-10 ${accentClass}`}>
+                  <Icon size={15} />
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => onRemove(field, index)}
+                  title={`Remove ${title}`}
+                  aria-label={`Remove ${title}`}
+                  className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full border border-rose-300/20 bg-rose-500/[0.07] text-rose-600 transition-all hover:bg-rose-500/[0.13] dark:border-rose-300/[0.08] dark:bg-rose-300/[0.035] dark:text-rose-200/65 dark:hover:bg-rose-300/[0.07] 3xl:size-10"
+                >
+                  <MdClose size={15} />
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="flex min-h-24 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300/80 bg-gray-50/45 px-4 text-center dark:border-white/[0.07] dark:bg-white/[0.014]">
+              <Icon size={18} className="text-gray-400 dark:text-white/25" />
+
+              <p className="mt-2 text-[9px] text-gray-400 dark:text-white/25">No {title.toLowerCase()} added.</p>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => onAdd(field, itemKey)}
+            className="mt-2 inline-flex h-9 items-center gap-2 rounded-xl border border-indigo-300/20 bg-indigo-500/[0.055] px-3 text-[9px] font-semibold text-indigo-700 transition-all hover:-translate-y-0.5 hover:bg-indigo-500/[0.10] dark:border-indigo-300/[0.08] dark:bg-indigo-300/[0.035] dark:text-indigo-200/65 dark:hover:bg-indigo-300/[0.07]"
+          >
+            <FiPlus size={13} />
+            {addLabel}
+          </button>
+        </div>
+      </div>
+    </Wrapper>
+  );
+};
+
+DynamicFieldSection.propTypes = {
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  entries: PropTypes.arrayOf(PropTypes.object).isRequired,
+  field: PropTypes.string.isRequired,
+  itemKey: PropTypes.string.isRequired,
+  type: PropTypes.string.isRequired,
+  placeholder: PropTypes.string.isRequired,
+  icon: PropTypes.elementType.isRequired,
+  accentClass: PropTypes.string.isRequired,
+  addLabel: PropTypes.string.isRequired,
+  onAdd: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
 };
 
 export const CreateAbout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const avatarInputRef = useRef(null);
   const cvInputRef = useRef(null);
 
   const [portfolioIntro, setPortfolioIntro] = useState(initialState);
+
   const [avatar, setAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
+
   const [cv, setCv] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { bio, description, fullname, position, emails, phones, languages, country, address, socialslinks } = portfolioIntro;
 
-  // Clean up object URLs
   useEffect(() => {
     return () => {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      revokeObjectUrl(avatarPreview);
     };
   }, [avatarPreview]);
 
-  // File validation (only checking file type and size, as backend handles other validations)
-  const isImageValid = (file) => {
-    const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
-    return allowedFormats.includes(file.type);
-  };
-
-  const isCvValid = (file) => {
-    const allowedFormats = ["application/pdf"];
-    return allowedFormats.includes(file.type);
-  };
-
-  // Handle avatar file change
-  const handleAvatarChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (!isImageValid(selectedFile)) {
-        toast.error("Avatar must be a PNG, JPEG, or JPG image.");
-        return;
-      }
-      if (selectedFile.size > 2 * 1024 * 1024) {
-        toast.error("Avatar file size exceeds 2MB limit.");
-        return;
-      }
-      setAvatar(selectedFile);
-      setAvatarPreview(URL.createObjectURL(selectedFile));
+  const processAvatar = useCallback((selectedFile) => {
+    if (!selectedFile) {
+      return;
     }
-  };
 
-  // Handle CV file change
-  const handleCvChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (!isCvValid(selectedFile)) {
-        toast.error("CV must be a PDF file.");
-        return;
-      }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("CV file size exceeds 10MB limit.");
-        return;
-      }
-      setCv(selectedFile);
+    if (!ALLOWED_IMAGE_FORMATS.includes(selectedFile.type)) {
+      toast.error("Avatar must be a PNG, JPEG, or JPG image.");
+      return;
     }
-  };
 
-  // Handle drag-and-drop for avatar
-  const handleDropAvatar = useCallback((event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) handleAvatarChange({ target: { files: [file] } });
+    if (selectedFile.size > MAX_AVATAR_SIZE) {
+      toast.error("Avatar file size exceeds the 2MB limit.");
+      return;
+    }
+
+    setAvatarPreview((currentPreview) => {
+      revokeObjectUrl(currentPreview);
+
+      return URL.createObjectURL(selectedFile);
+    });
+
+    setAvatar(selectedFile);
   }, []);
 
-  // Handle input changes for text fields
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setPortfolioIntro({ ...portfolioIntro, [name]: value });
+  const processCv = useCallback((selectedFile) => {
+    if (!selectedFile) {
+      return;
+    }
+
+    if (selectedFile.type !== "application/pdf") {
+      toast.error("CV must be a PDF file.");
+      return;
+    }
+
+    if (selectedFile.size > MAX_CV_SIZE) {
+      toast.error("CV file size exceeds the 10MB limit.");
+      return;
+    }
+
+    setCv(selectedFile);
+  }, []);
+
+  const handleAvatarChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+
+    if (selectedFile) {
+      processAvatar(selectedFile);
+    }
+
+    event.target.value = "";
   };
 
-  // Handle array field changes (emails, phones, languages, socialslinks)
+  const handleCvChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+
+    if (selectedFile) {
+      processCv(selectedFile);
+    }
+
+    event.target.value = "";
+  };
+
+  const handleDropAvatar = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      const selectedFile = event.dataTransfer.files?.[0];
+
+      if (selectedFile) {
+        processAvatar(selectedFile);
+      }
+    },
+    [processAvatar],
+  );
+
+  const handleDropCv = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      const selectedFile = event.dataTransfer.files?.[0];
+
+      if (selectedFile) {
+        processCv(selectedFile);
+      }
+    },
+    [processCv],
+  );
+
+  const handleRemoveAvatar = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    revokeObjectUrl(avatarPreview);
+
+    setAvatar(null);
+    setAvatarPreview("");
+  };
+
+  const handleRemoveCv = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setCv(null);
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setPortfolioIntro((previousIntro) => ({
+      ...previousIntro,
+      [name]: value,
+    }));
+  };
+
   const handleArrayChange = (index, field, key, value) => {
-    const normalizedValue = field === "phones" ? value.trim().replace(/\s/g, "") : value.trim();
-    const updatedArray = [...portfolioIntro[field]];
-    updatedArray[index] = { ...updatedArray[index], [key]: normalizedValue };
-    setPortfolioIntro({ ...portfolioIntro, [field]: updatedArray });
+    const normalizedValue = field === "phones" ? value.replace(/\s/g, "") : value;
+
+    setPortfolioIntro((previousIntro) => {
+      const updatedArray = [...previousIntro[field]];
+
+      updatedArray[index] = {
+        ...updatedArray[index],
+        [key]: normalizedValue,
+      };
+
+      return {
+        ...previousIntro,
+        [field]: updatedArray,
+      };
+    });
   };
 
-  // Add new entry to array fields
   const addArrayField = (field, key) => {
-    setPortfolioIntro({ ...portfolioIntro, [field]: [...portfolioIntro[field], { [key]: "" }] });
+    setPortfolioIntro((previousIntro) => ({
+      ...previousIntro,
+      [field]: [...previousIntro[field], { [key]: "" }],
+    }));
   };
 
-  // Remove entry from array fields
   const removeArrayField = (field, index) => {
-    const updatedArray = portfolioIntro[field].filter((_, i) => i !== index);
-    setPortfolioIntro({ ...portfolioIntro, [field]: updatedArray });
+    setPortfolioIntro((previousIntro) => ({
+      ...previousIntro,
+      [field]: previousIntro[field].filter((_, itemIndex) => itemIndex !== index),
+    }));
   };
 
-  // Handle form submission
   const handleCreate = async () => {
+    if (isLoading) {
+      return;
+    }
+
     try {
       setIsLoading(true);
+
       const formData = new FormData();
-      formData.append("fullname", fullname || "");
-      formData.append("bio", bio || "");
-      formData.append("description", description || "");
-      formData.append("position", position || "");
-      formData.append("country", country || "");
-      formData.append("address", address || "");
 
-      // Send emails, phones, languages, and social links as arrays
+      formData.append("fullname", fullname.trim());
+      formData.append("bio", bio.trim());
+      formData.append("description", description.trim());
+      formData.append("position", position.trim());
+      formData.append("country", country.trim());
+      formData.append("address", address.trim());
+
       emails
-        .filter((emailObj) => emailObj.email)
-        .forEach((emailObj, index) => {
-          formData.append(`emails[${index}][email]`, emailObj.email);
+        .filter((emailObject) => emailObject.email?.trim())
+        .forEach((emailObject, index) => {
+          formData.append(`emails[${index}][email]`, emailObject.email.trim());
         });
+
       phones
-        .filter((phoneObj) => phoneObj.phone)
-        .forEach((phoneObj, index) => {
-          formData.append(`phones[${index}][phone]`, phoneObj.phone.trim().replace(/\s/g, ""));
+        .filter((phoneObject) => phoneObject.phone?.trim())
+        .forEach((phoneObject, index) => {
+          formData.append(`phones[${index}][phone]`, phoneObject.phone.trim().replace(/\s/g, ""));
         });
+
       languages
-        .filter((langObj) => langObj.language)
-        .forEach((langObj, index) => {
-          formData.append(`languages[${index}][language]`, langObj.language);
+        .filter((languageObject) => languageObject.language?.trim())
+        .forEach((languageObject, index) => {
+          formData.append(`languages[${index}][language]`, languageObject.language.trim());
         });
+
       socialslinks
-        .filter((linkObj) => linkObj.link)
-        .forEach((linkObj, index) => {
-          formData.append(`socialslinks[${index}][link]`, linkObj.link);
+        .filter((linkObject) => linkObject.link?.trim())
+        .forEach((linkObject, index) => {
+          formData.append(`socialslinks[${index}][link]`, linkObject.link.trim());
         });
 
-      formData.append("avatar", avatar);
-      if (cv) formData.append("cv", cv);
+      if (avatar) {
+        formData.append("avatar", avatar);
+      }
 
-      // Log FormData for debugging
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
+      if (cv) {
+        formData.append("cv", cv);
       }
 
       const result = await dispatch(createIntro(formData)).unwrap();
-      toast.success(result.message || "Introduction created successfully.");
+
+      toast.success(result?.message || "Introduction created successfully.");
+
       navigate("/intro");
     } catch (error) {
-      const errorMessage = error.message || error.error || "Failed to create introduction.";
-      toast.error(errorMessage);
+      toast.error(getErrorMessage(error, "Failed to create introduction."));
     } finally {
       setIsLoading(false);
     }
@@ -180,240 +386,451 @@ export const CreateAbout = () => {
   return (
     <>
       <StickyHeader>
-        <HeadingTwo>Portfolio Introduction</HeadingTwo>
-        <div className="flexC gap-2">
-          <GhostButton onClick={() => navigate("/intro")}>Cancel</GhostButton>
-          <TertiaryButton onClick={handleCreate} disabled={isLoading}>
+        <div>
+          <HeadingTwo>Portfolio Introduction</HeadingTwo>
+
+          <p className="mt-1 hidden text-[9px] text-gray-400 dark:text-white/25 sm:block">Build your professional profile and contact information.</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <GhostButton type="button" disabled={isLoading} onClick={() => navigate("/intro")}>
+            Cancel
+          </GhostButton>
+
+          <TertiaryButton type="button" disabled={isLoading} onClick={handleCreate}>
             {isLoading ? "Creating..." : "Create Introduction"}
           </TertiaryButton>
         </div>
       </StickyHeader>
 
-      <section className="flex justify-between gap-3 pb-8">
-        <div className="w-2/3">
-          <div className="flex justify-between gap-3">
-            <Wrapper className="p-5 w-1/2">
-              <InputTitle className="mb-4">Introduction Details</InputTitle>
+      <section className="grid grid-cols-1 gap-3 pb-8 xl:grid-cols-[minmax(0,1.65fr)_minmax(330px,0.75fr)]">
+        {/* Main profile information */}
+        <div className="min-w-0 space-y-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {/* Identity */}
+            <Wrapper className="group relative overflow-hidden p-5 sm:p-6">
+              <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-indigo-500/[0.014] blur-[90px]" />
 
-              <div className="input">
-                <InputLabel className="my-2">Full Name</InputLabel>
-                <div className="relative">
-                  <Input type="text" name="fullname" className="pl-12" value={fullname} handleChange={handleInputChange} placeholder="John Doe" required />
-                  <div className="icon h-9 w-9 bg-green-300 rounded-full flexC text-white absolute top-1 left-1">
-                    <FaUser />
+              <div className="relative z-10">
+                <SectionHeading
+                  icon={HiOutlineIdentification}
+                  title="Professional identity"
+                  description="Introduce yourself and your current role."
+                  badge="Profile"
+                  accentClass="border-indigo-300/20 bg-indigo-500/[0.07] text-indigo-700 dark:border-indigo-300/[0.09] dark:bg-indigo-300/[0.04] dark:text-indigo-200/70"
+                />
+
+                <div>
+                  <InputLabel className="mb-2">Full name</InputLabel>
+
+                  <div className="relative">
+                    <Input type="text" name="fullname" className="pl-12" value={fullname} handleChange={handleInputChange} placeholder="John Doe" required disabled={isLoading} />
+
+                    <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-indigo-300/20 bg-indigo-500/[0.09] text-indigo-700 dark:border-indigo-300/[0.09] dark:bg-indigo-300/[0.045] dark:text-indigo-200/70 3xl:size-10">
+                      <FaUser size={14} />
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              <div className="input py-3">
-                <InputLabel className="my-2">Designation</InputLabel>
-                <div className="relative">
-                  <Input type="text" name="position" className="pl-12" value={position} handleChange={handleInputChange} placeholder="Software Engineer" required />
-                  <div className="icon h-9 w-9 bg-indigo-300 rounded-full flexC text-white absolute top-1 left-1">
-                    <PiHandbagFill />
+                <div className="mt-4">
+                  <InputLabel className="mb-2">Designation</InputLabel>
+
+                  <div className="relative">
+                    <Input type="text" name="position" className="pl-12" value={position} handleChange={handleInputChange} placeholder="Software Engineer" required disabled={isLoading} />
+
+                    <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-violet-300/20 bg-violet-500/[0.09] text-violet-700 dark:border-violet-300/[0.09] dark:bg-violet-300/[0.045] dark:text-violet-200/70 3xl:size-10">
+                      <PiHandbagFill size={15} />
+                    </span>
                   </div>
                 </div>
               </div>
             </Wrapper>
 
-            <Wrapper className="p-5 w-1/2">
-              <InputTitle className="mb-4">Address Info</InputTitle>
-              <div className="input">
-                <InputLabel className="my-2">Country</InputLabel>
-                <div className="relative">
-                  <Input type="text" name="country" className="pl-12" value={country} handleChange={handleInputChange} placeholder="United States" />
-                  <div className="icon h-9 w-9 bg-purple-300 rounded-full flexC text-white absolute top-1 left-1">
-                    <BiWorld />
+            {/* Location */}
+            <Wrapper className="group relative overflow-hidden p-5 sm:p-6">
+              <div className="pointer-events-none absolute -bottom-24 -left-24 size-64 rounded-full bg-cyan-500/[0.012] blur-[90px]" />
+
+              <div className="relative z-10">
+                <SectionHeading
+                  icon={BiWorld}
+                  title="Location details"
+                  description="Add your country and professional location."
+                  accentClass="border-cyan-300/20 bg-cyan-500/[0.07] text-cyan-700 dark:border-cyan-300/[0.09] dark:bg-cyan-300/[0.04] dark:text-cyan-200/70"
+                />
+
+                <div>
+                  <InputLabel className="mb-2">Country</InputLabel>
+
+                  <div className="relative">
+                    <Input type="text" name="country" className="pl-12" value={country} handleChange={handleInputChange} placeholder="Australia" disabled={isLoading} />
+
+                    <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-500/[0.09] text-cyan-700 dark:border-cyan-300/[0.09] dark:bg-cyan-300/[0.045] dark:text-cyan-200/70 3xl:size-10">
+                      <BiWorld size={16} />
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              <div className="input py-3">
-                <InputLabel className="my-2">Address</InputLabel>
-                <div className="relative">
-                  <Input type="text" name="address" className="pl-12" value={address} handleChange={handleInputChange} placeholder="123 Main St, City" />
-                  <div className="icon h-9 w-9 bg-red-300 rounded-full flexC text-white absolute top-1 left-1">
-                    <MdLocationPin />
+                <div className="mt-4">
+                  <InputLabel className="mb-2">Address</InputLabel>
+
+                  <div className="relative">
+                    <Input type="text" name="address" className="pl-12" value={address} handleChange={handleInputChange} placeholder="Sydney, New South Wales" disabled={isLoading} />
+
+                    <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-rose-300/20 bg-rose-500/[0.08] text-rose-700 dark:border-rose-300/[0.09] dark:bg-rose-300/[0.04] dark:text-rose-200/70 3xl:size-10">
+                      <MdLocationPin size={17} />
+                    </span>
                   </div>
                 </div>
               </div>
             </Wrapper>
           </div>
 
-          <Wrapper className="p-5 mt-3">
-            <InputTitle className="mb-4">Contact Info</InputTitle>
-            {/* Emails */}
-            <div className="input">
-              <InputLabel className="my-2">Emails (Optional)</InputLabel>
-              {emails.map((emailObj, index) => (
-                <div key={index} className="relative flex items-center mb-1.5">
-                  <Input type="email" value={emailObj.email} handleChange={(e) => handleArrayChange(index, "emails", "email", e.target.value)} placeholder="example@domain.com" className="pl-12" />
-                  <div className="icon h-9 w-9 bg-brown-300 rounded-full flexC text-white absolute top-1 left-1">
-                    <MdEmail />
-                  </div>
-                  <button onClick={() => removeArrayField("emails", index)} className="text-red-800 absolute top-1 right-1 size-9 rounded-full bg-red-200 flexC">
-                    <MdClose />
-                  </button>
-                </div>
-              ))}
-              <button onClick={() => addArrayField("emails", "email")} className="text-blue-500 hover:text-blue-600 textSizeSm">
-                + Add Email
-              </button>
-            </div>
+          {/* Contact information */}
+          <Wrapper className="group relative overflow-hidden p-5 sm:p-6">
+            <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-emerald-500/[0.012] blur-[90px]" />
 
-            {/* Phones */}
-            <div className="input py-3">
-              <InputLabel className="my-2">Phone Numbers (Optional)</InputLabel>
-              {phones.map((phoneObj, index) => (
-                <div key={index} className="relative flex items-center mb-1.5">
-                  <Input type="tel" value={phoneObj.phone} handleChange={(e) => handleArrayChange(index, "phones", "phone", e.target.value)} placeholder="+1234567890" className="pl-12" />
-                  <div className="icon h-9 w-9 bg-teal-300 rounded-full flexC text-white absolute top-1 left-1">
-                    <BsTelephone />
-                  </div>
-                  <button onClick={() => removeArrayField("phones", index)} className="text-red-800 absolute top-1 right-1 size-9 rounded-full bg-red-200 flexC">
-                    <MdClose />
-                  </button>
-                </div>
-              ))}
-              <button onClick={() => addArrayField("phones", "phone")} className="text-blue-500 hover:text-blue-600 textSizeSm">
-                + Add Phone
-              </button>
-            </div>
-          </Wrapper>
-
-          <Wrapper className="p-5 mt-3">
-            <InputTitle className="mb-4">Describe Yourself</InputTitle>
-            <div className="input">
-              <InputLabel className="my-2">Bio (Optional)</InputLabel>
-              <div className="relative">
-                <Input type="text" name="bio" className="pl-12" value={bio} handleChange={handleInputChange} placeholder="A brief bio (5-250 characters)" />
-                <div className="icon h-9 w-9 bg-green-300 rounded-full flexC text-white absolute top-1 left-1">
-                  <LuNotepadTextDashed />
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <InputLabel className="my-2">Description (Optional)</InputLabel>
-              <textarea
-                rows={5}
-                className="w-full p-2 textColor textSizeSm border border-gray-100 dark:border-gray-800/50 focus:border-gray-200 dark:focus:border-gray-800 rounded-md placeholder:text-xs placeholder:3xl:text-sm placeholder:text-gray-800/20 dark:placeholder:text-gray-500/50"
-                name="description"
-                value={description}
-                onChange={handleInputChange}
-                placeholder="Tell us more about yourself"
+            <div className="relative z-10">
+              <SectionHeading
+                icon={MdEmail}
+                title="Contact information"
+                description="Add one or more ways visitors can contact you."
+                accentClass="border-emerald-300/20 bg-emerald-500/[0.07] text-emerald-700 dark:border-emerald-300/[0.09] dark:bg-emerald-300/[0.04] dark:text-emerald-200/70"
               />
+
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                {/* Emails */}
+                <div className="rounded-[22px] border border-gray-200/70 bg-gray-50/45 p-4 dark:border-white/[0.05] dark:bg-white/[0.014]">
+                  <div className="mb-3 flex items-center justify-between">
+                    <InputLabel>Email addresses</InputLabel>
+
+                    <span className="text-[8px] font-medium tabular-nums text-gray-400 dark:text-white/20">{emails.length}</span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {emails.map((emailObject, index) => (
+                      <div key={`email-${index}`} className="relative">
+                        <Input
+                          type="email"
+                          value={emailObject.email}
+                          handleChange={(event) => handleArrayChange(index, "emails", "email", event.target.value)}
+                          placeholder="example@domain.com"
+                          className="pl-12 pr-12"
+                        />
+
+                        <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-emerald-300/20 bg-emerald-500/[0.08] text-emerald-700 dark:border-emerald-300/[0.08] dark:bg-emerald-300/[0.04] dark:text-emerald-200/65 3xl:size-10">
+                          <MdEmail size={15} />
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => removeArrayField("emails", index)}
+                          title="Remove email"
+                          aria-label="Remove email"
+                          className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full text-rose-600 transition-all hover:bg-rose-500/[0.08] dark:text-rose-200/65 3xl:size-10"
+                        >
+                          <MdClose size={15} />
+                        </button>
+                      </div>
+                    ))}
+
+                    {emails.length === 0 && (
+                      <div className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed border-gray-300/80 text-[9px] text-gray-400 dark:border-white/[0.07] dark:text-white/25">
+                        No email address added.
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => addArrayField("emails", "email")}
+                      className="inline-flex h-9 items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-500/[0.05] px-3 text-[9px] font-semibold text-emerald-700 transition-all hover:bg-emerald-500/[0.10] dark:border-emerald-300/[0.08] dark:bg-emerald-300/[0.03] dark:text-emerald-200/65 dark:hover:bg-emerald-300/[0.065]"
+                    >
+                      <FiPlus size={13} />
+                      Add email
+                    </button>
+                  </div>
+                </div>
+
+                {/* Phones */}
+                <div className="rounded-[22px] border border-gray-200/70 bg-gray-50/45 p-4 dark:border-white/[0.05] dark:bg-white/[0.014]">
+                  <div className="mb-3 flex items-center justify-between">
+                    <InputLabel>Phone numbers</InputLabel>
+
+                    <span className="text-[8px] font-medium tabular-nums text-gray-400 dark:text-white/20">{phones.length}</span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {phones.map((phoneObject, index) => (
+                      <div key={`phone-${index}`} className="relative">
+                        <Input
+                          type="tel"
+                          value={phoneObject.phone}
+                          handleChange={(event) => handleArrayChange(index, "phones", "phone", event.target.value)}
+                          placeholder="+61412345678"
+                          className="pl-12 pr-12"
+                        />
+
+                        <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-500/[0.08] text-cyan-700 dark:border-cyan-300/[0.08] dark:bg-cyan-300/[0.04] dark:text-cyan-200/65 3xl:size-10">
+                          <BsTelephone size={14} />
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => removeArrayField("phones", index)}
+                          title="Remove phone"
+                          aria-label="Remove phone"
+                          className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full text-rose-600 transition-all hover:bg-rose-500/[0.08] dark:text-rose-200/65 3xl:size-10"
+                        >
+                          <MdClose size={15} />
+                        </button>
+                      </div>
+                    ))}
+
+                    {phones.length === 0 && (
+                      <div className="flex min-h-20 items-center justify-center rounded-2xl border border-dashed border-gray-300/80 text-[9px] text-gray-400 dark:border-white/[0.07] dark:text-white/25">
+                        No phone number added.
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => addArrayField("phones", "phone")}
+                      className="inline-flex h-9 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-500/[0.05] px-3 text-[9px] font-semibold text-cyan-700 transition-all hover:bg-cyan-500/[0.10] dark:border-cyan-300/[0.08] dark:bg-cyan-300/[0.03] dark:text-cyan-200/65 dark:hover:bg-cyan-300/[0.065]"
+                    >
+                      <FiPlus size={13} />
+                      Add phone
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Wrapper>
+
+          {/* About */}
+          <Wrapper className="group relative overflow-hidden p-5 sm:p-6">
+            <div className="pointer-events-none absolute -bottom-28 -right-28 size-72 rounded-full bg-violet-500/[0.013] blur-[100px]" />
+
+            <div className="relative z-10">
+              <SectionHeading
+                icon={HiOutlineSparkles}
+                title="Professional summary"
+                description="Explain your experience, expertise and professional focus."
+                accentClass="border-violet-300/20 bg-violet-500/[0.07] text-violet-700 dark:border-violet-300/[0.09] dark:bg-violet-300/[0.04] dark:text-violet-200/70"
+              />
+
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <InputLabel>Short bio</InputLabel>
+
+                  <span className="text-[8px] font-medium tabular-nums text-gray-400 dark:text-white/20">{bio.length} characters</span>
+                </div>
+
+                <div className="relative">
+                  <Input type="text" name="bio" className="pl-12" value={bio} handleChange={handleInputChange} placeholder="A short professional introduction" disabled={isLoading} />
+
+                  <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-violet-300/20 bg-violet-500/[0.08] text-violet-700 dark:border-violet-300/[0.08] dark:bg-violet-300/[0.04] dark:text-violet-200/65 3xl:size-10">
+                    <LuNotepadTextDashed size={16} />
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <InputLabel>Detailed description</InputLabel>
+
+                  <span className="text-[8px] font-medium tabular-nums text-gray-400 dark:text-white/20">{description.length} characters</span>
+                </div>
+
+                <textarea
+                  rows={7}
+                  name="description"
+                  value={description}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  placeholder="Tell visitors more about your background, experience, interests and professional goals."
+                  className="min-h-40 w-full resize-y rounded-[22px] border border-gray-200/80 bg-gray-50/55 px-4 py-3 text-[11px] leading-6 text-gray-700 outline-none transition-all placeholder:text-gray-400 focus:border-violet-400/40 focus:ring-4 focus:ring-violet-500/[0.04] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.055] dark:bg-white/[0.018] dark:text-white/65 dark:placeholder:text-white/20 dark:focus:border-violet-300/[0.13]"
+                />
+              </div>
             </div>
           </Wrapper>
         </div>
 
-        <div className="w-1/3">
-          <Wrapper className="p-5 w-full">
-            <InputTitle className="mb-4">Avatar Image</InputTitle>
-            <div
-              onDrop={handleDropAvatar}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center w-full h-64 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
-              onClick={() => avatarInputRef.current.click()}
-            >
-              {avatarPreview ? (
-                <div className="relative w-full h-64 flex items-center justify-center">
-                  <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full rounded-3xl object-cover" />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAvatar(null);
-                      setAvatarPreview("");
-                    }}
-                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    title="Remove Avatar"
-                    aria-label="Remove avatar image"
-                  >
-                    <MdClose />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <IoCameraSharp size={30} />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Drag and drop an image or
-                    <span className="textColor font-medium cursor-pointer pl-1">click to browse</span>
-                  </p>
-                </div>
-              )}
-              <input ref={avatarInputRef} id="avatar" type="file" name="avatar" className="hidden" onChange={handleAvatarChange} accept="image/png,image/jpeg,image/jpg" />
+        {/* Supporting profile assets */}
+        <aside className="min-w-0 space-y-3">
+          {/* Avatar */}
+          <Wrapper className="group relative overflow-hidden p-5">
+            <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-indigo-500/[0.014] blur-[80px]" />
+
+            <div className="relative z-10">
+              <SectionHeading
+                icon={IoCameraSharp}
+                title="Profile image"
+                description="Upload a clear professional photograph."
+                accentClass="border-indigo-300/20 bg-indigo-500/[0.07] text-indigo-700 dark:border-indigo-300/[0.09] dark:bg-indigo-300/[0.04] dark:text-indigo-200/70"
+              />
+
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Upload profile image"
+                onClick={() => {
+                  if (!avatarPreview) {
+                    avatarInputRef.current?.click();
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (!avatarPreview && (event.key === "Enter" || event.key === " ")) {
+                    event.preventDefault();
+                    avatarInputRef.current?.click();
+                  }
+                }}
+                onDrop={handleDropAvatar}
+                onDragOver={(event) => event.preventDefault()}
+                className="relative flex h-72 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[26px] border border-dashed border-gray-300/80 bg-gray-50/55 text-center transition-all duration-300 hover:border-indigo-400/40 hover:bg-indigo-500/[0.025] focus:outline-none focus:ring-4 focus:ring-indigo-500/[0.05] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-indigo-300/[0.15] dark:hover:bg-indigo-300/[0.025]"
+              >
+                {avatarPreview ? (
+                  <>
+                    <img src={avatarPreview} alt="Profile preview" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.015]" />
+
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/10" />
+
+                    <div className="absolute bottom-4 left-4 text-left">
+                      <p className="max-w-[220px] truncate text-[10px] font-semibold text-white/90">{avatar?.name}</p>
+
+                      <p className="mt-0.5 text-[8px] text-white/50">{formatFileSize(avatar?.size)}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      title="Remove avatar"
+                      aria-label="Remove profile image"
+                      className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/85 text-white shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
+                    >
+                      <MdClose size={15} />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex max-w-[250px] flex-col items-center px-5">
+                    <span className="flex size-16 items-center justify-center rounded-[22px] border border-indigo-300/20 bg-indigo-500/[0.07] text-indigo-600 shadow-[0_12px_30px_rgba(79,70,229,0.10)] dark:border-indigo-300/[0.09] dark:bg-indigo-300/[0.04] dark:text-indigo-200/70">
+                      <IoCameraSharp size={27} />
+                    </span>
+
+                    <p className="mt-4 text-[11px] font-semibold text-gray-600 dark:text-white/50">Drop your image here</p>
+
+                    <p className="mt-1.5 text-[8px] leading-4 text-gray-400 dark:text-white/25">PNG, JPG or JPEG · Maximum 2MB</p>
+                  </div>
+                )}
+
+                <input ref={avatarInputRef} id="avatar" type="file" name="avatar" className="hidden" onChange={handleAvatarChange} accept="image/png,image/jpeg,image/jpg" />
+              </div>
             </div>
           </Wrapper>
 
-          <Wrapper className="p-5 my-3">
-            <InputTitle className="mb-4">CV (Optional)</InputTitle>
-            <div
-              className="flex flex-col items-center justify-center w-full h-32 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
-              onClick={() => cvInputRef.current.click()}
-            >
-              {cv ? (
-                <div className="relative w-full flex items-center justify-center">
-                  <p className="text-sm">{cv.name}</p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCv(null);
-                    }}
-                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    title="Remove CV"
-                    aria-label="Remove CV file"
-                  >
-                    <MdClose />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Drag and drop a PDF or
-                    <span className="textColor font-medium cursor-pointer pl-1">click to browse</span>
-                  </p>
-                </div>
-              )}
-              <input ref={cvInputRef} id="cv" type="file" name="cv" className="hidden" onChange={handleCvChange} accept="application/pdf" />
+          {/* CV */}
+          <Wrapper className="group relative overflow-hidden p-5">
+            <div className="pointer-events-none absolute -bottom-20 -left-20 size-56 rounded-full bg-amber-500/[0.012] blur-[80px]" />
+
+            <div className="relative z-10">
+              <SectionHeading
+                icon={FiFileText}
+                title="Curriculum vitae"
+                description="Attach your current CV as a PDF document."
+                accentClass="border-amber-300/20 bg-amber-500/[0.07] text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70"
+              />
+
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Upload CV file"
+                onClick={() => {
+                  if (!cv) {
+                    cvInputRef.current?.click();
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (!cv && (event.key === "Enter" || event.key === " ")) {
+                    event.preventDefault();
+                    cvInputRef.current?.click();
+                  }
+                }}
+                onDrop={handleDropCv}
+                onDragOver={(event) => event.preventDefault()}
+                className="relative flex min-h-40 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-gray-300/80 bg-gray-50/55 p-4 text-center transition-all hover:border-amber-400/40 hover:bg-amber-500/[0.025] focus:outline-none focus:ring-4 focus:ring-amber-500/[0.05] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-amber-300/[0.15] dark:hover:bg-amber-300/[0.025]"
+              >
+                {cv ? (
+                  <>
+                    <span className="flex size-12 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-500/[0.08] text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70">
+                      <FiFileText size={21} />
+                    </span>
+
+                    <p className="mt-3 max-w-[230px] truncate text-[10px] font-semibold text-gray-700 dark:text-white/65">{cv.name}</p>
+
+                    <p className="mt-1 text-[8px] text-gray-400 dark:text-white/25">{formatFileSize(cv.size)}</p>
+
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-500/[0.05] px-3 py-1.5 text-[8px] font-medium text-emerald-700 dark:border-emerald-300/[0.08] dark:bg-emerald-300/[0.03] dark:text-emerald-200/65">
+                      <HiOutlineCheckCircle size={13} />
+                      PDF attached
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRemoveCv}
+                      title="Remove CV"
+                      aria-label="Remove CV file"
+                      className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/[0.08] text-rose-600 transition-all hover:bg-rose-500/[0.15] dark:border-rose-300/[0.08] dark:bg-rose-300/[0.04] dark:text-rose-200/65"
+                    >
+                      <MdClose size={15} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex size-12 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-500/[0.08] text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70">
+                      <FiUploadCloud size={21} />
+                    </span>
+
+                    <p className="mt-3 text-[10px] font-semibold text-gray-600 dark:text-white/50">Drop your CV here</p>
+
+                    <p className="mt-1 text-[8px] text-gray-400 dark:text-white/25">PDF document · Maximum 10MB</p>
+                  </>
+                )}
+
+                <input ref={cvInputRef} id="cv" type="file" name="cv" className="hidden" onChange={handleCvChange} accept="application/pdf" />
+              </div>
             </div>
           </Wrapper>
 
-          <Wrapper className="p-5">
-            <InputTitle className="mb-2">Social Links (Optional)</InputTitle>
-            {socialslinks.map((linkObj, index) => (
-              <div key={index} className="relative flex items-center mb-1.5">
-                <Input type="url" value={linkObj.link} handleChange={(e) => handleArrayChange(index, "socialslinks", "link", e.target.value)} placeholder="https://example.com" className="pl-12" />
-                <div className="icon h-9 w-9 bg-blue-300 rounded-full flexC text-white absolute top-1 left-1">
-                  <HiLink />
-                </div>
-                <button onClick={() => removeArrayField("socialslinks", index)} className="text-red-800 absolute top-1 right-1 size-9 rounded-full bg-red-200 flexC">
-                  <MdClose />
-                </button>
-              </div>
-            ))}
-            <button onClick={() => addArrayField("socialslinks", "link")} className="text-blue-500 hover:text-blue-600 textSizeSm">
-              + Add Social Link
-            </button>
-          </Wrapper>
+          <DynamicFieldSection
+            title="Social links"
+            description="Add portfolio and professional profile links."
+            entries={socialslinks}
+            field="socialslinks"
+            itemKey="link"
+            type="url"
+            placeholder="https://example.com"
+            icon={HiLink}
+            accentClass="border-sky-300/20 bg-sky-500/[0.07] text-sky-700 dark:border-sky-300/[0.09] dark:bg-sky-300/[0.04] dark:text-sky-200/70"
+            addLabel="Add social link"
+            onAdd={addArrayField}
+            onChange={handleArrayChange}
+            onRemove={removeArrayField}
+          />
 
-          <Wrapper className="p-5 mt-3">
-            <InputTitle className="mb-2">Languages (Optional)</InputTitle>
-            {languages.map((langObj, index) => (
-              <div key={index} className="relative flex items-center mb-2">
-                <Input type="text" value={langObj.language} handleChange={(e) => handleArrayChange(index, "languages", "language", e.target.value)} placeholder="English" className="pl-12" />
-                <div className="icon h-9 w-9 bg-deep-orange-300 rounded-full flexC text-white absolute top-1 left-1">
-                  <IoLanguageOutline />
-                </div>
-                <button onClick={() => removeArrayField("languages", index)} className="text-red-800 absolute top-1 right-1 size-9 rounded-full bg-red-200 flexC">
-                  <MdClose />
-                </button>
-              </div>
-            ))}
-            <button onClick={() => addArrayField("languages", "language")} className="text-blue-500 hover:text-blue-600 textSizeSm">
-              + Add Language
-            </button>
-          </Wrapper>
-        </div>
+          <DynamicFieldSection
+            title="Languages"
+            description="List the languages you can communicate in."
+            entries={languages}
+            field="languages"
+            itemKey="language"
+            type="text"
+            placeholder="English"
+            icon={IoLanguageOutline}
+            accentClass="border-orange-300/20 bg-orange-500/[0.07] text-orange-700 dark:border-orange-300/[0.09] dark:bg-orange-300/[0.04] dark:text-orange-200/70"
+            addLabel="Add language"
+            onAdd={addArrayField}
+            onChange={handleArrayChange}
+            onRemove={removeArrayField}
+          />
+        </aside>
       </section>
     </>
   );

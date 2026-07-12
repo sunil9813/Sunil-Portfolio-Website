@@ -51,8 +51,8 @@ import {
   Share2,
   Info,
 } from "lucide-react";
-import { HeadingTwo, IconCircle } from "@/utils/Router";
-import { Wrapper } from "@/utils/Router";
+import { HeadingTwo, IconCircle } from "@/routes";
+import { Wrapper } from "@/routes";
 
 // Enhanced monthly data structure with more metrics
 const monthlyTrafficData = [

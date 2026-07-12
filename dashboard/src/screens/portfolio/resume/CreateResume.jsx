@@ -1,1085 +1,946 @@
-import { GhostButton, HeadingTwo, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper, InputForResume } from "@/utils/Router";
+import PropTypes from "prop-types";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
-import { FaAward, FaBriefcase, FaChalkboardTeacher, FaCode, FaGraduationCap, FaTrophy, FaUser, FaUserFriends } from "react-icons/fa";
+import { v4 as uuidv4 } from "uuid";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+
+import { closestCenter, DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { arrayMove, rectSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
+import { restrictToFirstScrollableAncestor, restrictToParentElement } from "@dnd-kit/modifiers";
+import { CSS } from "@dnd-kit/utilities";
+
+import { FaAward, FaBriefcase, FaChalkboardTeacher, FaCode, FaGraduationCap, FaTrophy, FaUser, FaUserFriends } from "react-icons/fa";
+import { HiOutlineArrowLeft, HiOutlineArrowRight, HiOutlineCheck, HiOutlineDocumentText, HiOutlineSparkles } from "react-icons/hi2";
 import { IoCloseOutline } from "react-icons/io5";
 import { GoPlus } from "react-icons/go";
-import PropTypes from "prop-types";
-import { v4 as uuidv4 } from "uuid";
-import { restrictToParentElement, restrictToFirstScrollableAncestor } from "@dnd-kit/modifiers";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from "@dnd-kit/core";
-import { SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { RiDragDropFill } from "react-icons/ri";
+
 import { CommentEditor } from "@/components/comment/CommentEditor";
-import { useDispatch } from "react-redux";
 import { createResume } from "@/redux/slices/portfolio/resumeSlice";
+import { GhostButton, HeadingTwo, InputForResume, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/routes";
 
-// Color Manager Hook
-export const UseColorManager = () => {
-  const [assignedColors, setAssignedColors] = useState({});
+import "react-datepicker/dist/react-datepicker.css";
 
-  const getColorForId = (section, id) => {
-    // Return existing color if already assigned
-    if (assignedColors[id]) return assignedColors[id];
+const DATE_INPUT_CLASS =
+  "h-11 w-full rounded-xl border border-gray-200/80 bg-gray-50/55 px-3 text-[10px] text-gray-700 outline-none transition-all placeholder:text-gray-400 focus:border-indigo-400/40 focus:ring-4 focus:ring-indigo-500/[0.04] dark:border-white/[0.06] dark:bg-white/[0.018] dark:text-white/65 dark:placeholder:text-white/20 dark:focus:border-indigo-300/[0.14] 3xl:h-12";
 
-    // Get all currently used hues
-    const usedHues = Object.values(assignedColors).map((color) => color.h);
+const SECTION_CONFIG = {
+  education: {
+    title: "Qualification History",
+    description: "Add your schools, degrees, universities and study periods.",
+    addLabel: "Add Education",
+    icon: FaGraduationCap,
+    gridClass: "grid grid-cols-1 gap-4 2xl:grid-cols-2",
+    accent: "border-sky-300/20 bg-sky-500/[0.07] text-sky-700 dark:border-sky-300/[0.09] dark:bg-sky-300/[0.04] dark:text-sky-200/70",
+  },
+  experience: {
+    title: "Work Experience",
+    description: "Describe your professional positions, organisations and responsibilities.",
+    addLabel: "Add Experience",
+    icon: FaBriefcase,
+    gridClass: "grid grid-cols-1 gap-4 2xl:grid-cols-2",
+    accent: "border-indigo-300/20 bg-indigo-500/[0.07] text-indigo-700 dark:border-indigo-300/[0.09] dark:bg-indigo-300/[0.04] dark:text-indigo-200/70",
+  },
+  skills: {
+    title: "Skills & Proficiencies",
+    description: "List your strongest technical and professional capabilities.",
+    addLabel: "Add Skill",
+    icon: FaCode,
+    gridClass: "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4",
+    accent: "border-cyan-300/20 bg-cyan-500/[0.07] text-cyan-700 dark:border-cyan-300/[0.09] dark:bg-cyan-300/[0.04] dark:text-cyan-200/70",
+  },
+  achievements: {
+    title: "Achievements",
+    description: "Highlight important accomplishments and professional milestones.",
+    addLabel: "Add Achievement",
+    icon: FaTrophy,
+    gridClass: "grid grid-cols-1 gap-4 xl:grid-cols-2 3xl:grid-cols-3",
+    accent: "border-violet-300/20 bg-violet-500/[0.07] text-violet-700 dark:border-violet-300/[0.09] dark:bg-violet-300/[0.04] dark:text-violet-200/70",
+  },
+  training: {
+    title: "Training History",
+    description: "Record workshops, professional training and development programmes.",
+    addLabel: "Add Training",
+    icon: FaChalkboardTeacher,
+    gridClass: "grid grid-cols-1 gap-4 2xl:grid-cols-2",
+    accent: "border-emerald-300/20 bg-emerald-500/[0.07] text-emerald-700 dark:border-emerald-300/[0.09] dark:bg-emerald-300/[0.04] dark:text-emerald-200/70",
+  },
+  award: {
+    title: "Awards & Honours",
+    description: "Add awards, recognition and honours received during your career.",
+    addLabel: "Add Award",
+    icon: FaAward,
+    gridClass: "grid grid-cols-1 gap-4 2xl:grid-cols-2",
+    accent: "border-amber-300/20 bg-amber-500/[0.07] text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70",
+  },
+  reference: {
+    title: "Professional References",
+    description: "Add trusted professional contacts who can verify your experience.",
+    addLabel: "Add Reference",
+    icon: FaUserFriends,
+    gridClass: "grid grid-cols-1 gap-4 2xl:grid-cols-2",
+    accent: "border-rose-300/20 bg-rose-500/[0.07] text-rose-700 dark:border-rose-300/[0.09] dark:bg-rose-300/[0.04] dark:text-rose-200/70",
+  },
+};
 
-    // Generate a new unique color
-    let h, s, l;
-    let attempts = 0;
-    const maxAttempts = 100;
-
-    do {
-      h = Math.floor(Math.random() * 360); // Full hue range (0-360)
-      s = 70 + Math.floor(Math.random() * 20); // 70-90% saturation
-      l = 50 + Math.floor(Math.random() * 10); // 50-60% lightness
-      attempts++;
-
-      // If we can't find a unique hue after many attempts, just pick any
-      if (attempts > maxAttempts) {
-        h = Math.floor(Math.random() * 360);
-        break;
-      }
-    } while (usedHues.includes(h));
-
-    const newColor = {
-      bg: `hsl(${h}, ${s}%, ${l}%, 0.1)`,
-      border: `hsl(${h}, ${s}%, ${l}%, 0.4)`,
-      text: `hsl(${h}, ${s}%, ${l}%)`,
-      h,
-    };
-
-    setAssignedColors((prev) => ({ ...prev, [id]: newColor }));
-    return newColor;
+const createEmptyEntry = (fieldName) => {
+  const entries = {
+    education: {
+      id: uuidv4(),
+      school: "",
+      degree: "",
+      university: "",
+      city: "",
+      startDate: "",
+      endDate: "",
+      description: "",
+    },
+    experience: {
+      id: uuidv4(),
+      company: "",
+      position: "",
+      city: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+    },
+    skills: {
+      id: uuidv4(),
+      name: "",
+      progress: "",
+    },
+    achievements: {
+      id: uuidv4(),
+      title: "",
+      description: "",
+    },
+    training: {
+      id: uuidv4(),
+      title: "",
+      company: "",
+      city: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+    },
+    award: {
+      id: uuidv4(),
+      title: "",
+      company: "",
+      city: "",
+      description: "",
+      receivedYear: "",
+    },
+    reference: {
+      id: uuidv4(),
+      fullname: "",
+      company: "",
+      designation: "",
+      phone: "",
+      email: "",
+      website: "",
+    },
   };
+
+  return entries[fieldName];
+};
+
+const readEditorValue = (valueOrEvent) => {
+  if (typeof valueOrEvent === "string") {
+    return valueOrEvent;
+  }
+
+  return valueOrEvent?.target?.value || "";
+};
+
+const getErrorMessage = (error) => {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  return error?.response?.data?.error || error?.data?.error || error?.message || error?.error || "Failed to create resume.";
+};
+
+const createStableColor = (section, id) => {
+  const value = `${section}-${id}`;
+
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = value.charCodeAt(index) + ((hash << 5) - hash);
+  }
+
+  const hue = Math.abs(hash) % 360;
+
+  return {
+    bg: `hsla(${hue}, 76%, 55%, 0.045)`,
+    border: `hsla(${hue}, 76%, 62%, 0.18)`,
+    text: `hsl(${hue}, 72%, 60%)`,
+    h: hue,
+  };
+};
+
+/*
+ * Preserved export for compatibility with any existing imports.
+ * Colours are deterministic, so they no longer change during re-renders.
+ */
+export const UseColorManager = () => {
+  const getColorForId = (section, id) => createStableColor(section, id);
 
   return { getColorForId };
 };
 
-// Sortable Item Component
+const ResumeTextField = ({ label, type = "text", value, placeholder, required = false, min, max, onChange }) => {
+  return (
+    <div>
+      <InputLabel className="mb-2">{label}</InputLabel>
+
+      <InputForResume
+        type={type}
+        value={value || ""}
+        handleChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        min={min}
+        max={max}
+        className="!rounded-xl dark:!border-white/[0.06] dark:!bg-white/[0.018]"
+      />
+    </div>
+  );
+};
+
+ResumeTextField.propTypes = {
+  label: PropTypes.string.isRequired,
+  type: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  placeholder: PropTypes.string,
+  required: PropTypes.bool,
+  min: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  max: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+};
+
+const ResumeDateField = ({ label, value, placeholder, onChange }) => {
+  return (
+    <div className="min-w-0">
+      <InputLabel className="mb-2">{label}</InputLabel>
+
+      <DatePicker
+        className={DATE_INPUT_CLASS}
+        selected={value ? new Date(value) : null}
+        onChange={(date) => onChange(date ? date.toISOString() : "")}
+        dateFormat="yyyy-MM-dd"
+        placeholderText={placeholder}
+      />
+    </div>
+  );
+};
+
+ResumeDateField.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+  placeholder: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
+
+const ResumeEditorField = ({ label, value, placeholder, onChange }) => {
+  return (
+    <div>
+      <InputLabel className="mb-2">{label}</InputLabel>
+
+      <div className="overflow-hidden rounded-2xl border border-gray-200/75 bg-gray-50/40 p-1 dark:border-white/[0.055] dark:bg-white/[0.012]">
+        <CommentEditor type="default" value={value || ""} placeholder={placeholder} handleChange={(valueOrEvent) => onChange(readEditorValue(valueOrEvent))} />
+      </div>
+    </div>
+  );
+};
+
+ResumeEditorField.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+  placeholder: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
+};
+
+const CardActions = ({ dragHandleProps, onRemove }) => {
+  return (
+    <div className="absolute right-3 top-3 z-20 flex items-center gap-1.5">
+      <button
+        type="button"
+        {...dragHandleProps}
+        title="Drag to reorder"
+        aria-label="Drag to reorder"
+        className="flex size-8 touch-none items-center justify-center rounded-xl border border-gray-200/75 bg-white/70 text-gray-400 shadow-sm backdrop-blur-md transition-all hover:border-indigo-300/35 hover:text-indigo-600 dark:border-white/[0.06] dark:bg-black/20 dark:text-white/30 dark:hover:border-indigo-300/[0.14] dark:hover:text-indigo-200/70"
+      >
+        <RiDragDropFill size={15} />
+      </button>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        title="Remove item"
+        aria-label="Remove item"
+        className="flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/[0.07] text-rose-600 transition-all hover:bg-rose-500/[0.14] dark:border-rose-300/[0.08] dark:bg-rose-300/[0.035] dark:text-rose-200/65 dark:hover:bg-rose-300/[0.07]"
+      >
+        <IoCloseOutline size={19} />
+      </button>
+    </div>
+  );
+};
+
+CardActions.propTypes = {
+  dragHandleProps: PropTypes.object.isRequired,
+  onRemove: PropTypes.func.isRequired,
+};
+
 export const SortableItem = ({ id, children, section }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const { getColorForId } = UseColorManager();
-  const colors = getColorForId(section, id);
+
+  const colors = useMemo(() => createStableColor(section, id), [section, id]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 100 : "auto",
-    opacity: isDragging ? 0.8 : 1,
+    opacity: isDragging ? 0.48 : 1,
     backgroundColor: colors.bg,
     borderColor: colors.border,
+    boxShadow: isDragging ? "0 24px 60px rgba(0, 0, 0, 0.28)" : undefined,
+  };
+
+  const dragHandleProps = {
+    ...attributes,
+    ...listeners,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`relative border p-4 rounded-xl ${isDragging ? "shadow-lg" : ""}`} {...attributes}>
-      {children({ dragHandleProps: listeners })}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group/card relative rounded-[24px] border p-4 pt-14 transition-shadow duration-300 sm:p-5 sm:pt-14 ${
+        isDragging ? "shadow-2xl" : "shadow-[0_12px_30px_rgba(15,23,42,0.035)] hover:shadow-[0_18px_38px_rgba(15,23,42,0.065)] dark:shadow-[0_14px_34px_rgba(0,0,0,0.12)]"
+      }`}
+    >
+      <span
+        className="pointer-events-none absolute left-4 top-4 flex h-7 items-center rounded-lg border px-2.5 text-[7px] font-semibold uppercase tracking-[0.1em]"
+        style={{
+          color: colors.text,
+          borderColor: colors.border,
+          backgroundColor: colors.bg,
+        }}
+      >
+        Resume entry
+      </span>
+
+      {children({
+        dragHandleProps,
+        colors,
+      })}
     </div>
   );
 };
 
-// User ID Step Component
-export const UserIdStep = ({ userId, setFormData }) => (
-  <>
-    <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-700 dark:to-teal-800 rounded-t-lg">
-      <InputTitle className="text-white font-semibold text-lg">Enter User ID</InputTitle>
-    </div>
-    <div className="rounded-md p-4">
-      <InputForResume type="text" placeholder="Enter User ID" value={userId} handleChange={(e) => setFormData((prev) => ({ ...prev, userId: e.target.value }))} className="!rounded-md" />
-    </div>
-  </>
-);
+SortableItem.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  children: PropTypes.func.isRequired,
+  section: PropTypes.string.isRequired,
+};
 
-// Education Step Component
-export const EducationStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
-  const [activeId, setActiveId] = useState(null);
-  const { getColorForId } = UseColorManager();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const onDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const onDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((item) => item.id === active.id);
-      const newIndex = fields.findIndex((item) => item.id === over.id);
-      handleInputChange("education", arrayMove(fields, oldIndex, newIndex));
-    }
-  };
-
-  const activeItem = fields.find((item) => item.id === activeId);
+const StepHeading = ({ config, itemCount }) => {
+  const Icon = config.icon;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-700 dark:to-teal-800 rounded-t-lg">
-        <InputTitle className="text-white font-semibold text-lg">Qualification History</InputTitle>
-      </div>
-      <div className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}>
-          <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 3xl:grid-cols-3 gap-4">
-              {fields.map((item, index) => (
-                <SortableItem key={item.id} id={item.id} index={index} section="education">
-                  {({ dragHandleProps }) => (
-                    <>
-                      <InputLabel className="py-2">School</InputLabel>
-                      <InputForResume
-                        type="text"
-                        placeholder="Name of school or college"
-                        value={item.school || ""}
-                        handleChange={(e) => handleInputChange("education", index, "school", e.target.value)}
-                        className="!rounded-md"
-                        required
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Degree</InputLabel>
-                          <InputForResume
-                            type="text"
-                            placeholder="BIT, BCA, BBA etc"
-                            value={item.degree || ""}
-                            handleChange={(e) => handleInputChange("education", index, "degree", e.target.value)}
-                            className="!rounded-md"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">University</InputLabel>
-                          <InputForResume
-                            type="text"
-                            value={item.university || ""}
-                            handleChange={(e) => handleInputChange("education", index, "university", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="PU, KU, TU"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <InputLabel className="py-2">City</InputLabel>
-                      <InputForResume
-                        type="text"
-                        value={item.city || ""}
-                        placeholder="Kathmandu, Nepal"
-                        handleChange={(e) => handleInputChange("education", index, "city", e.target.value)}
-                        className="!rounded-md"
-                        required
-                      />
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        <div className="input">
-                          <InputLabel className="py-2">Start Date</InputLabel>
-                          <DatePicker
-                            className="w-full rounded-md h-10 3xl:h-12 px-2 textColor textSizeSm bg-gray-900/5 dark:bg-gray-50/5"
-                            selected={item.startDate ? new Date(item.startDate) : null}
-                            onChange={(date) => handleInputChange("education", index, "startDate", date ? date.toISOString() : "")}
-                            dateFormat="yyyy-MM-dd"
-                            required
-                            placeholderText="Start Date"
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">End Date</InputLabel>
-                          <DatePicker
-                            className="w-full rounded-md h-10 3xl:h-12 px-2 textColor textSizeSm bg-gray-900/5 dark:bg-gray-50/5"
-                            selected={item.endDate ? new Date(item.endDate) : null}
-                            onChange={(date) => handleInputChange("education", index, "endDate", date ? date.toISOString() : "")}
-                            dateFormat="yyyy-MM-dd"
-                            placeholderText="End Date"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <CommentEditor type="default" handleChange={(e) => handleInputChange("education", index, "description", e.target.value)} />
+    <div className="mb-5 flex flex-col gap-4 border-b border-gray-200/70 pb-5 dark:border-white/[0.05] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <span className={`flex size-11 shrink-0 items-center justify-center rounded-2xl border ${config.accent}`}>
+          <Icon size={19} />
+        </span>
 
-                      <div className="absolute top-0 right-0 flex items-center m-1 gap-2">
-                        <button {...dragHandleProps} className="textColor rounded-full">
-                          <RiDragDropFill size={20} />
-                        </button>
-                        <button type="button" onClick={() => removeEntry("education", index)} className="textColor rounded-full">
-                          <IoCloseOutline size={30} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </SortableItem>
-              ))}
-            </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId && activeItem ? (
-              <div
-                style={{
-                  backgroundColor: getColorForId("education", activeId).bg,
-                  borderColor: getColorForId("education", activeId).border,
-                }}
-                className="border-2 p-4 rounded-md shadow-xl w-full md:w-1/2"
-              >
-                <div className="font-medium">{activeItem.school || "New School"}</div>
-                <div className="text-sm text-gray-500">{activeItem.degree}</div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        <div>
+          <InputTitle className="mb-1">{config.title}</InputTitle>
 
-        {/* Add new item button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => addEntry("education")}
-            className="button flex items-center justify-center w-full !p-3 3xl:!p-4 border border-dashed border-gray-100/20 transition-colors"
-          >
-            <GoPlus size={20} className="mr-2" />
-            Add Education
-          </button>
+          <p className="max-w-xl text-[9px] leading-4 text-gray-400 dark:text-white/25">{config.description}</p>
         </div>
       </div>
+
+      <span className="inline-flex w-fit items-center gap-2 rounded-full border border-gray-200/70 bg-gray-50/55 px-3 py-1.5 text-[8px] font-semibold text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.018] dark:text-white/30">
+        <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-300/70" />
+        {itemCount} {itemCount === 1 ? "entry" : "entries"}
+      </span>
     </div>
   );
 };
 
-// Experience Step Component
-export const ExperienceStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
-  const [activeId, setActiveId] = useState(null);
-  const { getColorForId } = UseColorManager();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const onDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const onDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((item) => item.id === active.id);
-      const newIndex = fields.findIndex((item) => item.id === over.id);
-      handleInputChange("experience", arrayMove(fields, oldIndex, newIndex));
-    }
-  };
-
-  const activeItem = fields.find((item) => item.id === activeId);
-
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-700 dark:to-teal-800 rounded-t-lg">
-        <InputTitle className="text-white font-semibold text-lg">Work Experience</InputTitle>
-      </div>
-      <div className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}>
-          <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 3xl:grid-cols-3 gap-4">
-              {fields.map((item, index) => (
-                <SortableItem key={item.id} id={item.id} index={index} section="experience">
-                  {({ dragHandleProps }) => (
-                    <>
-                      <InputLabel className="py-2">Company Name</InputLabel>
-                      <InputForResume
-                        type="text"
-                        placeholder="Organization or Company name"
-                        value={item.company || ""}
-                        handleChange={(e) => handleInputChange("experience", index, "company", e.target.value)}
-                        className="!rounded-md"
-                        required
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Designation</InputLabel>
-                          <InputForResume
-                            type="text"
-                            placeholder="Job Title"
-                            value={item.position || ""}
-                            handleChange={(e) => handleInputChange("experience", index, "position", e.target.value)}
-                            className="!rounded-md"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">City</InputLabel>
-                          <InputForResume
-                            type="text"
-                            placeholder="Kathmandu, Nepal"
-                            value={item.city || ""}
-                            handleChange={(e) => handleInputChange("experience", index, "city", e.target.value)}
-                            className="!rounded-md"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Start Date</InputLabel>
-                          <DatePicker
-                            className="w-full rounded-md h-10 3xl:h-12 px-2 textColor textSizeSm bg-gray-900/5 dark:bg-gray-50/5"
-                            selected={item.startDate ? new Date(item.startDate) : null}
-                            onChange={(date) => handleInputChange("experience", index, "startDate", date ? date.toISOString() : "")}
-                            dateFormat="yyyy-MM-dd"
-                            placeholderText="Start Date"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">End Date</InputLabel>
-                          <DatePicker
-                            className="w-full rounded-md h-10 3xl:h-12 px-2 textColor textSizeSm bg-gray-900/5 dark:bg-gray-50/5"
-                            selected={item.endDate ? new Date(item.endDate) : null}
-                            onChange={(date) => handleInputChange("experience", index, "endDate", date ? date.toISOString() : "")}
-                            dateFormat="yyyy-MM-dd"
-                            placeholderText="End Date"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <InputLabel className="py-2">Description</InputLabel>
-                      <CommentEditor type="default" value={item.description || ""} handleChange={(e) => handleInputChange("experience", index, "description", e.target.value)} />
-                      <div className="absolute top-0 right-0 flex items-center m-1 gap-2">
-                        <button {...dragHandleProps} className="textColor rounded-full">
-                          <RiDragDropFill size={20} />
-                        </button>
-                        <button type="button" onClick={() => removeEntry("experience", index)} className="textColor rounded-full">
-                          <IoCloseOutline size={30} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </SortableItem>
-              ))}
-            </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId && activeItem ? (
-              <div
-                style={{
-                  backgroundColor: getColorForId("experience", activeId).bg,
-                  borderColor: getColorForId("experience", activeId).border,
-                }}
-                className="border-2 p-4 rounded-md shadow-xl w-full md:w-1/2"
-              >
-                <div className="font-medium">{activeItem.company || "New Company"}</div>
-                <div className="text-sm text-gray-500">{activeItem.position}</div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-
-        {/* Add new item button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => addEntry("experience")}
-            className="button flex items-center justify-center w-full !p-3 3xl:!p-4 border border-dashed border-gray-100/20 transition-colors"
-          >
-            <GoPlus size={20} className="mr-2" />
-            Add Experience
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+StepHeading.propTypes = {
+  config: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    icon: PropTypes.elementType.isRequired,
+    accent: PropTypes.string.isRequired,
+  }).isRequired,
+  itemCount: PropTypes.number.isRequired,
 };
 
-// Skills Step Component
-export const SkillsStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
+const SortableCollection = ({ section, fields, handleInputChange, addEntry, renderItem, getOverlayTitle, getOverlaySubtitle }) => {
   const [activeId, setActiveId] = useState(null);
-  const { getColorForId } = UseColorManager();
+
+  const config = SECTION_CONFIG[section];
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 6,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
-
-  const onDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const onDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((item) => item.id === active.id);
-      const newIndex = fields.findIndex((item) => item.id === over.id);
-      handleInputChange("skills", arrayMove(fields, oldIndex, newIndex));
-    }
-  };
 
   const activeItem = fields.find((item) => item.id === activeId);
 
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-700 dark:to-teal-800 rounded-t-lg">
-        <InputTitle className="text-white font-semibold text-lg">Skills & Proficiencies</InputTitle>
-      </div>
-      <div className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}>
-          <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-4 gap-4">
-              {fields.map((item, index) => (
-                <SortableItem key={item.id} id={item.id} index={index} section="skills">
-                  {({ dragHandleProps }) => (
-                    <>
-                      <div className="input">
-                        <InputLabel className="py-2">Skill Name</InputLabel>
-                        <InputForResume type="text" value={item.name || ""} handleChange={(e) => handleInputChange("skills", index, "name", e.target.value)} className="!rounded-md" required />
-                      </div>
-                      <div className="input">
-                        <InputLabel className="py-2">Progress (0-100)</InputLabel>
-                        <InputForResume
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={item.progress || ""}
-                          handleChange={(e) => handleInputChange("skills", index, "progress", e.target.value)}
-                          className="!rounded-md"
-                          required
-                        />
-                      </div>
-                      <div className="absolute top-0 right-0 flex items-center m-1 gap-2">
-                        <button {...dragHandleProps} className="textColor rounded-full">
-                          <RiDragDropFill size={20} />
-                        </button>
-                        <button type="button" onClick={() => removeEntry("skills", index)} className="textColor rounded-full">
-                          <IoCloseOutline size={30} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </SortableItem>
-              ))}
-            </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId && activeItem ? (
-              <div
-                style={{
-                  backgroundColor: getColorForId("skills", activeId).bg,
-                  borderColor: getColorForId("skills", activeId).border,
-                }}
-                className="border-2 p-4 rounded-md shadow-xl w-full md:w-1/2"
-              >
-                <div className="font-medium">{activeItem.name || "New Skill"}</div>
-                <div className="text-sm text-gray-500">Progress: {activeItem.progress}%</div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-
-        {/* Add new item button */}
-        <div className="mt-4">
-          <button type="button" onClick={() => addEntry("skills")} className="button flex items-center justify-center w-full !p-3 3xl:!p-4 border border-dashed border-gray-100/20 transition-colors">
-            <GoPlus size={20} className="mr-2" />
-            Add Skill
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Achievements Step Component
-export const AchievementsStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
-  const [activeId, setActiveId] = useState(null);
-  const { getColorForId } = UseColorManager();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const onDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const onDragEnd = (event) => {
-    const { active, over } = event;
+  const handleDragEnd = ({ active, over }) => {
     setActiveId(null);
 
-    if (!over) return;
-
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((item) => item.id === active.id);
-      const newIndex = fields.findIndex((item) => item.id === over.id);
-      handleInputChange("achievements", arrayMove(fields, oldIndex, newIndex));
+    if (!over || active.id === over.id) {
+      return;
     }
+
+    const oldIndex = fields.findIndex((item) => item.id === active.id);
+
+    const newIndex = fields.findIndex((item) => item.id === over.id);
+
+    if (oldIndex < 0 || newIndex < 0) {
+      return;
+    }
+
+    handleInputChange(section, arrayMove(fields, oldIndex, newIndex));
   };
 
-  const activeItem = fields.find((item) => item.id === activeId);
-
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-[#8A2BE2] to-[#6A5ACD] dark:from-[#6A5ACD] dark:to-[#483D8B] rounded-t-lg">
-        <InputTitle className="text-white font-semibold text-lg">Achievements</InputTitle>
-      </div>
-      <div className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}>
-          <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-3 gap-4">
-              {fields.map((item, index) => (
-                <SortableItem key={item.id} id={item.id} index={index} section="achievements">
-                  {({ dragHandleProps }) => (
-                    <>
-                      <InputLabel className="py-2">Title</InputLabel>
-                      <InputForResume
-                        type="text"
-                        value={item.title || ""}
-                        handleChange={(e) => handleInputChange("achievements", index, "title", e.target.value)}
-                        className="!rounded-md"
-                        placeholder="e.g., Employee of the Month"
-                        required
-                      />
-                      <InputLabel className="py-2">Description</InputLabel>
-                      <CommentEditor type="default" value={item.description || ""} handleChange={(e) => handleInputChange("achievements", index, "description", e.target.value)} />
+    <div className="relative">
+      <StepHeading config={config} itemCount={fields.length} />
 
-                      <div className="absolute top-0 right-0 flex items-center m-1 gap-2">
-                        <button {...dragHandleProps} className="textColor rounded-full">
-                          <RiDragDropFill size={20} />
-                        </button>
-                        <button type="button" onClick={() => removeEntry("achievements", index)} className="textColor rounded-full">
-                          <IoCloseOutline size={30} />
-                        </button>
-                      </div>
-                    </>
-                  )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={({ active }) => setActiveId(active.id)}
+        onDragCancel={() => setActiveId(null)}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}
+      >
+        <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
+          {fields.length > 0 ? (
+            <div className={config.gridClass}>
+              {fields.map((item, index) => (
+                <SortableItem key={item.id} id={item.id} section={section}>
+                  {({ dragHandleProps }) =>
+                    renderItem({
+                      item,
+                      index,
+                      dragHandleProps,
+                    })
+                  }
                 </SortableItem>
               ))}
             </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId && activeItem ? (
-              <div
-                style={{
-                  backgroundColor: getColorForId("achievements", activeId).bg,
-                  borderColor: getColorForId("achievements", activeId).border,
-                }}
-                className="border-2 p-4 rounded-md shadow-xl w-full md:w-1/2"
-              >
-                <div className="font-medium">{activeItem.title || "New Achievement"}</div>
-                <div className="text-sm text-gray-500 truncate">{activeItem.description || "No description"}</div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+          ) : (
+            <div className="flex min-h-44 flex-col items-center justify-center rounded-[24px] border border-dashed border-gray-300/80 bg-gray-50/35 px-5 text-center dark:border-white/[0.07] dark:bg-white/[0.01]">
+              <span className={`flex size-12 items-center justify-center rounded-2xl border ${config.accent}`}>
+                <config.icon size={20} />
+              </span>
 
-        {/* Add new item button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => addEntry("achievements")}
-            className="button flex items-center justify-center w-full !p-3 3xl:!p-4 border border-dashed border-gray-100/20 transition-colors hover:bg-[#8A2BE2]/10"
-          >
-            <GoPlus size={20} className="mr-2 text-[#8A2BE2]" />
-            <span className="text-[#8A2BE2]">Add Achievement</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+              <p className="mt-3 text-[10px] font-semibold text-gray-600 dark:text-white/45">No entries added yet</p>
 
-// Training Step Component
-export const TrainingStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
-  const [activeId, setActiveId] = useState(null);
-  const { getColorForId } = UseColorManager();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const onDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const onDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((item) => item.id === active.id);
-      const newIndex = fields.findIndex((item) => item.id === over.id);
-      handleInputChange("training", arrayMove(fields, oldIndex, newIndex));
-    }
-  };
-
-  const activeItem = fields.find((item) => item.id === activeId);
-
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-[#20B2AA] to-[#008080] dark:from-[#008080] dark:to-[#2E8B57] rounded-t-lg">
-        <InputTitle className="text-white font-semibold text-lg">Training History</InputTitle>
-      </div>
-      <div className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}>
-          <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 gap-4">
-              {fields.map((item, index) => (
-                <SortableItem key={item.id} id={item.id} index={index} section="training">
-                  {({ dragHandleProps }) => (
-                    <>
-                      <InputLabel className="py-2">Title</InputLabel>
-                      <InputForResume
-                        type="text"
-                        value={item.title || ""}
-                        handleChange={(e) => handleInputChange("training", index, "title", e.target.value)}
-                        className="!rounded-md"
-                        placeholder="e.g., Advanced React Workshop"
-                        required
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Company</InputLabel>
-                          <InputForResume
-                            type="text"
-                            value={item.company || ""}
-                            handleChange={(e) => handleInputChange("training", index, "company", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Training provider name"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">City</InputLabel>
-                          <InputForResume
-                            type="text"
-                            value={item.city || ""}
-                            handleChange={(e) => handleInputChange("training", index, "city", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Location of training"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Start Date</InputLabel>
-                          <DatePicker
-                            className="w-full rounded-md h-10 3xl:h-12 px-2 textColor textSizeSm bg-gray-900/5 dark:bg-gray-50/5"
-                            selected={item.startDate ? new Date(item.startDate) : null}
-                            onChange={(date) => handleInputChange("training", index, "startDate", date ? date.toISOString() : "")}
-                            dateFormat="yyyy-MM-dd"
-                            placeholderText="Select start date"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">End Date</InputLabel>
-                          <DatePicker
-                            className="w-full rounded-md h-10 3xl:h-12 px-2 textColor textSizeSm bg-gray-900/5 dark:bg-gray-50/5"
-                            selected={item.endDate ? new Date(item.endDate) : null}
-                            onChange={(date) => handleInputChange("training", index, "endDate", date ? date.toISOString() : "")}
-                            dateFormat="yyyy-MM-dd"
-                            placeholderText="Select end date"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <InputLabel className="py-2">Description</InputLabel>
-                      <CommentEditor
-                        type="default"
-                        value={item.description || ""}
-                        handleChange={(value) => handleInputChange("training", index, "description", value)}
-                        placeholder="Describe what you learned and skills gained..."
-                      />
-                      <div className="absolute top-0 right-0 flex items-center m-1 gap-2">
-                        <button {...dragHandleProps} className="textColor rounded-full">
-                          <RiDragDropFill size={20} />
-                        </button>
-                        <button type="button" onClick={() => removeEntry("training", index)} className="textColor rounded-full">
-                          <IoCloseOutline size={30} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </SortableItem>
-              ))}
+              <p className="mt-1 max-w-sm text-[9px] leading-4 text-gray-400 dark:text-white/25">
+                Use the button below to add your first
+                {` ${config.title.toLowerCase()} `}
+                entry.
+              </p>
             </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId && activeItem ? (
-              <div
-                style={{
-                  backgroundColor: getColorForId("training", activeId).bg,
-                  borderColor: getColorForId("training", activeId).border,
-                }}
-                className="border-2 p-4 rounded-md shadow-xl w-full md:w-1/2"
-              >
-                <div className="font-medium">{activeItem.title || "New Training"}</div>
-                <div className="text-sm text-gray-500">{activeItem.company}</div>
-                <div className="text-xs text-gray-400 mt-1 truncate">
-                  {activeItem.startDate ? new Date(activeItem.startDate).toLocaleDateString() : ""} - {activeItem.endDate ? new Date(activeItem.endDate).toLocaleDateString() : ""}
+          )}
+        </SortableContext>
+
+        <DragOverlay>
+          {activeItem ? (
+            <div className="w-[340px] max-w-[90vw] rounded-[22px] border border-indigo-300/25 bg-white/95 p-4 shadow-[0_28px_70px_rgba(15,23,42,0.24)] backdrop-blur-xl dark:border-indigo-300/[0.12] dark:bg-[#151925]/95">
+              <div className="flex items-center gap-3">
+                <span className={`flex size-10 items-center justify-center rounded-xl border ${config.accent}`}>
+                  <RiDragDropFill size={16} />
+                </span>
+
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-semibold text-gray-800 dark:text-white/75">{getOverlayTitle(activeItem)}</p>
+
+                  <p className="mt-1 truncate text-[9px] text-gray-400 dark:text-white/30">{getOverlaySubtitle(activeItem)}</p>
                 </div>
               </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
-        {/* Add new item button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => addEntry("training")}
-            className="button flex items-center justify-center w-full !p-3 3xl:!p-4 border border-dashed border-gray-100/20 transition-colors hover:bg-[#20B2AA]/10"
-          >
-            <GoPlus size={20} className="mr-2 text-[#20B2AA]" />
-            <span className="text-[#20B2AA]">Add Training</span>
-          </button>
+      <button
+        type="button"
+        onClick={() => addEntry(section)}
+        className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300/80 bg-gray-50/35 px-4 text-[9px] font-semibold text-gray-500 transition-all hover:border-indigo-300/40 hover:bg-indigo-500/[0.035] hover:text-indigo-700 dark:border-white/[0.08] dark:bg-white/[0.012] dark:text-white/35 dark:hover:border-indigo-300/[0.14] dark:hover:bg-indigo-300/[0.03] dark:hover:text-indigo-200/70"
+      >
+        <GoPlus size={17} />
+        {config.addLabel}
+      </button>
+    </div>
+  );
+};
+
+SortableCollection.propTypes = {
+  section: PropTypes.oneOf(Object.keys(SECTION_CONFIG)).isRequired,
+  fields: PropTypes.arrayOf(PropTypes.object).isRequired,
+  handleInputChange: PropTypes.func.isRequired,
+  addEntry: PropTypes.func.isRequired,
+  renderItem: PropTypes.func.isRequired,
+  getOverlayTitle: PropTypes.func.isRequired,
+  getOverlaySubtitle: PropTypes.func.isRequired,
+};
+
+export const UserIdStep = ({ userId, setFormData }) => {
+  return (
+    <div>
+      <div className="mb-5 flex flex-col gap-4 border-b border-gray-200/70 pb-5 dark:border-white/[0.05] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="flex size-11 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/[0.07] text-indigo-700 dark:border-indigo-300/[0.09] dark:bg-indigo-300/[0.04] dark:text-indigo-200/70">
+            <FaUser size={17} />
+          </span>
+
+          <div>
+            <InputTitle className="mb-1">Assign Resume Owner</InputTitle>
+
+            <p className="text-[9px] leading-4 text-gray-400 dark:text-white/25">Enter the user ID that this resume belongs to.</p>
+          </div>
         </div>
+
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-amber-300/20 bg-amber-500/[0.05] px-3 py-1.5 text-[8px] font-semibold text-amber-700 dark:border-amber-300/[0.08] dark:bg-amber-300/[0.03] dark:text-amber-200/65">
+          Administrator only
+        </span>
+      </div>
+
+      <div className="mx-auto max-w-3xl rounded-[24px] border border-gray-200/70 bg-gray-50/40 p-5 dark:border-white/[0.05] dark:bg-white/[0.014] sm:p-6">
+        <ResumeTextField
+          label="User ID"
+          value={userId}
+          placeholder="Enter the portfolio owner user ID"
+          onChange={(event) =>
+            setFormData((previousData) => ({
+              ...previousData,
+              userId: event.target.value,
+            }))
+          }
+        />
       </div>
     </div>
   );
 };
 
-// Award Step Component
+UserIdStep.propTypes = {
+  userId: PropTypes.string.isRequired,
+  setFormData: PropTypes.func.isRequired,
+};
+
+export const EducationStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
+  return (
+    <SortableCollection
+      section="education"
+      fields={fields}
+      handleInputChange={handleInputChange}
+      addEntry={addEntry}
+      getOverlayTitle={(item) => item.school || "New qualification"}
+      getOverlaySubtitle={(item) => item.degree || item.university || "Education entry"}
+      renderItem={({ item, index, dragHandleProps }) => (
+        <>
+          <CardActions dragHandleProps={dragHandleProps} onRemove={() => removeEntry("education", index)} />
+
+          <div className="space-y-4">
+            <ResumeTextField
+              label="School or College"
+              value={item.school}
+              placeholder="Name of school or college"
+              required
+              onChange={(event) => handleInputChange("education", index, "school", event.target.value)}
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeTextField label="Degree" value={item.degree} placeholder="BIT, BCA, BBA" required onChange={(event) => handleInputChange("education", index, "degree", event.target.value)} />
+
+              <ResumeTextField
+                label="University"
+                value={item.university}
+                placeholder="University name"
+                required
+                onChange={(event) => handleInputChange("education", index, "university", event.target.value)}
+              />
+            </div>
+
+            <ResumeTextField label="City" value={item.city} placeholder="Sydney, Australia" required onChange={(event) => handleInputChange("education", index, "city", event.target.value)} />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeDateField label="Start Date" value={item.startDate} placeholder="Select start date" onChange={(value) => handleInputChange("education", index, "startDate", value)} />
+
+              <ResumeDateField label="End Date" value={item.endDate} placeholder="Select end date" onChange={(value) => handleInputChange("education", index, "endDate", value)} />
+            </div>
+
+            <ResumeEditorField
+              label="Description"
+              value={item.description}
+              placeholder="Describe your qualification and major learning outcomes."
+              onChange={(value) => handleInputChange("education", index, "description", value)}
+            />
+          </div>
+        </>
+      )}
+    />
+  );
+};
+
+export const ExperienceStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
+  return (
+    <SortableCollection
+      section="experience"
+      fields={fields}
+      handleInputChange={handleInputChange}
+      addEntry={addEntry}
+      getOverlayTitle={(item) => item.company || "New experience"}
+      getOverlaySubtitle={(item) => item.position || "Work experience entry"}
+      renderItem={({ item, index, dragHandleProps }) => (
+        <>
+          <CardActions dragHandleProps={dragHandleProps} onRemove={() => removeEntry("experience", index)} />
+
+          <div className="space-y-4">
+            <ResumeTextField
+              label="Company Name"
+              value={item.company}
+              placeholder="Organisation or company"
+              required
+              onChange={(event) => handleInputChange("experience", index, "company", event.target.value)}
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeTextField
+                label="Designation"
+                value={item.position}
+                placeholder="Job title"
+                required
+                onChange={(event) => handleInputChange("experience", index, "position", event.target.value)}
+              />
+
+              <ResumeTextField label="City" value={item.city} placeholder="Sydney, Australia" required onChange={(event) => handleInputChange("experience", index, "city", event.target.value)} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeDateField label="Start Date" value={item.startDate} placeholder="Select start date" onChange={(value) => handleInputChange("experience", index, "startDate", value)} />
+
+              <ResumeDateField label="End Date" value={item.endDate} placeholder="Select end date" onChange={(value) => handleInputChange("experience", index, "endDate", value)} />
+            </div>
+
+            <ResumeEditorField
+              label="Description"
+              value={item.description}
+              placeholder="Describe your responsibilities, projects and achievements."
+              onChange={(value) => handleInputChange("experience", index, "description", value)}
+            />
+          </div>
+        </>
+      )}
+    />
+  );
+};
+
+export const SkillsStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
+  return (
+    <SortableCollection
+      section="skills"
+      fields={fields}
+      handleInputChange={handleInputChange}
+      addEntry={addEntry}
+      getOverlayTitle={(item) => item.name || "New skill"}
+      getOverlaySubtitle={(item) => `${Number(item.progress) || 0}% proficiency`}
+      renderItem={({ item, index, dragHandleProps }) => {
+        const progress = Math.min(Math.max(Number(item.progress) || 0, 0), 100);
+
+        return (
+          <>
+            <CardActions dragHandleProps={dragHandleProps} onRemove={() => removeEntry("skills", index)} />
+
+            <div className="space-y-4">
+              <ResumeTextField
+                label="Skill Name"
+                value={item.name}
+                placeholder="React, Java, Project Management"
+                required
+                onChange={(event) => handleInputChange("skills", index, "name", event.target.value)}
+              />
+
+              <ResumeTextField
+                label="Proficiency (0–100)"
+                type="number"
+                value={item.progress}
+                placeholder="85"
+                min="0"
+                max="100"
+                required
+                onChange={(event) => handleInputChange("skills", index, "progress", event.target.value)}
+              />
+
+              <div className="rounded-2xl border border-gray-200/70 bg-white/40 p-3 dark:border-white/[0.05] dark:bg-black/10">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="text-[8px] font-semibold uppercase tracking-[0.1em] text-gray-400 dark:text-white/25">Skill level</span>
+
+                  <span className="text-[9px] font-bold tabular-nums text-cyan-700 dark:text-cyan-200/70">{progress}%</span>
+                </div>
+
+                <div className="h-1.5 overflow-hidden rounded-full bg-gray-200/80 dark:bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 transition-[width] duration-500"
+                    style={{
+                      width: `${progress}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      }}
+    />
+  );
+};
+
+export const AchievementsStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
+  return (
+    <SortableCollection
+      section="achievements"
+      fields={fields}
+      handleInputChange={handleInputChange}
+      addEntry={addEntry}
+      getOverlayTitle={(item) => item.title || "New achievement"}
+      getOverlaySubtitle={() => "Achievement entry"}
+      renderItem={({ item, index, dragHandleProps }) => (
+        <>
+          <CardActions dragHandleProps={dragHandleProps} onRemove={() => removeEntry("achievements", index)} />
+
+          <div className="space-y-4">
+            <ResumeTextField
+              label="Achievement Title"
+              value={item.title}
+              placeholder="Employee of the Month"
+              required
+              onChange={(event) => handleInputChange("achievements", index, "title", event.target.value)}
+            />
+
+            <ResumeEditorField
+              label="Description"
+              value={item.description}
+              placeholder="Explain the achievement and why it was important."
+              onChange={(value) => handleInputChange("achievements", index, "description", value)}
+            />
+          </div>
+        </>
+      )}
+    />
+  );
+};
+
+export const TrainingStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
+  return (
+    <SortableCollection
+      section="training"
+      fields={fields}
+      handleInputChange={handleInputChange}
+      addEntry={addEntry}
+      getOverlayTitle={(item) => item.title || "New training"}
+      getOverlaySubtitle={(item) => item.company || "Training entry"}
+      renderItem={({ item, index, dragHandleProps }) => (
+        <>
+          <CardActions dragHandleProps={dragHandleProps} onRemove={() => removeEntry("training", index)} />
+
+          <div className="space-y-4">
+            <ResumeTextField
+              label="Training Title"
+              value={item.title}
+              placeholder="Advanced React Workshop"
+              required
+              onChange={(event) => handleInputChange("training", index, "title", event.target.value)}
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeTextField
+                label="Training Provider"
+                value={item.company}
+                placeholder="Provider or company"
+                required
+                onChange={(event) => handleInputChange("training", index, "company", event.target.value)}
+              />
+
+              <ResumeTextField label="City" value={item.city} placeholder="Training location" required onChange={(event) => handleInputChange("training", index, "city", event.target.value)} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeDateField label="Start Date" value={item.startDate} placeholder="Select start date" onChange={(value) => handleInputChange("training", index, "startDate", value)} />
+
+              <ResumeDateField label="End Date" value={item.endDate} placeholder="Select end date" onChange={(value) => handleInputChange("training", index, "endDate", value)} />
+            </div>
+
+            <ResumeEditorField
+              label="Description"
+              value={item.description}
+              placeholder="Describe what you learned and the skills gained."
+              onChange={(value) => handleInputChange("training", index, "description", value)}
+            />
+          </div>
+        </>
+      )}
+    />
+  );
+};
+
 export const AwardStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
-  const [activeId, setActiveId] = useState(null);
-  const { getColorForId } = UseColorManager();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const onDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const onDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((item) => item.id === active.id);
-      const newIndex = fields.findIndex((item) => item.id === over.id);
-      handleInputChange("award", arrayMove(fields, oldIndex, newIndex));
-    }
-  };
-
-  const activeItem = fields.find((item) => item.id === activeId);
-
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-[#FF8C00] to-[#FF6347] dark:from-[#FF6347] dark:to-[#CD5C5C] rounded-t-lg">
-        <InputTitle className="text-white font-semibold text-lg">Awards & Honors</InputTitle>
-      </div>
-      <div className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}>
-          <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 gap-4">
-              {fields.map((item, index) => (
-                <SortableItem key={item.id} id={item.id} index={index} section="award">
-                  {({ dragHandleProps }) => (
-                    <>
-                      <InputLabel className="py-2">Title</InputLabel>
-                      <InputForResume
-                        type="text"
-                        value={item.title || ""}
-                        handleChange={(e) => handleInputChange("award", index, "title", e.target.value)}
-                        className="!rounded-md"
-                        placeholder="e.g., Employee of the Year"
-                        required
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Organization</InputLabel>
-                          <InputForResume
-                            type="text"
-                            value={item.company || ""}
-                            handleChange={(e) => handleInputChange("award", index, "company", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Awarding organization"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">City</InputLabel>
-                          <InputForResume
-                            type="text"
-                            value={item.city || ""}
-                            handleChange={(e) => handleInputChange("award", index, "city", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Location received"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <InputLabel className="py-2">Received Date</InputLabel>
-                      <DatePicker
-                        className="w-full rounded-md h-10 3xl:h-12 px-2 textColor textSizeSm bg-gray-900/5 dark:bg-gray-50/5"
-                        selected={item.receivedYear ? new Date(item.receivedYear) : null}
-                        onChange={(date) => handleInputChange("award", index, "receivedYear", date ? date.toISOString() : "")}
-                        dateFormat="yyyy-MM-dd"
-                        placeholderText="Select received date"
-                        required
-                      />
-                      <InputLabel className="py-2">Description</InputLabel>
-                      <CommentEditor
-                        type="default"
-                        value={item.description || ""}
-                        handleChange={(value) => handleInputChange("award", index, "description", value)}
-                        placeholder="Describe the award and its significance..."
-                      />
-                      <div className="absolute top-0 right-0 flex items-center m-1 gap-2">
-                        <button {...dragHandleProps} className="textColor rounded-full">
-                          <RiDragDropFill size={20} />
-                        </button>
-                        <button type="button" onClick={() => removeEntry("award", index)} className="textColor rounded-full">
-                          <IoCloseOutline size={30} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </SortableItem>
-              ))}
-            </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId && activeItem ? (
-              <div
-                style={{
-                  backgroundColor: getColorForId("award", activeId).bg,
-                  borderColor: getColorForId("award", activeId).border,
-                }}
-                className="border-2 p-4 rounded-md shadow-xl w-full md:w-1/2"
-              >
-                <div className="font-medium">{activeItem.title || "New Award"}</div>
-                <div className="text-sm text-gray-500">{activeItem.company}</div>
-                <div className="text-xs text-gray-400 mt-1">{activeItem.receivedYear ? new Date(activeItem.receivedYear).toLocaleDateString() : ""}</div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+    <SortableCollection
+      section="award"
+      fields={fields}
+      handleInputChange={handleInputChange}
+      addEntry={addEntry}
+      getOverlayTitle={(item) => item.title || "New award"}
+      getOverlaySubtitle={(item) => item.company || "Award entry"}
+      renderItem={({ item, index, dragHandleProps }) => (
+        <>
+          <CardActions dragHandleProps={dragHandleProps} onRemove={() => removeEntry("award", index)} />
 
-        {/* Add new item button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => addEntry("award")}
-            className="button flex items-center justify-center w-full !p-3 3xl:!p-4 border border-dashed border-gray-100/20 transition-colors hover:bg-[#FF8C00]/10"
-          >
-            <GoPlus size={20} className="mr-2 text-[#FF8C00]" />
-            <span className="text-[#FF8C00]">Add Award</span>
-          </button>
-        </div>
-      </div>
-    </div>
+          <div className="space-y-4">
+            <ResumeTextField label="Award Title" value={item.title} placeholder="Employee of the Year" required onChange={(event) => handleInputChange("award", index, "title", event.target.value)} />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeTextField
+                label="Organisation"
+                value={item.company}
+                placeholder="Awarding organisation"
+                required
+                onChange={(event) => handleInputChange("award", index, "company", event.target.value)}
+              />
+
+              <ResumeTextField label="City" value={item.city} placeholder="Location received" required onChange={(event) => handleInputChange("award", index, "city", event.target.value)} />
+            </div>
+
+            <ResumeDateField label="Received Date" value={item.receivedYear} placeholder="Select received date" onChange={(value) => handleInputChange("award", index, "receivedYear", value)} />
+
+            <ResumeEditorField
+              label="Description"
+              value={item.description}
+              placeholder="Describe the award and its professional significance."
+              onChange={(value) => handleInputChange("award", index, "description", value)}
+            />
+          </div>
+        </>
+      )}
+    />
   );
 };
-// Reference Step Component
+
 export const ReferenceStep = ({ fields, handleInputChange, addEntry, removeEntry }) => {
-  const [activeId, setActiveId] = useState(null);
-  const { getColorForId } = UseColorManager();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const onDragStart = (event) => {
-    setActiveId(event.active.id);
-  };
-
-  const onDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveId(null);
-
-    if (!over) return;
-
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((item) => item.id === active.id);
-      const newIndex = fields.findIndex((item) => item.id === over.id);
-      handleInputChange("reference", arrayMove(fields, oldIndex, newIndex));
-    }
-  };
-
-  const activeItem = fields.find((item) => item.id === activeId);
-
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-600 dark:to-teal-700 rounded-t-lg">
-        <InputTitle className="text-white font-semibold text-lg">References</InputTitle>
-      </div>
-      <div className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[restrictToParentElement, restrictToFirstScrollableAncestor]}>
-          <SortableContext items={fields.map((item) => item.id)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 gap-4">
-              {fields.map((item, index) => (
-                <SortableItem key={item.id} id={item.id} index={index} section="reference">
-                  {({ dragHandleProps }) => (
-                    <>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Full Name</InputLabel>
-                          <InputForResume
-                            type="text"
-                            value={item.fullname || ""}
-                            handleChange={(e) => handleInputChange("reference", index, "fullname", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Reference's full name"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">Company</InputLabel>
-                          <InputForResume
-                            type="text"
-                            value={item.company || ""}
-                            handleChange={(e) => handleInputChange("reference", index, "company", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Current company"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <InputLabel className="py-2">Designation</InputLabel>
-                      <InputForResume
-                        type="text"
-                        value={item.designation || ""}
-                        handleChange={(e) => handleInputChange("reference", index, "designation", e.target.value)}
-                        className="!rounded-md"
-                        placeholder="Job title/position"
-                        required
-                      />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="input">
-                          <InputLabel className="py-2">Phone</InputLabel>
-                          <InputForResume
-                            type="tel"
-                            value={item.phone || ""}
-                            handleChange={(e) => handleInputChange("reference", index, "phone", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Phone number"
-                            required
-                          />
-                        </div>
-                        <div className="input">
-                          <InputLabel className="py-2">Email</InputLabel>
-                          <InputForResume
-                            type="email"
-                            value={item.email || ""}
-                            handleChange={(e) => handleInputChange("reference", index, "email", e.target.value)}
-                            className="!rounded-md"
-                            placeholder="Email address"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <InputLabel className="py-2">Website</InputLabel>
-                      <InputForResume
-                        type="url"
-                        value={item.website || ""}
-                        handleChange={(e) => handleInputChange("reference", index, "website", e.target.value)}
-                        className="!rounded-md"
-                        placeholder="Personal or company website"
-                      />
-                      <div className="absolute top-0 right-0 flex items-center m-1 gap-2">
-                        <button {...dragHandleProps} className="textColor rounded-full">
-                          <RiDragDropFill size={20} />
-                        </button>
-                        <button type="button" onClick={() => removeEntry("reference", index)} className="textColor rounded-full">
-                          <IoCloseOutline size={30} />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </SortableItem>
-              ))}
-            </div>
-          </SortableContext>
-          <DragOverlay>
-            {activeId && activeItem ? (
-              <div
-                style={{
-                  backgroundColor: getColorForId("reference", activeId).bg,
-                  borderColor: getColorForId("reference", activeId).border,
-                }}
-                className="border-2 p-4 rounded-md shadow-xl w-full md:w-1/2"
-              >
-                <div className="font-medium">{activeItem.fullname || "New Reference"}</div>
-                <div className="text-sm text-gray-500">{activeItem.designation}</div>
-                <div className="text-xs text-gray-400 mt-1">{activeItem.company}</div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+    <SortableCollection
+      section="reference"
+      fields={fields}
+      handleInputChange={handleInputChange}
+      addEntry={addEntry}
+      getOverlayTitle={(item) => item.fullname || "New reference"}
+      getOverlaySubtitle={(item) => item.designation || item.company || "Professional reference"}
+      renderItem={({ item, index, dragHandleProps }) => (
+        <>
+          <CardActions dragHandleProps={dragHandleProps} onRemove={() => removeEntry("reference", index)} />
 
-        {/* Add new item button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => addEntry("reference")}
-            className="button flex items-center justify-center w-full !p-3 3xl:!p-4 border border-dashed border-gray-100/20 transition-colors hover:bg-teal-500/10"
-          >
-            <GoPlus size={20} className="mr-2 text-teal-500" />
-            <span className="text-teal-500">Add Reference</span>
-          </button>
-        </div>
-      </div>
-    </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeTextField
+                label="Full Name"
+                value={item.fullname}
+                placeholder="Reference's full name"
+                required
+                onChange={(event) => handleInputChange("reference", index, "fullname", event.target.value)}
+              />
+
+              <ResumeTextField label="Company" value={item.company} placeholder="Current company" required onChange={(event) => handleInputChange("reference", index, "company", event.target.value)} />
+            </div>
+
+            <ResumeTextField
+              label="Designation"
+              value={item.designation}
+              placeholder="Job title or position"
+              required
+              onChange={(event) => handleInputChange("reference", index, "designation", event.target.value)}
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ResumeTextField
+                label="Phone"
+                type="tel"
+                value={item.phone}
+                placeholder="+61412345678"
+                required
+                onChange={(event) => handleInputChange("reference", index, "phone", event.target.value)}
+              />
+
+              <ResumeTextField
+                label="Email"
+                type="email"
+                value={item.email}
+                placeholder="reference@example.com"
+                required
+                onChange={(event) => handleInputChange("reference", index, "email", event.target.value)}
+              />
+            </div>
+
+            <ResumeTextField
+              label="Website"
+              type="url"
+              value={item.website}
+              placeholder="https://company.com"
+              onChange={(event) => handleInputChange("reference", index, "website", event.target.value)}
+            />
+          </div>
+        </>
+      )}
+    />
   );
 };
 
-// Main CreateResume Component
+const stepPropTypes = {
+  fields: PropTypes.arrayOf(PropTypes.object).isRequired,
+  handleInputChange: PropTypes.func.isRequired,
+  addEntry: PropTypes.func.isRequired,
+  removeEntry: PropTypes.func.isRequired,
+};
+
+EducationStep.propTypes = stepPropTypes;
+ExperienceStep.propTypes = stepPropTypes;
+SkillsStep.propTypes = stepPropTypes;
+AchievementsStep.propTypes = stepPropTypes;
+TrainingStep.propTypes = stepPropTypes;
+AwardStep.propTypes = stepPropTypes;
+ReferenceStep.propTypes = stepPropTypes;
+
 export const CreateResume = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const { user } = useSelector((state) => state.auth);
+
   const isAdmin = user?.role === "admin";
 
-  // Stepper state
   const [currentStep, setCurrentStep] = useState(0);
-  const steps = [
-    { name: "User ID", icon: <FaUser />, show: isAdmin, component: UserIdStep },
-    { name: "Education", icon: <FaGraduationCap />, show: true, component: EducationStep },
-    { name: "Experience", icon: <FaBriefcase />, show: true, component: ExperienceStep },
-    { name: "Skills", icon: <FaCode />, show: true, component: SkillsStep },
-    { name: "Achievements", icon: <FaTrophy />, show: true, component: AchievementsStep },
-    { name: "Training", icon: <FaChalkboardTeacher />, show: true, component: TrainingStep },
-    { name: "Award", icon: <FaAward />, show: true, component: AwardStep },
-    { name: "Reference", icon: <FaUserFriends />, show: true, component: ReferenceStep },
-  ].filter((step) => step.show);
 
-  // Form state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     userId: "",
     education: [],
@@ -1091,383 +952,372 @@ export const CreateResume = () => {
     reference: [],
   });
 
-  // Initialize one entry for each field on mount
-  useEffect(() => {
-    const defaults = {
-      education: {
-        id: uuidv4(),
-        school: "",
-        degree: "",
-        university: "",
-        city: "",
-        startDate: "",
-        endDate: "",
-        description: "",
-      },
-      experience: {
-        id: uuidv4(),
-        company: "",
-        position: "",
-        city: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-      },
-      skills: { id: uuidv4(), name: "", progress: "" },
-      achievements: { id: uuidv4(), title: "", description: "" },
-      training: {
-        id: uuidv4(),
-        title: "",
-        company: "",
-        city: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-      },
-      award: {
-        id: uuidv4(),
-        title: "",
-        company: "",
-        city: "",
-        description: "",
-        receivedYear: "",
-      },
-      reference: {
-        id: uuidv4(),
-        fullname: "",
-        company: "",
-        designation: "",
-        phone: "",
-        email: "",
-        website: "",
-      },
-    };
+  const steps = useMemo(
+    () =>
+      [
+        {
+          key: "userId",
+          name: "User ID",
+          icon: FaUser,
+          show: isAdmin,
+          component: UserIdStep,
+        },
+        {
+          key: "education",
+          name: "Education",
+          icon: FaGraduationCap,
+          show: true,
+          component: EducationStep,
+        },
+        {
+          key: "experience",
+          name: "Experience",
+          icon: FaBriefcase,
+          show: true,
+          component: ExperienceStep,
+        },
+        {
+          key: "skills",
+          name: "Skills",
+          icon: FaCode,
+          show: true,
+          component: SkillsStep,
+        },
+        {
+          key: "achievements",
+          name: "Achievements",
+          icon: FaTrophy,
+          show: true,
+          component: AchievementsStep,
+        },
+        {
+          key: "training",
+          name: "Training",
+          icon: FaChalkboardTeacher,
+          show: true,
+          component: TrainingStep,
+        },
+        {
+          key: "award",
+          name: "Awards",
+          icon: FaAward,
+          show: true,
+          component: AwardStep,
+        },
+        {
+          key: "reference",
+          name: "References",
+          icon: FaUserFriends,
+          show: true,
+          component: ReferenceStep,
+        },
+      ].filter((step) => step.show),
+    [isAdmin],
+  );
 
-    setFormData((prev) => ({
-      ...prev,
-      education: prev.education.length === 0 ? [defaults.education] : prev.education,
-      experience: prev.experience.length === 0 ? [defaults.experience] : prev.experience,
-      skills: prev.skills.length === 0 ? [defaults.skills] : prev.skills,
-      achievements: prev.achievements.length === 0 ? [defaults.achievements] : prev.achievements,
-      training: prev.training.length === 0 ? [defaults.training] : prev.training,
-      award: prev.award.length === 0 ? [defaults.award] : prev.award,
-      reference: prev.reference.length === 0 ? [defaults.reference] : prev.reference,
+  const progressPercentage = steps.length > 0 ? Math.round(((currentStep + 1) / steps.length) * 100) : 0;
+
+  const isLastStep = currentStep === steps.length - 1;
+
+  const currentStepData = steps[currentStep];
+
+  useEffect(() => {
+    setFormData((previousData) => ({
+      ...previousData,
+      education: previousData.education.length > 0 ? previousData.education : [createEmptyEntry("education")],
+      experience: previousData.experience.length > 0 ? previousData.experience : [createEmptyEntry("experience")],
+      skills: previousData.skills.length > 0 ? previousData.skills : [createEmptyEntry("skills")],
+      achievements: previousData.achievements.length > 0 ? previousData.achievements : [createEmptyEntry("achievements")],
+      training: previousData.training.length > 0 ? previousData.training : [createEmptyEntry("training")],
+      award: previousData.award.length > 0 ? previousData.award : [createEmptyEntry("award")],
+      reference: previousData.reference.length > 0 ? previousData.reference : [createEmptyEntry("reference")],
     }));
   }, []);
 
-  // Handle input changes for array fields
-  const handleInputChange = (fieldName, indexOrItems, field, value) => {
-    if (Array.isArray(indexOrItems)) {
-      // For drag-and-drop updates
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: indexOrItems,
-      }));
-    } else {
-      // For input changes
-      const updatedArray = [...formData[fieldName]];
-      updatedArray[indexOrItems] = {
-        ...updatedArray[indexOrItems],
-        [field]: value,
-      };
-      setFormData({
-        ...formData,
-        [fieldName]: updatedArray,
-      });
+  useEffect(() => {
+    if (currentStep >= steps.length && steps.length > 0) {
+      setCurrentStep(steps.length - 1);
     }
-  };
+  }, [currentStep, steps.length]);
 
-  // Add new entry to a field
-  const addEntry = (fieldName) => {
-    const defaults = {
-      education: {
-        id: uuidv4(),
-        school: "",
-        degree: "",
-        university: "",
-        city: "",
-        startDate: "",
-        endDate: "",
-        description: "",
-      },
-      experience: {
-        id: uuidv4(),
-        company: "",
-        position: "",
-        city: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-      },
-      skills: { id: uuidv4(), name: "", progress: "" },
-      achievements: { id: uuidv4(), title: "", description: "" },
-      training: {
-        id: uuidv4(),
-        title: "",
-        company: "",
-        city: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-      },
-      award: {
-        id: uuidv4(),
-        title: "",
-        company: "",
-        city: "",
-        description: "",
-        receivedYear: "",
-      },
-      reference: {
-        id: uuidv4(),
-        fullname: "",
-        company: "",
-        designation: "",
-        phone: "",
-        email: "",
-        website: "",
-      },
-    };
-
-    setFormData({
-      ...formData,
-      [fieldName]: [...formData[fieldName], defaults[fieldName]],
-    });
-  };
-
-  // Remove entry
-  const removeEntry = (fieldName, index) => {
-    const updatedArray = formData[fieldName].filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      [fieldName]: updatedArray,
-    });
-  };
-
-  // Form submission
-  const onSubmit = async () => {
-    try {
-      const payload = { ...formData };
-      if (!isAdmin) {
-        delete payload.userId;
+  const handleInputChange = (fieldName, indexOrItems, field, value) => {
+    setFormData((previousData) => {
+      if (Array.isArray(indexOrItems)) {
+        return {
+          ...previousData,
+          [fieldName]: indexOrItems,
+        };
       }
 
-      // Remove 'id' fields from array entries
-      Object.keys(payload).forEach((key) => {
-        if (Array.isArray(payload[key])) {
-          payload[key] = payload[key].filter((item) => Object.values(item).some((val) => val && val.toString().trim())).map(({ ...rest }) => rest); // Remove 'id' from each item
-        }
-      });
+      const updatedEntries = [...previousData[fieldName]];
+
+      updatedEntries[indexOrItems] = {
+        ...updatedEntries[indexOrItems],
+        [field]: value,
+      };
+
+      return {
+        ...previousData,
+        [fieldName]: updatedEntries,
+      };
+    });
+  };
+
+  const addEntry = (fieldName) => {
+    const newEntry = createEmptyEntry(fieldName);
+
+    if (!newEntry) {
+      return;
+    }
+
+    setFormData((previousData) => ({
+      ...previousData,
+      [fieldName]: [...previousData[fieldName], newEntry],
+    }));
+  };
+
+  const removeEntry = (fieldName, index) => {
+    setFormData((previousData) => ({
+      ...previousData,
+      [fieldName]: previousData[fieldName].filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const createPayload = () => {
+    const payload = {
+      ...formData,
+    };
+
+    if (!isAdmin) {
+      delete payload.userId;
+    }
+
+    Object.keys(payload).forEach((key) => {
+      if (!Array.isArray(payload[key])) {
+        return;
+      }
+
+      payload[key] = payload[key]
+        .map((item) => {
+          const { id: _clientId, ...entry } = item;
+
+          return entry;
+        })
+        .filter((entry) => Object.values(entry).some((entryValue) => entryValue !== null && entryValue !== undefined && String(entryValue).trim() !== ""));
+    });
+
+    return payload;
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const payload = createPayload();
 
       await dispatch(createResume(payload)).unwrap();
+
+      toast.success("Resume created successfully.");
+
       navigate("/resume");
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "Failed to create resume";
-      toast.error(errorMessage);
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Navigation between steps
   const nextStep = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
-  };
-  const prevStep = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    setCurrentStep((previousStep) => Math.min(previousStep + 1, steps.length - 1));
   };
 
-  // Render form fields for each step
-  const renderStep = () => {
-    const StepComponent = steps[currentStep].component;
-    const fieldName = steps[currentStep].name.toLowerCase().replace(/\s+/g, "");
-    if (fieldName === "userid") {
+  const previousStep = () => {
+    setCurrentStep((previousStep) => Math.max(previousStep - 1, 0));
+  };
+
+  const renderCurrentStep = () => {
+    if (!currentStepData) {
+      return null;
+    }
+
+    const StepComponent = currentStepData.component;
+
+    if (currentStepData.key === "userId") {
       return <StepComponent userId={formData.userId} setFormData={setFormData} />;
     }
-    return <StepComponent fields={formData[fieldName]} handleInputChange={handleInputChange} addEntry={addEntry} removeEntry={removeEntry} />;
+
+    return <StepComponent fields={formData[currentStepData.key] || []} handleInputChange={handleInputChange} addEntry={addEntry} removeEntry={removeEntry} />;
   };
 
   return (
     <>
       <StickyHeader>
-        <HeadingTwo>Create Resume</HeadingTwo>
-        <div className="flexC gap-2">
-          <GhostButton onClick={() => navigate("/resume")}>Cancel</GhostButton>
+        <div>
+          <HeadingTwo>Create Resume</HeadingTwo>
 
-          {currentStep === steps.length - 1 ? (
-            <TertiaryButton onClick={onSubmit}>Submit Resume</TertiaryButton>
-          ) : (
-            <TertiaryButton>
-              <span>
-                Step {currentStep + 1} of {steps.length}
-              </span>
-              <span className="bg-teal-500 rounded-full px-2 text-white ml-2 textSizeSm">{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
+          <p className="mt-1 hidden text-[9px] text-gray-400 dark:text-white/25 sm:block">Build a complete professional resume section by section.</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <GhostButton type="button" disabled={isSubmitting} onClick={() => navigate("/resume")}>
+            Cancel
+          </GhostButton>
+
+          {isLastStep ? (
+            <TertiaryButton type="button" disabled={isSubmitting} onClick={handleSubmit}>
+              {isSubmitting ? "Submitting..." : "Submit Resume"}
             </TertiaryButton>
+          ) : (
+            <div className="hidden items-center gap-3 rounded-xl border border-indigo-300/20 bg-indigo-500/[0.055] px-3 py-2 sm:flex dark:border-indigo-300/[0.08] dark:bg-indigo-300/[0.03]">
+              <div>
+                <p className="text-[7px] font-semibold uppercase tracking-[0.1em] text-indigo-600 dark:text-indigo-200/45">Builder progress</p>
+
+                <p className="mt-0.5 text-[9px] font-semibold text-indigo-800 dark:text-indigo-100/70">
+                  Step {currentStep + 1} of {steps.length}
+                </p>
+              </div>
+
+              <span className="rounded-full bg-indigo-500 px-2 py-1 text-[8px] font-bold text-white dark:bg-indigo-400/80">{progressPercentage}%</span>
+            </div>
           )}
         </div>
       </StickyHeader>
-      <Wrapper className="w-full rounded-none !rounded-t-md py-2 mb-3">
-        <div className="stepper">
-          {steps.map((step, index) => (
-            <div
-              key={step.name}
-              className={`stepper__step ${index <= currentStep ? "stepper__step--completed" : ""} ${index === currentStep ? "stepper__step--current" : ""}`}
-              style={{ width: `${100 / steps.length}%` }}
-            >
-              <div className="stepper__step-content">
-                <div className="stepper__step-icon">
-                  <span className="stepper__step-icon-inner">
-                    {index < currentStep ? (
-                      <svg viewBox="0 0 24 24" className="stepper__checkmark">
-                        <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                      </svg>
-                    ) : (
-                      step.icon
-                    )}
-                  </span>
-                </div>
-                {/* <span className="stepper__step-label textSizeSm pt-1">{step.name}</span> */}
-              </div>
-              {index < steps.length - 1 && (
-                <div className="stepper__connector">
-                  <div className="stepper__connector-progress" />
-                </div>
-              )}
+
+      {/* Premium step navigator */}
+      <Wrapper className="relative mb-3 overflow-hidden p-3 sm:p-4">
+        <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-indigo-500/[0.014] blur-[80px]" />
+
+        <div className="relative z-10">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-indigo-600 dark:text-indigo-200/50">Resume builder</p>
+
+              <h2 className="mt-1 text-sm font-black tracking-[-0.02em] text-gray-900 dark:text-white/90">{currentStepData?.name}</h2>
             </div>
-          ))}
+
+            <span className="text-[9px] font-semibold tabular-nums text-gray-400 dark:text-white/25">{progressPercentage}% complete</span>
+          </div>
+
+          <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-gray-200/80 dark:bg-white/[0.055]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-500 transition-[width] duration-500"
+              style={{
+                width: `${progressPercentage}%`,
+              }}
+            />
+          </div>
+
+          <div className="overflow-x-auto pb-1">
+            <div className="flex min-w-max items-center gap-2">
+              {steps.map((step, index) => {
+                const StepIcon = step.icon;
+                const isCompleted = index < currentStep;
+                const isCurrent = index === currentStep;
+
+                return (
+                  <div
+                    key={step.key}
+                    className={`flex min-w-[135px] items-center gap-3 rounded-2xl border px-3 py-3 transition-all ${
+                      isCurrent
+                        ? "border-indigo-300/30 bg-indigo-500/[0.07] shadow-[0_10px_24px_rgba(79,70,229,0.08)] dark:border-indigo-300/[0.12] dark:bg-indigo-300/[0.045]"
+                        : isCompleted
+                          ? "border-emerald-300/20 bg-emerald-500/[0.045] dark:border-emerald-300/[0.08] dark:bg-emerald-300/[0.028]"
+                          : "border-gray-200/70 bg-gray-50/40 dark:border-white/[0.045] dark:bg-white/[0.012]"
+                    }`}
+                  >
+                    <span
+                      className={`flex size-9 shrink-0 items-center justify-center rounded-xl border ${
+                        isCurrent
+                          ? "border-indigo-300/25 bg-indigo-500/[0.1] text-indigo-700 dark:border-indigo-300/[0.1] dark:bg-indigo-300/[0.06] dark:text-indigo-200/75"
+                          : isCompleted
+                            ? "border-emerald-300/25 bg-emerald-500/[0.08] text-emerald-700 dark:border-emerald-300/[0.1] dark:bg-emerald-300/[0.05] dark:text-emerald-200/70"
+                            : "border-gray-200/70 bg-white/50 text-gray-400 dark:border-white/[0.05] dark:bg-white/[0.018] dark:text-white/25"
+                      }`}
+                    >
+                      {isCompleted ? <HiOutlineCheck size={16} /> : <StepIcon size={15} />}
+                    </span>
+
+                    <div>
+                      <p
+                        className={`text-[9px] font-semibold ${
+                          isCurrent ? "text-gray-900 dark:text-white/80" : isCompleted ? "text-emerald-700 dark:text-emerald-200/65" : "text-gray-500 dark:text-white/35"
+                        }`}
+                      >
+                        {step.name}
+                      </p>
+
+                      <p className="mt-0.5 text-[7px] uppercase tracking-[0.08em] text-gray-400 dark:text-white/20">Step {index + 1}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </Wrapper>
-      <Wrapper className="rounded-md mb-5">
-        {renderStep()}
-        <div className=" absolute top-0 right-0 m-2.5 flex items-center gap-3">
-          <button type="button" onClick={prevStep} disabled={currentStep === 0} className="button">
-            Previous
-          </button>
-          <button type="button" onClick={nextStep} className="button" disabled={currentStep === steps.length - 1}>
-            Next
-          </button>
+
+      {/* Active step */}
+      <Wrapper className="relative mb-5 overflow-hidden p-4 sm:p-6">
+        <div className="pointer-events-none absolute -right-28 -top-28 size-72 rounded-full bg-indigo-500/[0.012] blur-[100px]" />
+
+        <div className="pointer-events-none absolute -bottom-28 -left-28 size-72 rounded-full bg-cyan-500/[0.01] blur-[100px]" />
+
+        <div className="relative z-10">
+          {renderCurrentStep()}
+
+          <footer className="mt-6 flex flex-col gap-3 border-t border-gray-200/70 pt-5 dark:border-white/[0.05] sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-2xl border border-gray-200/70 bg-gray-50/50 text-gray-400 dark:border-white/[0.05] dark:bg-white/[0.016] dark:text-white/25">
+                <HiOutlineDocumentText size={17} />
+              </span>
+
+              <div>
+                <p className="text-[8px] font-semibold uppercase tracking-[0.11em] text-gray-400 dark:text-white/20">Current section</p>
+
+                <p className="mt-0.5 text-[10px] font-semibold text-gray-700 dark:text-white/55">{currentStepData?.name}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={previousStep}
+                disabled={currentStep === 0}
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-200/80 bg-white/55 px-4 text-[9px] font-semibold text-gray-600 transition-all hover:-translate-y-0.5 hover:border-indigo-300/35 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:translate-y-0 dark:border-white/[0.06] dark:bg-white/[0.018] dark:text-white/45 dark:hover:border-indigo-300/[0.12] dark:hover:text-indigo-200/70"
+              >
+                <HiOutlineArrowLeft size={14} />
+                Previous
+              </button>
+
+              {isLastStep ? (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-500/[0.08] px-4 text-[9px] font-semibold text-emerald-700 transition-all hover:-translate-y-0.5 hover:bg-emerald-500/[0.14] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 dark:border-emerald-300/[0.1] dark:bg-emerald-300/[0.045] dark:text-emerald-200/70 dark:hover:bg-emerald-300/[0.08]"
+                >
+                  <HiOutlineSparkles size={14} />
+
+                  {isSubmitting ? "Submitting..." : "Submit Resume"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-300/25 bg-indigo-500/[0.08] px-4 text-[9px] font-semibold text-indigo-700 transition-all hover:-translate-y-0.5 hover:bg-indigo-500/[0.14] dark:border-indigo-300/[0.1] dark:bg-indigo-300/[0.045] dark:text-indigo-200/70 dark:hover:bg-indigo-300/[0.08]"
+                >
+                  Next section
+                  <HiOutlineArrowRight size={14} />
+                </button>
+              )}
+            </div>
+          </footer>
         </div>
       </Wrapper>
     </>
   );
-};
-
-UserIdStep.propTypes = {
-  userId: PropTypes.string.isRequired,
-  setFormData: PropTypes.func.isRequired,
-};
-SortableItem.propTypes = {
-  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  index: PropTypes.number.isRequired,
-  children: PropTypes.func.isRequired,
-  section: PropTypes.string.isRequired,
-  gridCols: PropTypes.number,
-};
-EducationStep.propTypes = {
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      school: PropTypes.string,
-      degree: PropTypes.string,
-      university: PropTypes.string,
-      city: PropTypes.string,
-      startDate: PropTypes.string,
-      endDate: PropTypes.string,
-      description: PropTypes.string,
-    })
-  ).isRequired,
-  handleInputChange: PropTypes.func.isRequired,
-  addEntry: PropTypes.func.isRequired,
-  removeEntry: PropTypes.func.isRequired,
-};
-
-ExperienceStep.propTypes = {
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      company: PropTypes.string,
-      position: PropTypes.string,
-      city: PropTypes.string,
-      startDate: PropTypes.string,
-      endDate: PropTypes.string,
-      description: PropTypes.string,
-    })
-  ).isRequired,
-  handleInputChange: PropTypes.func.isRequired,
-  addEntry: PropTypes.func.isRequired,
-  removeEntry: PropTypes.func.isRequired,
-};
-
-SkillsStep.propTypes = {
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      name: PropTypes.string,
-      progress: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    })
-  ).isRequired,
-  handleInputChange: PropTypes.func.isRequired,
-  addEntry: PropTypes.func.isRequired,
-  removeEntry: PropTypes.func.isRequired,
-};
-
-AchievementsStep.propTypes = {
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      title: PropTypes.string,
-      description: PropTypes.string,
-    })
-  ).isRequired,
-  handleInputChange: PropTypes.func.isRequired,
-  addEntry: PropTypes.func.isRequired,
-  removeEntry: PropTypes.func.isRequired,
-};
-
-TrainingStep.propTypes = {
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      title: PropTypes.string,
-      company: PropTypes.string,
-      city: PropTypes.string,
-      description: PropTypes.string,
-      startDate: PropTypes.string,
-      endDate: PropTypes.string,
-    })
-  ).isRequired,
-  handleInputChange: PropTypes.func.isRequired,
-  addEntry: PropTypes.func.isRequired,
-  removeEntry: PropTypes.func.isRequired,
-};
-
-AwardStep.propTypes = {
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      title: PropTypes.string,
-      company: PropTypes.string,
-      city: PropTypes.string,
-      description: PropTypes.string,
-      receivedYear: PropTypes.string,
-    })
-  ).isRequired,
-  handleInputChange: PropTypes.func.isRequired,
-  addEntry: PropTypes.func.isRequired,
-  removeEntry: PropTypes.func.isRequired,
-};
-
-ReferenceStep.propTypes = {
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string,
-      fullname: PropTypes.string,
-      company: PropTypes.string,
-      designation: PropTypes.string,
-      phone: PropTypes.string,
-      email: PropTypes.string,
-      website: PropTypes.string,
-    })
-  ).isRequired,
-  handleInputChange: PropTypes.func.isRequired,
-  addEntry: PropTypes.func.isRequired,
-  removeEntry: PropTypes.func.isRequired,
 };

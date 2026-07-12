@@ -32,6 +32,9 @@
 @use "./base/scrollbar";
 @use "./dashboard/CategoryCard";
 @use "./layout/table/tableTheme";
+@use "./layout/sidebarTree";
+@use "./components/auth-input";
+@use "./vendors/toast";
 
 .reactjs-tiptap-editor .richtext-bg-background {
   .dark & {

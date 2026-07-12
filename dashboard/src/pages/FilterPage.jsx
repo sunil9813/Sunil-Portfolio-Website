@@ -1,7 +1,7 @@
 import { DateFormatter } from "@/components/common/DateFormatter";
 import { getBlogsByCategoryAndTag } from "@/redux/slices/blogSlice";
 import { truncateText } from "@/utils";
-import { Loader, Wrapper } from "@/utils/Router";
+import { Loader, Wrapper } from "@/routes";
 import { Chip } from "@material-tailwind/react";
 import { useEffect } from "react";
 import { AiFillLike } from "react-icons/ai";

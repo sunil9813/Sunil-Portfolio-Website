@@ -1,4 +1,4 @@
-import { Wrapper } from "@/utils/Router";
+import { Wrapper } from "@/routes";
 import { FaClock } from "react-icons/fa";
 
 // Sample activity data (0-100 scale)
@@ -27,15 +27,26 @@ const generateActivityData = () => {
 export const ActiveReadingTimes = () => {
   const { times, days, data } = generateActivityData();
 
-  // Green shades based on activity value
+  // Muted emerald shades designed for a dark dashboard
   const getCellColor = (value) => {
-    if (value < 20) return "bg-green-50 dark:bg-green-950/30";
-    if (value < 40) return "bg-green-100 dark:bg-green-900/50";
-    if (value < 60) return "bg-green-200 dark:bg-green-800/60";
-    if (value < 80) return "bg-green-300 dark:bg-green-700/70";
-    return "bg-green-400 dark:bg-green-600/80";
-  };
+    if (value < 20) {
+      return "border-emerald-300/[0.035] bg-emerald-400/[0.035] hover:bg-emerald-400/[0.07]";
+    }
 
+    if (value < 40) {
+      return "border-emerald-300/[0.055] bg-emerald-400/[0.075] hover:bg-emerald-400/[0.11]";
+    }
+
+    if (value < 60) {
+      return "border-emerald-300/[0.08] bg-emerald-400/[0.13] hover:bg-emerald-400/[0.17]";
+    }
+
+    if (value < 80) {
+      return "border-emerald-300/[0.11] bg-emerald-400/[0.20] hover:bg-emerald-400/[0.25]";
+    }
+
+    return "border-emerald-300/[0.15] bg-emerald-400/[0.30] shadow-[0_0_14px_rgba(52,211,153,0.07)] hover:bg-emerald-400/[0.36]";
+  };
   return (
     <Wrapper className="p-6 relative overflow-hidden group">
       {/* Floating Glow Backgrounds - subtle green tones */}

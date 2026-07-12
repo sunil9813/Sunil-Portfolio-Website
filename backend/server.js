@@ -36,6 +36,10 @@ const blogRoute = require("./routes/BlogRoute");
 const likeRoute = require("./routes/common/likeRoute");
 // End Setting routes
 
+// Dashbaord routes
+const dashboardRoute = require("./routes/dashboard/DashboardRoute");
+// End Dashbaord routes
+
 const textEditorRoute = require("./routes/CloudinaryImgUploadRouterForEditor");
 
 const orderRoute = require("./routes/order/OrderRoute");
@@ -54,9 +58,9 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:3001", "http://localhost:5172", "http://localhost:5173", "https://bksuniladmin.netlify.app", "https://bksunil.netlify.app"],
+    origin: ["http://localhost:3001", "http://localhost:5172", "http://localhost:5173", "http://192.168.1.4:5172", "https://bksuniladmin.netlify.app", "https://bksunil.netlify.app"],
     credentials: true,
-  })
+  }),
 );
 
 // Route middle
@@ -94,6 +98,8 @@ app.use("/api/v1/program", ProgramRoute);
 app.use("/api/v1/subject", SubjectRoute);
 app.use("/api/v1/chapter", ChapterRoute);
 /*  -------  End AcademicComponentsRoute ----------- */
+
+app.use("/api/v1/dashboard", dashboardRoute);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Sunil Portfolio.");

@@ -11,15 +11,14 @@ const initialState = {
   message: "",
 };
 // Fetch all images
-export const getAllImages = createAsyncThunk("images/getAll", async ({ folder, subfolder }, thunkAPI) => {
+export const getAllImages = createAsyncThunk("images/getAll", async ({ folder, subfolder, groupId }, thunkAPI) => {
   try {
-    return await imageService.getAllImages({ folder, subfolder });
+    return await imageService.getAllImages({ folder, subfolder, groupId });
   } catch (error) {
-    const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
+    const message = error.response?.data?.error || "An error occurred";
     return thunkAPI.rejectWithValue(message);
   }
 });
-
 // Upload image
 export const uploadImageToEditorDes = createAsyncThunk("images/upload", async (formData, thunkAPI) => {
   try {

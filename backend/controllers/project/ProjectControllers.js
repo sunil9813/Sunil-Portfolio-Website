@@ -556,101 +556,221 @@ const deleteProject = asyncHandler(async (req, res) => {
   await project.deleteOne();
   res.status(200).json({ message: "Project and associated images deleted successfully" });
 });
-
 const updateProject = asyncHandler(async (req, res) => {
-  const postId = req.params.id;
-  const { title, description, updatedAssets } = req.body;
+  const projectSlug = req.params.slug;
 
-  try {
-    const post = await ProjectModel.findById(postId);
+  const { title, description, metaDescription, category, layout, urllink, tags, visibility, groupId, formats, price, discount, discountDate, highlights, resourceFile, existingAssets } = req.body;
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found." });
-    }
+  const post = await ProjectModel.findOne({ slug: projectSlug });
 
-    // Check if the user is the owner of the post and admin
-    if (post.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
-      return res.status(403).json({ message: "You are not authorized to update this post." });
-    }
+  if (!post) {
+    return res.status(404).json({ message: "Post not found." });
+  }
 
-    // Update post fields
-    post.title = title || post.title;
-    post.description = description || post.description;
-    const originalSlug = slugify(post.title, {
+  if (post.user.toString() !== req.user._id.toString() && req.user.role !== "admin" && req.user.role !== "super admin") {
+    return res.status(403).json({ message: "You are not authorized to update this post." });
+  }
+
+  if (title && title !== post.title) {
+    const originalSlug = slugify(title, {
       lower: true,
       remove: /[*+~.()'"!:@]/g,
       strict: true,
     });
 
-    let slug = originalSlug;
+    let newSlug = originalSlug;
     let suffix = 1;
 
-    while (await ProjectModel.findOne({ slug })) {
-      slug = `${suffix}-${originalSlug}`;
+    while (await ProjectModel.findOne({ slug: newSlug, _id: { $ne: post._id } })) {
+      newSlug = `${suffix}-${originalSlug}`;
       suffix++;
     }
 
-    post.slug = slug;
+    post.slug = newSlug;
+  }
 
-    // Handle image updates
-    if (updatedAssets && updatedAssets.length > 0) {
-      const assetLimitConfig = await AssetLimitConfigModel.findOne();
+  if (req.files?.thumbnail?.[0]) {
+    const thumbnailFile = req.files.thumbnail[0];
 
-      if (!assetLimitConfig) {
-        return res.status(500).json({ message: "Asset limit configuration not found." });
-      }
-
-      // Check if the number of updated assets exceeds the asset limit
-      if (updatedAssets.length > assetLimitConfig.assetLimit) {
-        return res.status(400).json({ message: `You can only update ${assetLimitConfig.assetLimit} assets.` });
-      }
-
-      // Delete the previous images from Cloudinary for the specified updatedAssets
-      for (const updatedAssetIndex of updatedAssets) {
-        if (post.assets[updatedAssetIndex]) {
-          await cloudinary.uploader.destroy(post.assets[updatedAssetIndex].publicId);
-          // Remove the asset from the post's assets array
-          post.assets.splice(updatedAssetIndex, 1);
-        }
-      }
-
-      // Upload new images to Cloudinary
-      const fileData = [];
-
-      for (const file of req.files) {
-        try {
-          const uploadedFile = await cloudinary.uploader.upload(file.path, {
-            folder: "Photo Idol/Posts",
-            resource_type: "image",
-          });
-
-          fileData.push({
-            fileName: file.originalname,
-            filePath: uploadedFile.secure_url,
-            fileType: file.mimetype,
-            publicId: uploadedFile.public_id,
-          });
-        } catch (error) {
-          return res.status(500).json({ message: "One or more images could not be uploaded." });
-        }
-      }
-
-      // Add the new assets to the post's assets array
-      for (const updatedAssetIndex of updatedAssets) {
-        post.assets.splice(updatedAssetIndex, 0, fileData.shift());
-      }
+    if (post.thumbnail?.publicId) {
+      await cloudinary.uploader.destroy(post.thumbnail.publicId);
     }
 
-    // Save the updated post
-    await post.save();
+    const thumbnailData = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "Sunil Portfolio/Project/Thumbnails",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) return reject(error);
 
-    res.status(200).json({ message: "Post updated successfully", data: post });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "An error occurred while updating the post." });
+          resolve({
+            fileName: thumbnailFile.originalname,
+            filePath: result.secure_url,
+            fileType: thumbnailFile.mimetype,
+            publicId: result.public_id,
+          });
+        },
+      );
+
+      uploadStream.end(thumbnailFile.buffer);
+    });
+
+    post.thumbnail = thumbnailData;
   }
-});
 
+  let keptAssets = Array.isArray(post.assets) ? post.assets : [];
+
+  if (existingAssets !== undefined) {
+    keptAssets = typeof existingAssets === "string" ? JSON.parse(existingAssets || "[]") : existingAssets;
+  }
+
+  const oldAssets = Array.isArray(post.assets) ? post.assets : [];
+  const keptPublicIds = keptAssets.map((asset) => asset.publicId).filter(Boolean);
+  const removedAssets = oldAssets.filter((asset) => asset.publicId && !keptPublicIds.includes(asset.publicId));
+
+  for (const asset of removedAssets) {
+    await cloudinary.uploader.destroy(asset.publicId);
+  }
+
+  const newAssets = [];
+
+  if (req.files?.assets?.length > 0) {
+    const assetLimitConfig = await AssetLimitConfigModel.findOne();
+    const maxAssets = assetLimitConfig?.assetLimit || 5;
+
+    if (keptAssets.length + req.files.assets.length > maxAssets) {
+      return res.status(400).json({ message: `You can only upload ${maxAssets} images.` });
+    }
+
+    for (const file of req.files.assets) {
+      const assetData = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "Sunil Portfolio/Project",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) return reject(error);
+
+            resolve({
+              fileName: file.originalname,
+              filePath: result.secure_url,
+              fileType: file.mimetype,
+              publicId: result.public_id,
+            });
+          },
+        );
+
+        uploadStream.end(file.buffer);
+      });
+
+      newAssets.push(assetData);
+    }
+  }
+
+  post.assets = [...keptAssets, ...newAssets];
+
+  if (resourceFile !== undefined) {
+    const parsedResourceFile = typeof resourceFile === "string" ? JSON.parse(resourceFile) : resourceFile;
+
+    if (parsedResourceFile?.type === "url") {
+      post.resourceFile = {
+        type: "url",
+        url: parsedResourceFile.url,
+      };
+    }
+
+    if (parsedResourceFile?.type === "file" && req.files?.resourceFileUpload?.[0]) {
+      const resourceUpload = req.files.resourceFileUpload[0];
+
+      const resourceFileData = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "Sunil Portfolio/Project/Resources",
+            resource_type: "auto",
+          },
+          (error, result) => {
+            if (error) return reject(error);
+
+            resolve({
+              type: "file",
+              file: {
+                path: result.secure_url,
+                publicId: result.public_id,
+                originalName: resourceUpload.originalname,
+                size: resourceUpload.size,
+                mimeType: resourceUpload.mimetype,
+              },
+            });
+          },
+        );
+
+        uploadStream.end(resourceUpload.buffer);
+      });
+
+      post.resourceFile = resourceFileData;
+    }
+  }
+
+  if (tags !== undefined) {
+    const parsedTags = typeof tags === "string" ? JSON.parse(tags || "[]") : tags;
+    post.tags = parsedTags.map((item) => ({ tag: String(item.tag).trim() }));
+  }
+
+  if (formats !== undefined) {
+    const parsedFormats = typeof formats === "string" ? JSON.parse(formats || "[]") : formats;
+    post.formats = parsedFormats.map((item) => ({ format: String(item.format).trim() }));
+  }
+
+  if (highlights !== undefined) {
+    const parsedHighlights = typeof highlights === "string" ? JSON.parse(highlights || "[]") : highlights;
+    post.highlights = parsedHighlights.map((item) => ({ highlight: String(item.highlight).trim() }));
+  }
+
+  if (title !== undefined) post.title = title;
+  if (description !== undefined) post.description = description;
+  if (metaDescription !== undefined) post.metaDescription = metaDescription;
+  if (category !== undefined) post.category = category;
+  if (layout !== undefined) post.layout = layout;
+  if (urllink !== undefined) post.urllink = urllink;
+  if (visibility !== undefined) post.visibility = visibility;
+  if (groupId !== undefined) post.groupId = groupId;
+
+  if (price !== undefined) post.price = parseFloat(price) || 0;
+
+  if (discount !== undefined) {
+    const finalDiscount = parseFloat(discount) || 0;
+    post.discount = finalDiscount;
+
+    if (finalDiscount > 0) {
+      if (!discountDate) {
+        return res.status(400).json({ message: "Discount date is required." });
+      }
+
+      post.discountDate = new Date(discountDate);
+      post.discountShow = true;
+    } else {
+      post.discountDate = null;
+      post.discountShow = false;
+    }
+  }
+
+  post.markModified("thumbnail");
+  post.markModified("assets");
+  post.markModified("resourceFile");
+  post.markModified("tags");
+  post.markModified("formats");
+  post.markModified("highlights");
+
+  const updatedProject = await post.save();
+
+  res.status(200).json({
+    message: "Project updated successfully",
+    data: updatedProject,
+  });
+});
 const updateProjectFeaturedStatus = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
   const { featured } = req.body;

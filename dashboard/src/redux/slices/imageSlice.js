@@ -11,11 +11,11 @@ const initialState = {
   message: "",
 };
 // Fetch all images
-export const getAllImages = createAsyncThunk("images/getAll", async ({ folder, subfolder }, thunkAPI) => {
+export const getAllImages = createAsyncThunk("images/getAll", async ({ folder, subfolder, groupId }, thunkAPI) => {
   try {
-    return await imageService.getAllImages({ folder, subfolder });
+    return await imageService.getAllImages({ folder, subfolder, groupId });
   } catch (error) {
-    const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
+    const message = error.response?.data?.error || "An error occurred";
     return thunkAPI.rejectWithValue(message);
   }
 });
@@ -70,34 +70,36 @@ const imageSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getAllImages.pending, (state) => {
-        state.isLoadingUpload = true;
+        state.isError = false;
       })
       .addCase(getAllImages.fulfilled, (state, action) => {
         state.isLoadingUpload = false;
         state.isSuccess = true;
         state.isError = false;
-        state.images = action.payload;
+        state.images = action.payload || { recentImages: [], olderImages: [] };
       })
       .addCase(getAllImages.rejected, (state) => {
         state.isLoadingUpload = false;
         state.isSuccess = false;
         state.isError = true;
-        state.images = [];
+        state.images = { recentImages: [], olderImages: [] };
       })
       .addCase(uploadImageToEditorDes.pending, (state) => {
         state.isLoadingUpload = true;
       })
-      .addCase(uploadImageToEditorDes.fulfilled, (state) => {
+      .addCase(uploadImageToEditorDes.fulfilled, (state, action) => {
         state.isLoadingUpload = false;
         state.isSuccess = true;
         state.isError = false;
+
+        const uploadedImages = Array.isArray(action.payload?.images) ? action.payload.images : action.payload?.image ? [action.payload.image] : action.payload?.filePath ? [action.payload] : [];
+
+        state.images = {
+          recentImages: [...uploadedImages, ...(state.images?.recentImages || [])],
+          olderImages: state.images?.olderImages || [],
+        };
+
         toast.success("Image uploaded successfully!");
-      })
-      .addCase(uploadImageToEditorDes.rejected, (state, action) => {
-        state.isLoadingUpload = false;
-        state.isSuccess = false;
-        state.isError = true;
-        toast.error(action.payload);
       })
       .addCase(deleteImage.pending, (state) => {
         state.isLoadingDelete = true;

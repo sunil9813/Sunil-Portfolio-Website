@@ -1,160 +1,306 @@
-import { InputFiled, InputPassword, Loader, Logo, PrimaryButton } from "@/utils/Router";
-import { FaGithub } from "react-icons/fa";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Loader, PrimaryButton } from "@/routes";
+import { useState } from "react";
+import { FiLock, FiMail } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { validateEmail } from "@/redux/services/authService";
-import { login, RESET, sendLoginCode } from "@/redux/slices/authSlice";
-import { FcGoogle } from "react-icons/fc";
-import { Avatar } from "@material-tailwind/react";
 
-const initialSate = {
-  password: "",
-  email: "",
+import { AuthInputField, AuthInputPassword } from "@/components/common/input/AuthInput";
+
+import { validateEmail } from "@/redux/services/authService";
+import { login, sendLoginCode } from "@/redux/slices/authSlice";
+
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
+import { FiShield } from "react-icons/fi";
+import { HiSparkles } from "react-icons/hi2";
+import PropTypes from "prop-types";
+
+export const AuthSocialButtons = ({ onGoogleClick, onGithubClick, googleText = "Google", githubText = "GitHub" }) => {
+  return (
+    <div className="mono-auth-social">
+      <button type="button" className="mono-auth-google" aria-label="Continue with Google" onClick={onGoogleClick}>
+        <span className="mono-auth-google__background" />
+        <span className="mono-auth-google__top-line" />
+        <span className="mono-auth-google__shine" />
+
+        <span className="mono-auth-google__icon">
+          <FcGoogle size={16} aria-hidden="true" />
+        </span>
+
+        <span className="mono-auth-google__text">{googleText}</span>
+      </button>
+
+      <button type="button" className="mono-auth-google" aria-label="Continue with GitHub" onClick={onGithubClick}>
+        <span className="mono-auth-google__background" />
+        <span className="mono-auth-google__top-line" />
+        <span className="mono-auth-google__shine" />
+
+        <span className="mono-auth-google__icon mono-auth-google__icon--github">
+          <FaGithub size={16} aria-hidden="true" />
+        </span>
+
+        <span className="mono-auth-google__text">{githubText}</span>
+      </button>
+    </div>
+  );
 };
+
+export const AuthLayout = ({
+  title = "Welcome back",
+  subtitle = "Enter your account details to continue securely.",
+  badgeText = "Secure access",
+  children,
+  footer,
+  showTrust = true,
+  trustItems = ["Encrypted", "Private", "Protected"],
+  LogoIcon = HiSparkles,
+  BadgeIcon = FiShield,
+  shellClassName = "",
+  cardClassName = "",
+  contentClassName = "",
+}) => {
+  const handleCardPointerMove = (event) => {
+    const card = event.currentTarget;
+    const cardBounds = card.getBoundingClientRect();
+
+    card.style.setProperty("--card-pointer-x", `${event.clientX - cardBounds.left}px`);
+    card.style.setProperty("--card-pointer-y", `${event.clientY - cardBounds.top}px`);
+  };
+
+  const handleCardPointerLeave = (event) => {
+    event.currentTarget.style.setProperty("--card-pointer-x", "50%");
+    event.currentTarget.style.setProperty("--card-pointer-y", "14%");
+  };
+
+  return (
+    <main className="mono-auth">
+      <div className="mono-auth__background" aria-hidden="true">
+        <span className="mono-auth__spotlight" />
+        <span className="mono-auth__aurora mono-auth__aurora--left" />
+        <span className="mono-auth__aurora mono-auth__aurora--right" />
+        <span className="mono-auth__aurora mono-auth__aurora--bottom" />
+        <span className="mono-auth__grid" />
+        <span className="mono-auth__stars mono-auth__stars--one" />
+        <span className="mono-auth__stars mono-auth__stars--two" />
+        <span className="mono-auth__noise" />
+        <span className="mono-auth__vignette" />
+      </div>
+
+      <div className="mono-auth__layout">
+        <div className={`mono-auth-shell ${shellClassName}`.trim()}>
+          <span className="mono-auth-shell__top-light" aria-hidden="true" />
+          <span className="mono-auth-shell__floor-glow" aria-hidden="true" />
+          <span className="mono-auth-shell__horizontal-line" aria-hidden="true" />
+
+          <article className={`mono-auth-card ${cardClassName}`.trim()} onPointerMove={handleCardPointerMove} onPointerLeave={handleCardPointerLeave}>
+            <div className="mono-auth-card__effects" aria-hidden="true">
+              <span className="mono-auth-card__pointer-light" />
+              <span className="mono-auth-card__top-haze" />
+              <span className="mono-auth-card__side-light" />
+              <span className="mono-auth-card__reflection" />
+              <span className="mono-auth-card__texture" />
+            </div>
+
+            <div className={`mono-auth-card__content ${contentClassName}`.trim()}>
+              <header className="mono-auth-brand">
+                {badgeText && (
+                  <div className="mono-auth-brand__badge">
+                    <BadgeIcon size={12} aria-hidden="true" />
+                    <span>{badgeText}</span>
+                  </div>
+                )}
+
+                <div className="mono-auth-brand__logo">
+                  <span className="mono-auth-brand__logo-aura" aria-hidden="true" />
+                  <span className="mono-auth-brand__logo-surface" aria-hidden="true" />
+                  <span className="mono-auth-brand__logo-highlight" aria-hidden="true" />
+
+                  <LogoIcon size={27} className="mono-auth-brand__logo-icon" aria-hidden="true" />
+                </div>
+
+                <h1>{title}</h1>
+                {subtitle && <p>{subtitle}</p>}
+              </header>
+
+              {children}
+
+              {footer}
+
+              {showTrust && (
+                <div className="mono-auth-trust" aria-label="Security information">
+                  {trustItems.map((item) => (
+                    <span key={item}>
+                      <i aria-hidden="true" />
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </article>
+        </div>
+      </div>
+    </main>
+  );
+};
+
+const INITIAL_STATE = {
+  email: "",
+  password: "",
+};
+
 export const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState(initialSate);
 
-  const { isLoading, isSuccess, isError, isLoggedIn, twoFactor } = useSelector((state) => state.auth);
-  const { password, email } = formData;
+  const [formData, setFormData] = useState(INITIAL_STATE);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  const { isLoading } = useSelector((state) => state.auth);
+
+  const { email, password } = formData;
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((currentData) => ({
+      ...currentData,
+      [name]: value,
+    }));
   };
 
-  const loginUser = async (e) => {
-    e.preventDefault();
-    if (!email || !password) {
-      return toast.error("All fields are required");
+  const loginUser = async (event) => {
+    event.preventDefault();
+
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail || !password) {
+      toast.error("All fields are required");
+      return;
     }
-    if (!validateEmail(email)) {
-      return toast.error("Email is not valid");
+
+    if (!validateEmail(normalizedEmail)) {
+      toast.error("Email is not valid");
+      return;
     }
-    const userData = {
-      email,
-      password,
-    };
-    await dispatch(login(userData));
+
+    try {
+      await dispatch(
+        login({
+          email: normalizedEmail,
+          password,
+        }),
+      ).unwrap();
+
+      navigate("/", { replace: true });
+    } catch (errorMessage) {
+      const message = errorMessage || "Login failed. Please try again.";
+
+      const requiresOtp = message.includes("A new or unrecognized browser/device has been detected");
+
+      if (requiresOtp) {
+        try {
+          await dispatch(sendLoginCode(normalizedEmail)).unwrap();
+
+          navigate(`/logi-with-otp/${encodeURIComponent(normalizedEmail)}`, {
+            replace: true,
+          });
+        } catch (otpErrorMessage) {
+          toast.error(otpErrorMessage || "Unable to send OTP code.");
+        }
+
+        return;
+      }
+
+      toast.error(message);
+    }
   };
 
-  useEffect(() => {
-    if (isSuccess && isLoggedIn) {
-      navigate("/");
-    }
-    // login with otp
-    if (isError && twoFactor) {
-      dispatch(sendLoginCode(email));
-      navigate(`/logi-with-otp/${email}`);
-    }
-    // ---end here
-    dispatch(RESET());
-  }, [dispatch, isLoggedIn, isSuccess, navigate, isError, twoFactor, email]);
-
-  // login with google
-  /*  const googleLoginhandle = async (credentialResponse) => {
-    console.log(credentialResponse);
-    await dispatch(loginWithGoogle({ userToken: credentialResponse.credential }));
-  }; */
   return (
     <>
-      <section className="auth-section">
-        {isLoading && <Loader />}
-        <div className="auth-section_container 3xl:-mt-16">
-          <div className="auth-section_container_content">
-            <div className="auth-section_container_content_line"></div>
-            <div className="flexC pb-2">
-              <Logo />
-            </div>
-            <h1 className="text-3xl font-semibold xl:text-2xl text-black dark:text-white">Sign in to Bento</h1>
-            <form className="inputs flex flex-col mt-6 xl:mt-3" onSubmit={loginUser}>
-              <InputFiled fieldNameType={false} type="email" value={email} name="email" onChange={handleInputChange} placeholder="example@gmail.com" />
-              <InputPassword fieldNameType={false} name="password" value={password} onChange={handleInputChange} placeholder="*******" />
-              <PrimaryButton text="log in" />
-            </form>
-            <div className="flexC my-3 gap-3">
-              <div className="auth-line line1 w-full h-[1px] rounded-full"></div>
-              <span className="text-textcolor dark:text-white">OR</span>
-              <div className="auth-line line2 w-full h-[1px] rounded-full"></div>
-            </div>
+      {isLoading && <Loader />}
 
-            <div className="flex flex-col gap-1">
-              <button className="button flex items-center gap-2">
-                <FcGoogle size={20} />
-                <span className="font-normal xl:text-xs">Sign in with Google</span>
-              </button>
-              <button className="button flex items-center gap-2">
-                <FaGithub size={20} />
-                <span className="font-normal xl:text-xs">Sign in with Github</span>
-              </button>
-            </div>
-            <p className="text-gray-400 text-xs text-center pt-3">
-              Don&apos;t have an account?
-              <NavLink to="/signup" className="text-black dark:text-white px-0.5">
-                Sign up
-              </NavLink>
+      <AuthLayout
+        title="Welcome back"
+        subtitle="Enter your account details to continue securely."
+        badgeText="Secure access"
+        footer={
+          <>
+            <p className="mono-auth-signup">
+              Don&apos;t have an account? <NavLink to="/signup">Create one</NavLink>
             </p>
-            <p className="text-gray-400 text-xs text-center">
-              <NavLink to="/forgot-password" className="text-gray-400 px-0.5 hover:text-black dark:hover:text-white transition-colors ease-out">
-                Forgot Password
-              </NavLink>
-            </p>
+          </>
+        }
+      >
+        <form className="mono-auth-form" onSubmit={loginUser} noValidate>
+          <AuthInputField
+            type="email"
+            value={email}
+            name="email"
+            onChange={handleInputChange}
+            placeholder="Email address"
+            autoComplete="email"
+            ariaLabel="Email address"
+            leadingIcon={<FiMail size={17} aria-hidden="true" />}
+            required
+          />
+
+          <AuthInputPassword
+            value={password}
+            name="password"
+            onChange={handleInputChange}
+            placeholder="Password"
+            autoComplete="current-password"
+            ariaLabel="Password"
+            leadingIcon={<FiLock size={17} aria-hidden="true" />}
+            required
+          />
+
+          <div className="mono-auth-form__options">
+            <label className="mono-auth-remember">
+              <input type="checkbox" />
+              <span>Remember me</span>
+            </label>
+
+            <NavLink to="/forgot-password" className="mono-auth-forgot">
+              Forgot password?
+            </NavLink>
           </div>
+
+          <div className="auth-submit">
+            <PrimaryButton text={isLoading ? "Signing in..." : "Log in"} />
+          </div>
+        </form>
+
+        <div className="mono-auth-divider" aria-hidden="true">
+          <span />
+          <p>or</p>
+          <span />
         </div>
-        <div className="absolute bottom-5 flex flex-col items-center gap-5">
-          <AuthUserInfo />
-        </div>
-      </section>
+
+        <AuthSocialButtons />
+      </AuthLayout>
     </>
   );
 };
+AuthSocialButtons.propTypes = {
+  onGoogleClick: PropTypes.func,
+  onGithubClick: PropTypes.func,
+  googleText: PropTypes.string,
+  githubText: PropTypes.string,
+};
 
-export const AuthUserInfo = () => {
-  return (
-    <>
-      <p className=" text-textcolor">
-        Join over <span className="textColor font-semibold">2M</span> global social media users
-      </p>
-      <div className="flex items-center -space-x-4">
-        <Avatar
-          variant="circular"
-          alt="user 1"
-          size="sm"
-          className="border border-gray-800 hover:z-10 focus:z-10"
-          src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1480&q=80"
-        />
-        <Avatar
-          variant="circular"
-          alt="user 2"
-          size="sm"
-          className="border border-gray-800 hover:z-10 focus:z-10"
-          src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1061&q=80"
-        />
-        <Avatar
-          variant="circular"
-          alt="user 3"
-          size="sm"
-          className="border border-gray-800 hover:z-10 focus:z-10"
-          src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1288&q=80"
-        />
-        <Avatar
-          variant="circular"
-          alt="user 4"
-          size="sm"
-          className="border border-gray-800 hover:z-10 focus:z-10"
-          src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1287&q=80"
-        />
-        <Avatar
-          variant="circular"
-          alt="user 5"
-          size="sm"
-          className="border border-gray-800 hover:z-10 focus:z-10"
-          src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1760&q=80"
-        />
-      </div>
-    </>
-  );
+AuthLayout.propTypes = {
+  title: PropTypes.string,
+  subtitle: PropTypes.string,
+  badgeText: PropTypes.string,
+  children: PropTypes.node,
+  footer: PropTypes.node,
+  showTrust: PropTypes.bool,
+  trustItems: PropTypes.arrayOf(PropTypes.string),
+  LogoIcon: PropTypes.elementType,
+  BadgeIcon: PropTypes.elementType,
+  shellClassName: PropTypes.string,
+  cardClassName: PropTypes.string,
+  contentClassName: PropTypes.string,
 };

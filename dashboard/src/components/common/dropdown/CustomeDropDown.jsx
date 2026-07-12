@@ -1,161 +1,225 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const CustomDropdown = ({ value, onChange, name, options = [], placeholder = "Select an option", disabled = false, className = "", isLoading = false, clearable = false, ...props }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  const triggerRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
+  const selectedOption = options.find((opt) => opt.value === value);
+
+  const updateDropdownPosition = () => {
+    if (!triggerRef.current || !dropdownRef.current) return;
+
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const dropdownRect = dropdownRef.current.getBoundingClientRect();
+
+    const gap = 8;
+    const padding = 12;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let top = triggerRect.bottom + gap;
+    let left = triggerRect.left;
+
+    if (left + dropdownRect.width > viewportWidth - padding) {
+      left = Math.max(padding, triggerRect.right - dropdownRect.width);
+    }
+
+    if (left < padding) {
+      left = padding;
+    }
+
+    if (top + dropdownRect.height > viewportHeight - padding) {
+      top = triggerRect.top - dropdownRect.height - gap;
+    }
+
+    if (top < padding) {
+      top = padding;
+    }
+
+    setPosition({ top, left });
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      const clickedTrigger = triggerRef.current?.contains(event.target);
+      const clickedDropdown = dropdownRef.current?.contains(event.target);
+
+      if (!clickedTrigger && !clickedDropdown) {
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      requestAnimationFrame(updateDropdownPosition);
+
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscapeKey);
+      window.addEventListener("resize", updateDropdownPosition);
+      window.addEventListener("scroll", updateDropdownPosition, true);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscapeKey);
+      window.removeEventListener("resize", updateDropdownPosition);
+      window.removeEventListener("scroll", updateDropdownPosition, true);
+    };
+  }, [isOpen]);
 
   const handleSelect = (selectedValue) => {
     setIsOpen(false);
+
     if (onChange) {
       onChange({ target: { name, value: selectedValue } });
     }
   };
 
-  const handleClear = (e) => {
-    e.stopPropagation();
+  const handleClear = (event) => {
+    event.stopPropagation();
     handleSelect("");
   };
-
-  const selectedOption = options.find((opt) => opt.value === value);
 
   if (isLoading) {
     return (
       <div
         className={`
-        w-full h-11 3xl:h-12 px-5
-        flex items-center justify-center
-        bg-white dark:bg-gray-900
-        border border-gray-100 dark:border-gray-800/50
-        rounded-full
-        ${className}
-      `}
+          flex h-11 w-full items-center justify-center rounded-xl border px-5 3xl:h-12
+          border-white/[0.06] bg-white/[0.018]
+          ${className}
+        `}
       >
-        <div className="animate-pulse flex items-center space-x-2">
-          <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+        <div className="flex animate-pulse items-center gap-2">
+          <div className="size-4 rounded-full bg-white/[0.08]" />
+          <div className="h-3 w-24 rounded bg-white/[0.08]" />
         </div>
       </div>
     );
   }
 
-  return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
-      {/* Dropdown trigger/button */}
-      <button
-        type="button"
-        className={`
-          w-full h-11 3xl:h-12 px-5
-          text-left
-          ${value ? "text-gray-800 dark:text-gray-200" : "text-gray-400 dark:text-gray-500"}
-          text-xs 3xl:text-sm
-          border border-gray-100 dark:border-gray-800/50
-          hover:border-gray-200 dark:hover:border-gray-700
-          focus:border-gray-200 dark:focus:border-gray-800
-          focus:outline-none focus:ring-1 focus:ring-gray-200 dark:focus:ring-gray-700
-          rounded-full
-          appearance-none
-          transition-all duration-200
-          flex items-center justify-between
-          ${isOpen ? "border-gray-200 dark:border-gray-700 ring-1 ring-gray-200 dark:ring-gray-700" : ""}
-          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-        `}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        {...props}
-      >
-        <span className="truncate flex-1 text-left">{selectedOption ? selectedOption.label : placeholder}</span>
-
-        <div className="flex items-center gap-2 ml-2">
-          {clearable && value && !disabled && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="
-                w-5 h-5 flex items-center justify-center
-                text-gray-400 hover:text-gray-600
-                dark:text-gray-500 dark:hover:text-gray-300
-                focus:outline-none
-                z-10
-              "
-              aria-label="Clear selection"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-
-          <svg className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </button>
-
-      {/* Dropdown menu - FIXED SCROLLBAR */}
+  const dropdownContent = (
+    <AnimatePresence>
       {isOpen && !disabled && (
-        <div
+        <motion.div
+          ref={dropdownRef}
           className="
-            absolute top-full left-0 right-0 z-50 mt-2
-            bg-white dark:bg-gray-900
-            border border-gray-100 dark:border-gray-800/50
-            rounded-3xl
-            shadow-lg dark:shadow-gray-900/50
-            overflow-hidden
+            fixed z-[2147483647]
+            rounded-xl border border-gray-800/30
+            bg-dark-surface2
+            p-2
+            shadow-dropDownDark
           "
+          style={{
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+            width: triggerRef.current?.offsetWidth || 240,
+            minWidth: "200px",
+            originX: position.left > window.innerWidth / 2 ? 1 : 0,
+          }}
+          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
         >
-          <div
-            className="
-              max-h-60 overflow-y-auto
-              scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 
-              scrollbar-track-gray-100 dark:scrollbar-track-gray-900
-            "
-            style={{
-              maxHeight: "15rem", // 60 * 0.25rem = 15rem
-            }}
-          >
+          <div className="max-h-60 space-y-1 overflow-y-auto pr-1">
             {options.length > 0 ? (
-              options.map((option, index) => (
+              options.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   className={`
-                    w-full text-left
-                    px-4 py-3
-                    text-xs 3xl:text-sm
-                    transition-colors duration-150
-                    ${index < options.length - 1 ? "border-b border-gray-100 dark:border-gray-800/50" : ""}
-                    ${value === option.value ? "bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"}
-                    ${index === 0 ? "rounded-t-xl" : ""}
-                    ${index === options.length - 1 ? "rounded-b-xl" : ""}
+                    flex h-10 w-full items-center gap-3 rounded-xl border px-3
+                    text-left text-xs font-semibold capitalize transition-all duration-300 3xl:text-sm
+                    ${
+                      value === option.value
+                        ? "border-white/[0.05] bg-white/[0.018] text-white/75"
+                        : "border-transparent text-white/35 hover:border-white/[0.05] hover:bg-white/[0.018] hover:text-white/65"
+                    }
                   `}
                   onClick={() => handleSelect(option.value)}
                   role="option"
                   aria-selected={value === option.value}
                 >
-                  {option.label}
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.05] bg-white/[0.018] text-[10px] font-bold text-white/35">
+                    {option?.label?.charAt(0)?.toUpperCase() || "O"}
+                  </span>
+
+                  <span className="min-w-0 truncate">{option.label}</span>
                 </button>
               ))
             ) : (
-              <div className="px-4 py-3 text-xs 3xl:text-sm text-gray-500 dark:text-gray-400 italic text-center">No options available</div>
+              <div className="px-4 py-3 text-center text-xs italic text-white/35 3xl:text-sm">No options available</div>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
+  );
+
+  return (
+    <>
+      <div className={`relative w-full ${className}`}>
+        <button
+          ref={triggerRef}
+          type="button"
+          className={`
+            flex h-11 w-full items-center justify-between gap-3 rounded-xl border px-5
+            text-left transition-all duration-300 3xl:h-12
+            border-white/[0.06] bg-white/[0.018]
+            ${value ? "text-white/75" : "text-white/35"}
+            hover:border-white/[0.1] hover:bg-white/[0.03] hover:text-white/75
+            focus:outline-none
+            ${isOpen ? "border-white/[0.14] bg-white/[0.035] text-white/80" : ""}
+            ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+          `}
+          onClick={() => !disabled && setIsOpen((prev) => !prev)}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          {...props}
+        >
+          <span className="min-w-0 flex-1 truncate text-left text-xs font-semibold 3xl:text-sm">{selectedOption ? selectedOption.label : placeholder}</span>
+
+          <span className="ml-2 flex items-center gap-2">
+            {clearable && value && !disabled && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={handleClear}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    handleClear(event);
+                  }
+                }}
+                className="flex size-5 items-center justify-center text-white/35 transition hover:text-white/70"
+                aria-label="Clear selection"
+              >
+                <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </span>
+            )}
+
+            <svg className={`size-4 text-white/35 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </span>
+        </button>
+      </div>
+
+      {typeof document !== "undefined" ? createPortal(dropdownContent, document.body) : dropdownContent}
+    </>
   );
 };
 
@@ -179,7 +243,6 @@ CustomDropdown.defaultProps = {
   clearable: false,
 };
 
-// Pre-configured dropdowns for common use cases
 export const VisibilityDropdown = (props) => (
   <CustomDropdown
     {...props}
@@ -190,6 +253,7 @@ export const VisibilityDropdown = (props) => (
     ]}
   />
 );
+
 export const TypeVisiDropdown = (props) => (
   <CustomDropdown
     {...props}
@@ -200,6 +264,7 @@ export const TypeVisiDropdown = (props) => (
     ]}
   />
 );
+
 export const AccessTypeDropdown = (props) => (
   <CustomDropdown
     {...props}
@@ -218,8 +283,6 @@ export const TypeDropdown = (props) => (
     options={[
       { value: "blog", label: "Blog" },
       { value: "project", label: "Project" },
-      // { value: "news", label: "News" },
-      // { value: "tutorial", label: "Tutorial" },
     ]}
   />
 );

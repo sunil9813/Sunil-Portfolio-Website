@@ -36,6 +36,11 @@ const createChapter = asyncHandler(async (req, res) => {
       error: "You can only create chapters for subjects you created or the subject doesn't exist",
     });
   }
+  if (existingSubject?.resourceFile?.file?.filePath) {
+    return res.status(400).json({
+      error: "This course has a PDF resource file, so chapters cannot be created for it.",
+    });
+  }
 
   // Generate unique slug
   const originalSlug = slugify(title, { lower: true, remove: /[*+~.()'"!:@]/g, strict: true });
@@ -116,7 +121,7 @@ const createChapter = asyncHandler(async (req, res) => {
               size: result.bytes,
             };
             resolve();
-          }
+          },
         );
         uploadStream.end(videoFile.buffer);
       });

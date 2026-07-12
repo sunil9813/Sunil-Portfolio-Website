@@ -39,7 +39,10 @@ const updateVisibility = async (blogId, visibility) => {
   const response = await axios.patch(`${API_URL}visibility/${blogId}`, { visibility });
   return response.data;
 };
-
+const updateProject = async ({ slug, formData }) => {
+  const response = await axios.put(`${API_URL}${slug}`, formData, config);
+  return response.data;
+};
 // Asset Config
 const addAssetsLimit = async (formdata) => {
   const response = await axios.post(API_URL_CONFIG, formdata);
@@ -59,6 +62,7 @@ const projectService = {
   addAssetsLimit,
   getAssetsLimit,
   getProjectPrivate,
+  updateProject,
 };
 
 export default projectService;

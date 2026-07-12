@@ -1,5 +1,5 @@
 import { getUserFavorite } from "@/redux/slices/common/favoriteSlice";
-import { FavoriteCard } from "@/utils/Router";
+import { FavoriteCard } from "@/routes";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 

@@ -19,6 +19,7 @@ import introReducer from "./slices/portfolio/introSlice";
 import resumeReducer from "./slices/portfolio/resumeSlice";
 import serviceReducer from "./slices/portfolio/portServiceService";
 import testimonialReducer from "./slices/portfolio/testimonialSlice";
+import dashboardReducer from "./slices/dashboard/dashboardSlice";
 
 export const store = configureStore({
   reducer: {
@@ -42,5 +43,6 @@ export const store = configureStore({
     resume: resumeReducer,
     service: serviceReducer,
     testimonial: testimonialReducer,
+    dashboard: dashboardReducer,
   },
 });

@@ -1,251 +1,349 @@
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { ImageToolbar } from "./ImageToolbar";
 import PropTypes from "prop-types";
 
 export const ImageView = ({ node, updateAttributes, selected, editor }) => {
   const { src, alt, size, align, flipX, flipY, width, height, objectFit, display, borderRadius } = node.attrs;
+
   const [isResizing, setIsResizing] = useState(false);
   const [isSelected, setIsSelected] = useState(selected);
-  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0, corner: null });
-  const [naturalDimensions, setNaturalDimensions] = useState({ naturalWidth: null, naturalHeight: null });
+  const [previewSize, setPreviewSize] = useState({
+    width: width || null,
+    height: height || null,
+  });
+  const [naturalDimensions, setNaturalDimensions] = useState({
+    naturalWidth: null,
+    naturalHeight: null,
+  });
+
   const imageRef = useRef(null);
+  const resizeStartRef = useRef(null);
+  const latestPreviewSizeRef = useRef(previewSize);
+  const frameRef = useRef(null);
 
   useEffect(() => {
     setIsSelected(selected);
   }, [selected]);
 
   useEffect(() => {
+    latestPreviewSizeRef.current = previewSize;
+  }, [previewSize]);
+
+  useEffect(() => {
+    if (!isResizing) {
+      setPreviewSize({
+        width: width || null,
+        height: height || null,
+      });
+    }
+  }, [width, height, isResizing]);
+
+  const selectImage = useCallback(() => {
+    const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : -1;
+
+    if (pos >= 0) {
+      editor.commands.setNodeSelection(pos);
+    }
+
+    setIsSelected(true);
+  }, [editor]);
+
+  const updateCurrentImage = useCallback(
+    (attrs) => {
+      updateAttributes(attrs);
+      selectImage();
+    },
+    [updateAttributes, selectImage],
+  );
+
+  useEffect(() => {
     const handleSelectionUpdate = () => {
       const { selection } = editor.state;
       const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : -1;
       const { from, to } = selection;
-      const isNodeSelected = pos >= 0 && from <= pos && to >= pos;
-      setIsSelected(isNodeSelected);
+
+      setIsSelected(pos >= 0 && from <= pos && to >= pos);
     };
 
     editor.on("selectionUpdate", handleSelectionUpdate);
-    return () => editor.off("selectionUpdate", handleSelectionUpdate);
-  }, [editor, node]);
 
-  // Calculate natural dimensions when image loads
+    return () => editor.off("selectionUpdate", handleSelectionUpdate);
+  }, [editor]);
+
   useEffect(() => {
     const img = imageRef.current;
-    if (img && img.complete) {
+
+    if (!img) return;
+
+    const updateNaturalSize = () => {
       setNaturalDimensions({
         naturalWidth: img.naturalWidth,
         naturalHeight: img.naturalHeight,
       });
-    } else if (img) {
-      img.onload = () => {
-        setNaturalDimensions({
-          naturalWidth: img.naturalWidth,
-          naturalHeight: img.naturalHeight,
-        });
-      };
+    };
+
+    if (img.complete) {
+      updateNaturalSize();
+    } else {
+      img.onload = updateNaturalSize;
     }
+
     return () => {
-      if (img) img.onload = null;
+      img.onload = null;
     };
   }, [src]);
 
-  const getSizeStyles = () => {
-    // Prioritize custom width and height if set
-    if (width && height) {
-      return { width, height, maxWidth: "100%" };
-    }
-    if (width) {
-      return { width, height: "auto", maxWidth: "100%" };
-    }
-    if (height) {
-      return { height, width: "auto", maxWidth: "100%" };
+  const getBaseSize = () => {
+    const activeWidth = previewSize.width || width;
+    const activeHeight = previewSize.height || height;
+
+    if (activeWidth && activeHeight) {
+      return {
+        width: activeWidth,
+        height: activeHeight,
+        maxWidth: "100%",
+      };
     }
 
-    // Fallback to size-based defaults
-    if (size === "large") {
+    if (activeWidth) {
       return {
-        width: display === "inline" ? 300 : "100%",
+        width: activeWidth,
         height: "auto",
         maxWidth: "100%",
       };
     }
 
-    const sizes = {
-      small: { width: display === "inline" ? 200 : 400, height: "auto" },
-      medium: { width: display === "inline" ? 300 : 600, height: "auto" },
-    };
-    return sizes[size] || sizes.medium;
-  };
-
-  const getAlignmentStyles = () => {
-    if (display === "inline") {
+    if (activeHeight) {
       return {
-        margin: align === "left" ? "0 8px 0 0" : align === "right" ? "0 0 0 8px" : "0 8px",
-        display: "inline-block",
-        verticalAlign: "middle",
+        height: activeHeight,
+        width: "auto",
+        maxWidth: "100%",
+      };
+    }
+
+    if (size === "large") {
+      return {
+        width: "100%",
+        height: "auto",
+        maxWidth: "100%",
+      };
+    }
+
+    if (size === "small") {
+      return {
+        width: 220,
+        height: "auto",
+        maxWidth: "100%",
       };
     }
 
     return {
-      display: "block",
-      margin: align === "center" ? "0 auto" : align === "left" ? "0 0 0 0" : "0 0 0 auto",
-      width: size === "large" ? "100%" : width || getSizeStyles().width,
+      width: 420,
+      height: "auto",
+      maxWidth: "100%",
     };
   };
 
-  const getTransformStyles = () => ({
+  const getLayoutStyles = () => {
+    const isLeftInline = display === "inline" && align === "left";
+
+    if (isLeftInline) {
+      return {
+        wrapperStyle: {
+          display: "inline-block",
+          width: "auto",
+          maxWidth: "100%",
+          margin: "0 10px 10px 0",
+          verticalAlign: "middle",
+          textAlign: "left",
+        },
+        frameStyle: {
+          display: "inline-block",
+          maxWidth: "100%",
+        },
+        imageStyle: {
+          display: "block",
+          margin: 0,
+        },
+      };
+    }
+
+    return {
+      wrapperStyle: {
+        display: "block",
+        width: "100%",
+        maxWidth: "100%",
+        margin: "0 0 16px 0",
+        textAlign: align === "right" ? "right" : align === "center" ? "center" : "left",
+      },
+      frameStyle: {
+        display: "inline-block",
+        maxWidth: "100%",
+      },
+      imageStyle: {
+        display: "block",
+        margin: 0,
+      },
+    };
+  };
+
+  const layout = getLayoutStyles();
+
+  const imageStyles = {
+    ...getBaseSize(),
+    ...layout.imageStyle,
+    objectFit,
+    borderRadius: `${borderRadius || 0}px`,
     transform: `${flipX ? "scaleX(-1)" : ""} ${flipY ? "scaleY(-1)" : ""}`,
-  });
-
-  const handleMouseDown = (e, corner) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsResizing(true);
-    setResizeStart({
-      x: e.clientX,
-      y: e.clientY,
-      width: width || imageRef.current?.naturalWidth || 300,
-      height: height || imageRef.current?.naturalHeight || 200,
-      corner,
-    });
-    const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-    editor.commands.setNodeSelection(pos);
-    setIsSelected(true);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isResizing) return;
-    const dx = e.clientX - resizeStart.x;
-    let newWidth = resizeStart.width;
-    let newHeight = resizeStart.height;
-    const aspectRatio = resizeStart.width / resizeStart.height;
-
-    switch (resizeStart.corner) {
-      case "top-left":
-        newWidth = resizeStart.width - dx;
-        newHeight = newWidth / aspectRatio;
-        break;
-      case "top-right":
-        newWidth = resizeStart.width + dx;
-        newHeight = newWidth / aspectRatio;
-        break;
-      case "bottom-left":
-        newWidth = resizeStart.width - dx;
-        newHeight = newWidth / aspectRatio;
-        break;
-      case "bottom-right":
-        newWidth = resizeStart.width + dx;
-        newHeight = newWidth / aspectRatio;
-        break;
-    }
-
-    if (newWidth < 50) newWidth = 50;
-    if (newHeight < 50) newHeight = 50;
-
-    updateAttributes({ width: Math.round(newWidth), height: Math.round(newHeight), size: null });
-  };
-
-  const handleMouseUp = () => {
-    setIsResizing(false);
-    const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-    editor.commands.setNodeSelection(pos);
-    setIsSelected(true);
-  };
-
-  const handleImageClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-    editor.commands.setNodeSelection(pos);
-    setIsSelected(true);
-  };
-
-  useEffect(() => {
-    if (isResizing) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isResizing]);
-
-  const styles = {
-    ...getSizeStyles(),
-    ...getAlignmentStyles(),
-    ...getTransformStyles(),
-    objectFit, // Ensure objectFit is applied directly
-    borderRadius: `${borderRadius}px`,
-    position: "relative",
     cursor: "default",
   };
 
+  const handleImageClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    selectImage();
+  };
+
+  const handleMouseDown = (event, corner) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const rect = imageRef.current.getBoundingClientRect();
+
+    resizeStartRef.current = {
+      x: event.clientX,
+      width: rect.width,
+      height: rect.height,
+      corner,
+    };
+
+    const startSize = {
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+    };
+
+    setPreviewSize(startSize);
+    latestPreviewSizeRef.current = startSize;
+
+    setIsResizing(true);
+    selectImage();
+  };
+
+  const handleMouseMove = useCallback((event) => {
+    if (!resizeStartRef.current) return;
+
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
+    }
+
+    frameRef.current = requestAnimationFrame(() => {
+      const start = resizeStartRef.current;
+      const dx = event.clientX - start.x;
+      const aspectRatio = start.width / start.height;
+
+      let nextWidth = start.corner === "top-left" || start.corner === "bottom-left" ? start.width - dx : start.width + dx;
+
+      nextWidth = Math.max(80, nextWidth);
+
+      const nextSize = {
+        width: Math.round(nextWidth),
+        height: Math.round(Math.max(50, nextWidth / aspectRatio)),
+      };
+
+      latestPreviewSizeRef.current = nextSize;
+      setPreviewSize(nextSize);
+    });
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
+    }
+
+    const finalSize = latestPreviewSizeRef.current;
+
+    setIsResizing(false);
+
+    if (finalSize.width && finalSize.height) {
+      updateCurrentImage({
+        width: finalSize.width,
+        height: finalSize.height,
+        size: null,
+      });
+    }
+
+    resizeStartRef.current = null;
+    selectImage();
+  }, [selectImage, updateCurrentImage]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
   return (
-    <NodeViewWrapper as="span" style={{ display: display === "inline" ? "inline-block" : "block" }}>
-      <div className="relative" style={{ display: display === "inline" ? "inline-block" : "block" }} onClick={(e) => e.stopPropagation()}>
+    <NodeViewWrapper as="span" className={`custom-image-node custom-image-node--${align || "left"}`} style={layout.wrapperStyle}>
+      <div className={`custom-image-frame ${isSelected ? "is-selected" : ""}`} style={layout.frameStyle} onClick={(event) => event.stopPropagation()}>
         {isSelected && (
           <ImageToolbar
             onSizeChange={(newSize) => {
-              updateAttributes({ size: newSize, width: null, height: null });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+              updateCurrentImage({
+                size: newSize,
+                width: null,
+                height: null,
+              });
             }}
             onAlignChange={(newAlign) => {
-              updateAttributes({ align: newAlign });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+              updateCurrentImage({
+                align: newAlign,
+              });
             }}
-            onFlipX={(e) => {
-              e.stopPropagation();
-              updateAttributes({ flipX: !flipX });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+            onFlipX={(event) => {
+              event.stopPropagation();
+              updateCurrentImage({ flipX: !flipX });
             }}
-            onFlipY={(e) => {
-              e.stopPropagation();
-              updateAttributes({ flipY: !flipY });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+            onFlipY={(event) => {
+              event.stopPropagation();
+              updateCurrentImage({ flipY: !flipY });
             }}
             onDelete={() => {
               editor.commands.deleteImage();
               setIsSelected(false);
             }}
             onCustomSizeChange={(newWidth, newHeight) => {
-              updateAttributes({ width: newWidth, height: newHeight, size: null });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+              updateCurrentImage({
+                width: newWidth,
+                height: newHeight,
+                size: null,
+              });
             }}
             onObjectFitChange={(newObjectFit) => {
-              updateAttributes({ objectFit: newObjectFit });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+              updateCurrentImage({ objectFit: newObjectFit });
             }}
             onDisplayChange={(newDisplay) => {
-              updateAttributes({ display: newDisplay });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+              updateCurrentImage({ display: newDisplay });
             }}
             onBorderRadiusChange={(newRadius) => {
-              updateAttributes({ borderRadius: newRadius });
-              const pos = imageRef.current ? editor.view.posAtDOM(imageRef.current, 0) : 0;
-              editor.commands.setNodeSelection(pos);
-              setIsSelected(true);
+              updateCurrentImage({ borderRadius: newRadius });
             }}
             currentSize={size}
             currentAlign={align}
             flipX={flipX}
             flipY={flipY}
-            currentWidth={width}
-            currentHeight={height}
+            currentWidth={previewSize.width || width}
+            currentHeight={previewSize.height || height}
             currentObjectFit={objectFit}
             currentDisplay={display}
             currentBorderRadius={borderRadius}
@@ -253,22 +351,10 @@ export const ImageView = ({ node, updateAttributes, selected, editor }) => {
             naturalHeight={naturalDimensions.naturalHeight}
           />
         )}
-        <img ref={imageRef} src={src} alt={alt} style={styles} className={`custom-image ${isSelected ? "custom-image-selected" : ""}`} onClick={handleImageClick} />
+        <img ref={imageRef} src={src} alt={alt || ""} style={imageStyles} className={`custom-image ${isSelected ? "custom-image-selected" : ""}`} onClick={handleImageClick} draggable={false} />
+
         {(isSelected || isResizing) && (
-          <>
-            <div className="resize-handle top-left" onMouseDown={(e) => handleMouseDown(e, "top-left")} style={{ top: 0, left: 0, transform: "translate(-50%, -50%)", cursor: "nwse-resize" }} />
-            <div className="resize-handle top-right" onMouseDown={(e) => handleMouseDown(e, "top-right")} style={{ top: 0, right: 0, transform: "translate(50%, -50%)", cursor: "nesw-resize" }} />
-            <div
-              className="resize-handle bottom-left"
-              onMouseDown={(e) => handleMouseDown(e, "bottom-left")}
-              style={{ bottom: 0, left: 0, transform: "translate(-50%, 50%)", cursor: "nesw-resize" }}
-            />
-            <div
-              className="resize-handle bottom-right"
-              onMouseDown={(e) => handleMouseDown(e, "bottom-right")}
-              style={{ bottom: 0, right: 0, transform: "translate(50%, 50%)", cursor: "nwse-resize" }}
-            />
-          </>
+          <span className="image-resize-handle image-resize-handle-bottom-right" data-resize-handle="bottom-right" onMouseDown={(event) => handleMouseDown(event, "bottom-right")} />
         )}
       </div>
     </NodeViewWrapper>
@@ -293,21 +379,5 @@ ImageView.propTypes = {
   }).isRequired,
   updateAttributes: PropTypes.func.isRequired,
   selected: PropTypes.bool.isRequired,
-  editor: PropTypes.shape({
-    state: PropTypes.shape({
-      selection: PropTypes.shape({
-        from: PropTypes.number,
-        to: PropTypes.number,
-      }),
-    }),
-    view: PropTypes.shape({
-      posAtDOM: PropTypes.func,
-    }),
-    on: PropTypes.func,
-    off: PropTypes.func,
-    commands: PropTypes.shape({
-      setNodeSelection: PropTypes.func,
-      deleteImage: PropTypes.func,
-    }),
-  }).isRequired,
+  editor: PropTypes.object.isRequired,
 };

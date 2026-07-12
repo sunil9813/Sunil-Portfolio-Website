@@ -1,0 +1,79 @@
+/* Fix dropdown head double style */
+.group\/editor-dd {
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* The span inside dropdown trigger */
+.group\/editor-dd > span {
+  height: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+/* Remove old inner head button/div style */
+.group\/editor-dd > span > div,
+.group\/editor-dd > span > button {
+  all: unset !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  width: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: 1 !important;
+}
+
+/* Remove old hover effects from inner head */
+.group\/editor-dd > span > div:hover,
+.group\/editor-dd > span > button:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  color: inherit !important;
+}
+
+/* Force text/icon size inside dropdown trigger */
+.group\/editor-dd > span *,
+.group\/editor-dd > span > div *,
+.group\/editor-dd > span > button * {
+  color: inherit !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Icons inside dropdown trigger */
+.group\/editor-dd > span svg {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+  flex-shrink: 0 !important;
+}

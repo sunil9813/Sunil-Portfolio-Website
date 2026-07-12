@@ -20,6 +20,18 @@ const Resume = require("../../models/portfolio/resumeModel");
 const cryptr = new Cryptr(process.env.CRYPTR_KEY);
 const client = new OAuth2Client(process.env.GOOGLE_ClIENT_ID);
 
+const isProduction = process.env.NODE_ENV === "production";
+
+const authCookieOptions = {
+  path: "/",
+  httpOnly: true,
+  expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+
+  // Allow HTTP cookies during local-network development.
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
+};
+
 const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
   const userExists = await UserModel.findOne({ email });
@@ -206,7 +218,8 @@ const login = asyncHandler(async (req, res) => {
   }
 });
 
-const adminLogin = asyncHandler(async (req, res) => {
+// original
+const adminLogins = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const user = await UserModel.findOne({ email });
   if (!user) {
@@ -272,6 +285,80 @@ const adminLogin = asyncHandler(async (req, res) => {
   }
 });
 
+// fixed network code didnt run
+const adminLogin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400);
+    throw new Error("Email and password are required.");
+  }
+
+  const user = await UserModel.findOne({
+    email: email.trim().toLowerCase(),
+  });
+
+  if (!user) {
+    res.status(400);
+    throw new Error("No account was found with this email.");
+  }
+
+  const passwordIsCorrect = await bcrypt.compare(password, user.password);
+
+  if (!passwordIsCorrect) {
+    res.status(400);
+    throw new Error("Incorrect email or password.");
+  }
+
+  if (user.role !== "admin") {
+    res.status(403);
+    throw new Error("You must be an admin to log in.");
+  }
+
+  const parsedAgent = parse(req.headers["user-agent"]);
+  const currentUserAgent = parsedAgent.ua || "Unknown device";
+
+  const allowedAgent = user.userAgent.some((agent) => agent === currentUserAgent);
+
+  if (!allowedAgent) {
+    const loginCode = Math.floor(100000 + Math.random() * 900000);
+
+    const encryptedLoginCode = cryptr.encrypt(String(loginCode));
+
+    await TokenModel.deleteOne({
+      userId: user._id,
+    });
+
+    await TokenModel.create({
+      userId: user._id,
+      loginToken: encryptedLoginCode,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 30 * 60 * 1000,
+    });
+
+    res.status(400);
+
+    throw new Error("A new or unrecognized browser/device has been detected for your account. For security reasons, please verify your identity to continue.");
+  }
+
+  const token = generateToken(user._id);
+
+  res.cookie("token", token, authCookieOptions);
+
+  const { _id, name, phone, bio, avatar, role, isVerified, cover } = user;
+
+  res.status(200).json({
+    _id,
+    name,
+    email: user.email,
+    phone,
+    bio,
+    avatar,
+    role,
+    isVerified,
+    cover,
+  });
+});
 const logout = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     path: "/",
@@ -389,7 +476,7 @@ const profileCoverUpload = asyncHandler(async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     res.status(200).json(updatedProfile);
@@ -605,7 +692,8 @@ const sendOTPctr = asyncHandler(async (req, res) => {
   }
 });
 
-const loginWithOTP = asyncHandler(async (req, res) => {
+// orginal
+const loginWithOTPs = asyncHandler(async (req, res) => {
   const { email } = req.params;
   const { loginCode } = req.body;
 
@@ -652,6 +740,59 @@ const loginWithOTP = asyncHandler(async (req, res) => {
     });
     res.status(200).json({ profile: formatUser(user), message: "Login successful. Welcome back!" });
   }
+});
+
+// fixed network code didnt run
+const loginWithOTP = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+  const { loginCode } = req.body;
+
+  const user = await UserModel.findOne({
+    email: email.trim().toLowerCase(),
+  });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+
+  const userToken = await TokenModel.findOne({
+    userId: user._id,
+    expiresAt: {
+      $gt: Date.now(),
+    },
+  });
+
+  if (!userToken) {
+    res.status(400);
+    throw new Error("The OTP is invalid or has expired.");
+  }
+
+  const decryptedCode = cryptr.decrypt(userToken.loginToken);
+
+  if (String(loginCode) !== String(decryptedCode)) {
+    res.status(400);
+    throw new Error("The OTP code is incorrect.");
+  }
+
+  const parsedAgent = parse(req.headers["user-agent"]);
+  const currentUserAgent = parsedAgent.ua || "Unknown device";
+
+  if (!user.userAgent.includes(currentUserAgent)) {
+    user.userAgent.push(currentUserAgent);
+    await user.save();
+  }
+
+  await userToken.deleteOne();
+
+  const token = generateToken(user._id);
+
+  res.cookie("token", token, authCookieOptions);
+
+  res.status(200).json({
+    profile: formatUser(user),
+    message: "Login successful. Welcome back!",
+  });
 });
 
 const loginWithGoogle = asyncHandler(async (req, res) => {
@@ -1086,7 +1227,7 @@ const updateLink = asyncHandler(async (req, res) => {
           "links.$.visibility": visibility || undefined,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedLink) {

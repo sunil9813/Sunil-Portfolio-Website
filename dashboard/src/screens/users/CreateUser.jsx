@@ -1,4 +1,4 @@
-import { BreadcrumbsComponent, GhostButton, HeadingTwo, Input, PrimaryButton, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
+import { BreadcrumbsComponent, GhostButton, HeadingTwo, Input, PrimaryButton, StickyHeader, TertiaryButton, Wrapper } from "@/routes";
 import { useNavigate } from "react-router-dom";
 
 export const CreateUser = () => {

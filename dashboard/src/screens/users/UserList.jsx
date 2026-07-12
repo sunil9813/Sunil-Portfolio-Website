@@ -1,5 +1,5 @@
 import { deleteUserByAdmin, getAllUserByAdmin } from "@/redux/slices/authSlice";
-import { BreadcrumbsComponent, GlitterCards, Table, Wrapper } from "@/utils/Router";
+import { BreadcrumbsComponent, GlitterCards, Table, Wrapper } from "@/routes";
 import { Avatar } from "@material-tailwind/react";
 import PropTypes from "prop-types";
 import { useEffect } from "react";

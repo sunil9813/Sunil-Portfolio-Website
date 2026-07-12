@@ -1,14 +1,19 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { IoCameraSharp } from "react-icons/io5";
+import { MdClose } from "react-icons/md";
+
 import { getAllFaculty } from "@/redux/slices/universityStructure/facultySlice";
 import { getAllProgram, getProgram, updateProgram } from "@/redux/slices/universityStructure/programSlice";
 import { getAllUniversity } from "@/redux/slices/universityStructure/universitySlice";
 import Editor from "@/textEditor/Editor";
-import { FacultyDropDown, GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, UniversityDropDown, Wrapper } from "@/utils/Router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { IoCameraSharp } from "react-icons/io5";
-import { MdClose } from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+import { FacultyDropDown, GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, UniversityDropDown, Wrapper } from "@/routes";
+
+const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_IMAGE_FORMATS = ["image/png", "image/jpeg", "image/jpg"];
 
 const initialState = {
   name: "",
@@ -17,262 +22,456 @@ const initialState = {
   faculty: "",
 };
 
+const getErrorMessage = (error, fallbackMessage) => {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  return error?.message || fallbackMessage;
+};
+
+const UpdateProgramSkeleton = () => {
+  return (
+    <>
+      <div className="mb-3 h-16 animate-pulse rounded-2xl bg-gray-200 dark:bg-white/[0.035]" />
+
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <Wrapper className="p-5 sm:p-6">
+          <div className="space-y-5">
+            <div className="h-5 w-36 animate-pulse rounded-md bg-gray-200 dark:bg-white/[0.045]" />
+
+            {[...Array(3)].map((_, index) => (
+              <div key={index}>
+                <div className="mb-2 h-3 w-24 animate-pulse rounded bg-gray-200 dark:bg-white/[0.04]" />
+
+                <div className="h-11 animate-pulse rounded-full bg-gray-200 dark:bg-white/[0.04]" />
+              </div>
+            ))}
+          </div>
+        </Wrapper>
+
+        <Wrapper className="p-5 sm:p-6">
+          <div className="mb-4 h-5 w-32 animate-pulse rounded-md bg-gray-200 dark:bg-white/[0.045]" />
+
+          <div className="h-64 animate-pulse rounded-3xl bg-gray-200 dark:bg-white/[0.04]" />
+        </Wrapper>
+      </section>
+
+      <Wrapper className="mt-3 p-5 sm:p-6">
+        <div className="mb-4 h-5 w-28 animate-pulse rounded-md bg-gray-200 dark:bg-white/[0.045]" />
+
+        <div className="h-[400px] animate-pulse rounded-2xl bg-gray-200 dark:bg-white/[0.04]" />
+      </Wrapper>
+    </>
+  );
+};
+
 export const UpdateProgram = () => {
   const thumbnailInputRef = useRef(null);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { slug } = useParams();
 
+  const { program: currentProgram } = useSelector((state) => state.program);
+
   const [program, setProgram] = useState(initialState);
+  const [selectedUniversity, setSelectedUniversity] = useState(null);
+  const [selectedFaculty, setSelectedFaculty] = useState(null);
+
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedUniversity, setSelectedUniversity] = useState(null);
-  const [selectedFaculty, setSelectedFaculty] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { name, university, faculty } = program;
 
-  // Get data from Redux store
-  const { program: currentProgram } = useSelector((state) => state.program);
-  const { universitys } = useSelector((state) => state.university);
-  const { universityList } = universitys || {};
-
-  // Load initial data
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
+    const loadProgramData = async () => {
+      if (!slug) {
+        setIsPageLoading(false);
+        return;
+      }
+
       try {
-        await dispatch(getProgram(slug));
-        await dispatch(getAllFaculty());
-        await dispatch(getAllUniversity());
+        setIsPageLoading(true);
+
+        await Promise.all([dispatch(getProgram(slug)).unwrap(), dispatch(getAllFaculty()).unwrap(), dispatch(getAllUniversity()).unwrap()]);
       } catch (error) {
-        toast.error(error || "Failed to load program data");
+        toast.error(getErrorMessage(error, "Failed to load program data."));
       } finally {
-        setIsLoading(false);
+        setIsPageLoading(false);
       }
     };
-    loadData();
+
+    loadProgramData();
   }, [dispatch, slug]);
 
-  // Set initial values when currentProgram is available
   useEffect(() => {
-    if (currentProgram) {
-      setProgram({
-        name: currentProgram.name || "",
-        description: currentProgram.description || "",
-        university: currentProgram.university?._id || "",
-        faculty: currentProgram.faculty?._id || "",
-      });
-      setDescription(currentProgram.description || "");
-      setThumbnailPreview(currentProgram.thumbnail?.filePath || "");
-
-      if (currentProgram.university) {
-        setSelectedUniversity({
-          _id: currentProgram.university._id,
-          name: currentProgram.university.name,
-        });
-      }
-      if (currentProgram.faculty) {
-        setSelectedFaculty({
-          _id: currentProgram.faculty._id,
-          name: currentProgram.faculty.name,
-        });
-      }
+    if (!currentProgram) {
+      return;
     }
+
+    setProgram({
+      name: currentProgram.name || "",
+      description: currentProgram.description || "",
+      university: currentProgram.university?._id || "",
+      faculty: currentProgram.faculty?._id || "",
+    });
+
+    setDescription(currentProgram.description || "");
+    setThumbnailPreview(currentProgram.thumbnail?.filePath || "");
+
+    setSelectedUniversity(
+      currentProgram.university
+        ? {
+            _id: currentProgram.university._id,
+            name: currentProgram.university.name,
+          }
+        : null,
+    );
+
+    setSelectedFaculty(
+      currentProgram.faculty
+        ? {
+            _id: currentProgram.faculty._id,
+            name: currentProgram.faculty.name,
+          }
+        : null,
+    );
   }, [currentProgram]);
 
-  // Clean up object URLs
   useEffect(() => {
     return () => {
-      if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
+      if (thumbnailPreview?.startsWith("blob:")) {
         URL.revokeObjectURL(thumbnailPreview);
       }
     };
   }, [thumbnailPreview]);
 
-  const isImageValid = (file) => {
-    const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
-    return allowedFormats.includes(file.type);
-  };
+  const isImageValid = useCallback((file) => {
+    return ALLOWED_IMAGE_FORMATS.includes(file?.type);
+  }, []);
 
-  const handleThumbnailChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
+  const processThumbnail = useCallback(
+    (selectedFile) => {
+      if (!selectedFile) {
+        return;
+      }
+
       if (!isImageValid(selectedFile)) {
         toast.error("Thumbnail must be a PNG, JPEG, or JPG image.");
         return;
       }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("Thumbnail file size exceeds 10MB limit.");
+
+      if (selectedFile.size > MAX_THUMBNAIL_SIZE) {
+        toast.error("Thumbnail file size exceeds the 10MB limit.");
         return;
       }
+
+      setThumbnailPreview((currentPreview) => {
+        if (currentPreview?.startsWith("blob:")) {
+          URL.revokeObjectURL(currentPreview);
+        }
+
+        return URL.createObjectURL(selectedFile);
+      });
+
       setThumbnail(selectedFile);
-      setThumbnailPreview(URL.createObjectURL(selectedFile));
+    },
+    [isImageValid],
+  );
+
+  const handleThumbnailChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+
+    if (selectedFile) {
+      processThumbnail(selectedFile);
     }
+
+    event.target.value = "";
   };
 
-  const handleDropThumbnail = useCallback((event) => {
+  const handleDropThumbnail = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      const selectedFile = event.dataTransfer.files?.[0];
+
+      if (selectedFile) {
+        processThumbnail(selectedFile);
+      }
+    },
+    [processThumbnail],
+  );
+
+  const handleRestoreThumbnail = (event) => {
     event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) handleThumbnailChange({ target: { files: [file] } });
-  }, []);
+    event.stopPropagation();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProgram({ ...program, [name]: value });
+    if (thumbnailPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(thumbnailPreview);
+    }
+
+    setThumbnail(null);
+    setThumbnailPreview(currentProgram?.thumbnail?.filePath || "");
   };
 
-  const handleUniversityChange = (selectedUniversity) => {
-    setSelectedUniversity(selectedUniversity);
-    setSelectedFaculty(null); // Reset faculty when university changes
-    setProgram((prev) => ({
-      ...prev,
-      university: selectedUniversity?._id || "",
-      faculty: "", // Clear faculty when university changes
+  const handleInputChange = (event) => {
+    const { name: fieldName, value } = event.target;
+
+    setProgram((previousProgram) => ({
+      ...previousProgram,
+      [fieldName]: value,
     }));
   };
 
-  const handleFacultyChange = (selectedFaculty) => {
-    setSelectedFaculty(selectedFaculty);
-    setProgram((prev) => ({
-      ...prev,
-      faculty: selectedFaculty?._id || "",
+  const handleUniversityChange = (universityOption) => {
+    setSelectedUniversity(universityOption);
+    setSelectedFaculty(null);
+
+    setProgram((previousProgram) => ({
+      ...previousProgram,
+      university: universityOption?._id || "",
+      faculty: "",
+    }));
+  };
+
+  const handleFacultyChange = (facultyOption) => {
+    setSelectedFaculty(facultyOption);
+
+    setProgram((previousProgram) => ({
+      ...previousProgram,
+      faculty: facultyOption?._id || "",
     }));
   };
 
   const handleUpdate = async () => {
-    if (!name.trim()) {
-      toast.error("Program name is required");
-      return;
-    }
-
     if (!university) {
-      toast.error("University is required");
+      toast.error("University is required.");
       return;
     }
 
     if (!faculty) {
-      toast.error("Faculty is required");
+      toast.error("Faculty is required.");
       return;
     }
 
+    if (!name.trim()) {
+      toast.error("Program name is required.");
+      return;
+    }
+
+    if (isSubmitting) {
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("name", name.trim());
+    formData.append("description", description || "");
+    formData.append("university", university);
+    formData.append("faculty", faculty);
+
+    if (thumbnail) {
+      formData.append("thumbnail", thumbnail);
+    }
+
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
 
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("university", university);
-      formData.append("faculty", faculty);
+      await dispatch(
+        updateProgram({
+          slug,
+          formData,
+        }),
+      ).unwrap();
 
-      if (thumbnail) {
-        formData.append("thumbnail", thumbnail);
-      }
+      await dispatch(getAllProgram()).unwrap();
 
-      await dispatch(updateProgram({ slug, formData })).unwrap();
-      await dispatch(getAllProgram());
+      toast.success("Program updated successfully.");
       navigate("/all-program");
     } catch (error) {
-      toast.error(error.message || "Failed to update program");
+      toast.error(getErrorMessage(error, "Failed to update program."));
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (isLoading || !currentProgram) {
-    return <div>Loading...</div>;
+  if (isPageLoading || !currentProgram) {
+    return <UpdateProgramSkeleton />;
   }
 
   return (
     <>
       <StickyHeader>
         <HeadingTwo>Update Program</HeadingTwo>
-        <div className="flexC gap-2">
-          <GhostButton onClick={() => navigate("/all-program")}>Cancle</GhostButton>
-          <TertiaryButton onClick={handleUpdate}>Update Program</TertiaryButton>
+
+        <div className="flex items-center gap-2">
+          <GhostButton type="button" disabled={isSubmitting} onClick={() => navigate("/all-program")}>
+            Cancel
+          </GhostButton>
+
+          <TertiaryButton type="button" disabled={isSubmitting} onClick={handleUpdate}>
+            {isSubmitting ? "Updating..." : "Update Program"}
+          </TertiaryButton>
         </div>
       </StickyHeader>
 
-      <section className="flex justify-between gap-3">
-        <div className="w-2/3">
-          <Wrapper className="p-5 h-full">
-            <InputTitle className="mb-4">Program details</InputTitle>
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        {/* Program details */}
+        <Wrapper className="group relative h-full overflow-hidden p-5 sm:p-6">
+          {/* Wrapper background remains unchanged */}
 
-            <div className="input">
-              <InputLabel className="my-2">University</InputLabel>
-              <div className="relative">
-                <UniversityDropDown value={selectedUniversity} onChange={handleUniversityChange} options={universityList || []} placeholder="Select University" />
-              </div>
+          <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-sky-500/[0.014] blur-[90px] transition-all duration-700 group-hover:bg-sky-500/[0.024]" />
+
+          <div className="pointer-events-none absolute -bottom-24 -left-24 size-64 rounded-full bg-violet-500/[0.012] blur-[90px] transition-all duration-700 group-hover:bg-violet-500/[0.022]" />
+
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.012),transparent_40%,transparent_75%,rgba(255,255,255,0.003))]" />
+
+          <div className="relative z-10">
+            <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+              <InputTitle className="mb-1">Program details</InputTitle>
+
+              <p className="text-[9px] leading-5 text-gray-400 dark:text-white/25">Update the university, faculty and program name.</p>
             </div>
 
-            <div className="input py-3">
-              <InputLabel className="my-2">Faculty</InputLabel>
-              <div className="relative">
-                <FacultyDropDown
-                  value={selectedFaculty}
-                  onChange={handleFacultyChange}
-                  universityId={selectedUniversity?._id} // Pass the selected university ID
-                  placeholder="Select Faculty"
-                  disabled={!selectedUniversity} // Disable if no university is selected
-                />
-              </div>
-            </div>
+            <div className="space-y-5">
+              {/* University */}
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <InputLabel>University</InputLabel>
 
-            <div className="input">
-              <div className="flex items-center gap-1">
-                <InputLabel className="my-2">Name</InputLabel>
+                  <span className="rounded-full border border-emerald-300/20 bg-emerald-500/[0.05] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.08em] text-emerald-700 dark:border-emerald-300/[0.08] dark:bg-emerald-300/[0.035] dark:text-emerald-200/60">
+                    Required
+                  </span>
+                </div>
+
+                <UniversityDropDown value={selectedUniversity} onChange={handleUniversityChange} placeholder="Select University" />
               </div>
-              <div className="relative">
+
+              {/* Faculty */}
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <InputLabel>Faculty</InputLabel>
+
+                  {!selectedUniversity && <span className="text-[8px] text-gray-400 dark:text-white/20">Select a university first</span>}
+                </div>
+
+                <FacultyDropDown value={selectedFaculty} onChange={handleFacultyChange} universityId={selectedUniversity?._id || ""} placeholder="Select Faculty" disabled={!selectedUniversity} />
+              </div>
+
+              {/* Program name */}
+              <div>
+                <InputLabel className="mb-2">Program name</InputLabel>
+
                 <Input type="text" name="name" value={name} handleChange={handleInputChange} placeholder="BBA, BCA, BIT" />
+
+                <p className="mt-1.5 text-[9px] text-gray-400 dark:text-white/20">Enter the official program name or abbreviation.</p>
               </div>
             </div>
-          </Wrapper>
-        </div>
+          </div>
+        </Wrapper>
 
-        <div className="w-1/3">
-          <Wrapper className="p-5 w-full">
-            <InputTitle className="mb-4">Thumbnail Image</InputTitle>
+        {/* Thumbnail */}
+        <Wrapper className="group relative h-full overflow-hidden p-5 sm:p-6">
+          {/* Wrapper background remains unchanged */}
+
+          <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-violet-500/[0.014] blur-[80px] transition-all duration-700 group-hover:bg-violet-500/[0.024]" />
+
+          <div className="pointer-events-none absolute -bottom-20 -left-20 size-52 rounded-full bg-cyan-500/[0.010] blur-[80px]" />
+
+          <div className="relative z-10">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <InputTitle className="mb-1">Thumbnail image</InputTitle>
+
+                <p className="text-[9px] text-gray-400 dark:text-white/25">Replace the current program image</p>
+              </div>
+
+              <span className="rounded-full border border-gray-200/70 bg-gray-50/60 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.08em] text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.02] dark:text-white/30">
+                Max 10MB
+              </span>
+            </div>
+
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Upload program thumbnail"
+              onClick={() => thumbnailInputRef.current?.click()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  thumbnailInputRef.current?.click();
+                }
+              }}
               onDrop={handleDropThumbnail}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center w-full h-64 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
-              onClick={() => thumbnailInputRef.current.click()}
+              onDragOver={(event) => event.preventDefault()}
+              className="relative flex h-64 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-gray-300/80 bg-gray-50/60 text-center transition-all duration-300 hover:border-violet-400/40 hover:bg-violet-500/[0.025] focus:outline-none focus:ring-4 focus:ring-violet-500/[0.05] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-violet-300/[0.15] dark:hover:bg-violet-300/[0.025]"
             >
               {thumbnailPreview ? (
-                <div className="relative w-full h-64 flex items-center justify-center">
-                  <img src={thumbnailPreview} alt="Thumbnail Preview" className="w-full h-full rounded-3xl object-cover" />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setThumbnail(null);
-                      setThumbnailPreview(currentProgram.thumbnail?.filePath || "");
-                    }}
-                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    title="Remove Thumbnail"
-                    aria-label="Remove thumbnail image"
-                  >
-                    <MdClose />
-                  </button>
-                </div>
+                <>
+                  <img src={thumbnailPreview} alt="Program thumbnail preview" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.015]" />
+
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
+
+                  <span className="absolute bottom-3 left-3 rounded-lg border border-white/[0.12] bg-black/45 px-2.5 py-1.5 text-[9px] font-medium text-white/90 backdrop-blur-xl">
+                    {thumbnail ? "New thumbnail preview" : "Current thumbnail"}
+                  </span>
+
+                  {thumbnail && (
+                    <button
+                      type="button"
+                      onClick={handleRestoreThumbnail}
+                      title="Restore current thumbnail"
+                      aria-label="Restore current program thumbnail"
+                      className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/85 text-white shadow-[0_8px_20px_rgba(0,0,0,0.22)] backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
+                    >
+                      <MdClose size={15} />
+                    </button>
+                  )}
+                </>
               ) : (
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <IoCameraSharp size={30} />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Drag and drop an image or
-                    <span className="textColor font-medium cursor-pointer pl-1">click to browse</span>
-                  </p>
+                <div className="flex max-w-[260px] flex-col items-center px-5">
+                  <span className="relative flex size-14 items-center justify-center overflow-hidden rounded-2xl border border-violet-300/20 bg-violet-500/[0.07] text-violet-600 shadow-[0_10px_26px_rgba(124,58,237,0.10)] dark:border-violet-300/[0.10] dark:bg-violet-300/[0.045] dark:text-violet-200/70">
+                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.10] to-transparent" />
+
+                    <IoCameraSharp className="relative z-10" size={25} />
+                  </span>
+
+                  <p className="mt-4 text-[11px] font-medium text-gray-600 dark:text-white/50">Drag and drop an image</p>
+
+                  <p className="mt-1.5 text-[9px] text-gray-400 dark:text-white/25">or click to browse PNG, JPG or JPEG</p>
                 </div>
               )}
+
               <input ref={thumbnailInputRef} id="thumbnail" type="file" name="thumbnail" className="hidden" onChange={handleThumbnailChange} accept="image/png,image/jpeg,image/jpg" />
             </div>
-          </Wrapper>
-        </div>
+          </div>
+        </Wrapper>
       </section>
 
-      <Wrapper className="p-5 mt-3">
-        <InputTitle className="mb-4">Description</InputTitle>
-        <Editor customId={currentProgram.groupId} value={description} onChange={setDescription} folderName="program/description" folder="program" subfolder="description" />
+      {/* Description editor */}
+      <Wrapper className="group relative mt-3 overflow-hidden p-5 sm:p-6">
+        {/* Wrapper background remains unchanged */}
+
+        <div className="pointer-events-none absolute -bottom-24 -right-24 size-72 rounded-full bg-sky-500/[0.014] blur-[95px] transition-all duration-700 group-hover:bg-sky-500/[0.024]" />
+
+        <div className="pointer-events-none absolute -left-24 -top-24 size-64 rounded-full bg-violet-500/[0.010] blur-[90px]" />
+
+        <div className="relative z-10">
+          <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+            <InputTitle className="mb-1">Program description</InputTitle>
+
+            <p className="text-[9px] leading-5 text-gray-400 dark:text-white/25">Update the program overview, learning outcomes, requirements and career information.</p>
+          </div>
+
+          <div className="min-h-[400px] rounded-2xl border border-gray-200/70 bg-gray-50/35 p-2 dark:border-white/[0.045] dark:bg-white/[0.014]">
+            <Editor customId={currentProgram?.groupId} value={description} onChange={setDescription} folderName="program/description" folder="program" subfolder="description" />
+          </div>
+        </div>
       </Wrapper>
     </>
   );

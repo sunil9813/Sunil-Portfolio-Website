@@ -1,25 +1,35 @@
-import { createProject, getAllProject } from "@/redux/slices/projectSlice";
-import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/utils/Router";
-import { toast } from "react-toastify";
-import { v4 as uuidv4 } from "uuid";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { v4 as uuidv4 } from "uuid";
 import TagsInput from "react-tagsinput";
-import { CategoryDropDown } from "@/components/common/DropDown";
+import DatePicker from "react-datepicker";
 import { Switch, Tooltip } from "@material-tailwind/react";
-import Editor from "@/textEditor/Editor";
+
 import { MdClose } from "react-icons/md";
-import { getAssetsLimit } from "@/redux/slices/settings/AssestLimitSlice";
 import { CiCircleQuestion, CiDiscount1, CiDollar } from "react-icons/ci";
 import { IoCameraSharp } from "react-icons/io5";
-import { FaFolder } from "react-icons/fa";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { IoIosCheckmarkCircle } from "react-icons/io";
-import { FaCirclePlus, FaCircleMinus } from "react-icons/fa6";
-import { ProjectToolsSection } from "./ProjectToolsSection";
+import { FaFolder } from "react-icons/fa";
+import { FaCircleMinus, FaCirclePlus } from "react-icons/fa6";
+
+import Editor from "@/textEditor/Editor";
+import { createProject, getAllProject } from "@/redux/slices/projectSlice";
+import { getAssetsLimit } from "@/redux/slices/settings/AssestLimitSlice";
+import { CategoryDropDown } from "@/components/common/DropDown";
+import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/routes";
 import { inputClassName } from "@/utils";
+import { ProjectToolsSection } from "./ProjectToolsSection";
+
+import "react-tagsinput/react-tagsinput.css";
+import "react-datepicker/dist/react-datepicker.css";
+import { CustomDropdown } from "@/components/common/dropdown/CustomeDropDown";
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_RESOURCE_SIZE = 100 * 1024 * 1024;
+
+const ALLOWED_IMAGE_FORMATS = ["image/png", "image/jpeg", "image/jpg"];
 
 const initialState = {
   title: "",
@@ -29,28 +39,48 @@ const initialState = {
   urllink: "",
   price: "",
   discount: "",
+  discountDate: "",
   category: null,
   tags: [],
   formats: [],
   highlights: [],
 };
 
+const revokeObjectUrl = (url) => {
+  if (url?.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+};
+
 export const CreateProject = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const thumbnailInputRef = useRef(null);
   const assetsInputRef = useRef(null);
   const resourceInputRef = useRef(null);
 
+  const thumbnailPreviewRef = useRef(null);
+  const resourcePreviewRef = useRef(null);
+  const assetsPreviewsRef = useRef([]);
+
   const [project, setProject] = useState(initialState);
   const [highlights, setHighlights] = useState([""]);
+
   const [thumbnail, setThumbnail] = useState(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState("");
+
+  const [assets, setAssets] = useState([]);
+  const [assetsPreviews, setAssetsPreviews] = useState([]);
+
   const [resourceFileUpload, setResourceFileUpload] = useState(null);
   const [resourceFileUrl, setResourceFileUrl] = useState("");
-  const [assets, setAssets] = useState([]);
-  const [resourcePreview, setResourcePreview] = useState(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState(null);
-  const [assetsPreviews, setAssetsPreviews] = useState([]);
+  const [resourcePreview, setResourcePreview] = useState("");
+
+  const [description, setDescription] = useState("");
+  const [groupId] = useState(() => uuidv4());
+  const [discountEnabled, setDiscountEnabled] = useState(false);
+
   const [tagError, setTagError] = useState("");
   const [formatError, setFormatError] = useState("");
   const [highlightErrors, setHighlightErrors] = useState([""]);
@@ -58,34 +88,55 @@ export const CreateProject = () => {
   const [metaDescError, setMetaDescError] = useState("");
   const [resourceFileError, setResourceFileError] = useState("");
   const [discountError, setDiscountError] = useState("");
-  const [description, setDescription] = useState("");
-  const [groupId] = useState(uuidv4());
-  const [discountEnabled, setDiscountEnabled] = useState(false);
 
   const { title, category, metaDescription, visibility, tags, formats, layout, urllink, price, discount } = project;
+
   const { isError } = useSelector((state) => state.project);
+
   const { assetLimit } = useSelector((state) => state.assetlimit);
 
-  // Fetch asset limit on mount
+  const maximumAssets = assetLimit?.assetLimit || 5;
+
   useEffect(() => {
     dispatch(getAssetsLimit());
   }, [dispatch]);
 
-  // Clean up object URLs to prevent memory leaks
+  useEffect(() => {
+    thumbnailPreviewRef.current = thumbnailPreview;
+  }, [thumbnailPreview]);
+
+  useEffect(() => {
+    resourcePreviewRef.current = resourcePreview;
+  }, [resourcePreview]);
+
+  useEffect(() => {
+    assetsPreviewsRef.current = assetsPreviews;
+  }, [assetsPreviews]);
+
   useEffect(() => {
     return () => {
-      if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
-      if (resourcePreview) URL.revokeObjectURL(resourcePreview);
-      assetsPreviews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
-    };
-  }, [thumbnailPreview, assetsPreviews, resourcePreview]);
+      revokeObjectUrl(thumbnailPreviewRef.current);
+      revokeObjectUrl(resourcePreviewRef.current);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProject({ ...project, [name]: value });
+      assetsPreviewsRef.current.forEach((preview) => {
+        revokeObjectUrl(preview);
+      });
+    };
+  }, []);
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setProject((previousProject) => ({
+      ...previousProject,
+      [name]: value,
+    }));
+
     if (name === "price" || name === "discount") {
       const priceValue = name === "price" ? parseFloat(value) || 0 : parseFloat(price) || 0;
+
       const discountValue = name === "discount" ? parseFloat(value) || 0 : parseFloat(discount) || 0;
+
       if (discountValue >= priceValue && discountValue > 0) {
         setDiscountError("Discount cannot be greater than or equal to the price.");
       } else if (discountValue < 0) {
@@ -96,122 +147,231 @@ export const CreateProject = () => {
     }
   };
 
-  const handleResourceFileUrlChange = (e) => {
-    const value = e.target.value;
+  const handleResourceFileUrlChange = (event) => {
+    const value = event.target.value;
+
     setResourceFileUrl(value);
-    const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
+
+    const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w\-./?%&=]*)?$/;
+
     if (value && !urlRegex.test(value)) {
-      setResourceFileError("Please enter a valid URL (e.g., https://github.com/user/repo)");
+      setResourceFileError("Please enter a valid URL, such as https://github.com/user/repo.");
     } else {
       setResourceFileError("");
     }
   };
 
-  const handleResourceFileUploadChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 100 * 1024 * 1024) {
-        toast.error("Resource file size exceeds 100MB limit.");
+  const processResourceFile = useCallback(
+    (file) => {
+      if (!file) {
         return;
       }
+
+      if (file.size > MAX_RESOURCE_SIZE) {
+        toast.error("Resource file size exceeds the 100MB limit.");
+        return;
+      }
+
+      revokeObjectUrl(resourcePreview);
+
       setResourceFileUpload(file);
       setResourcePreview(URL.createObjectURL(file));
       setResourceFileError("");
-    }
-  };
+    },
+    [resourcePreview],
+  );
 
-  const isImageValid = (file) => {
-    const allowedFormats = ["image/png", "image/jpeg", "image/jpg"];
-    return allowedFormats.includes(file.type);
-  };
+  const handleResourceFileUploadChange = (event) => {
+    const selectedFile = event.target.files?.[0];
 
-  const handleThumbnailChange = (e) => {
-    const selectedFile = e.target.files[0];
     if (selectedFile) {
+      processResourceFile(selectedFile);
+    }
+
+    event.target.value = "";
+  };
+
+  const isImageValid = useCallback((file) => {
+    return ALLOWED_IMAGE_FORMATS.includes(file?.type);
+  }, []);
+
+  const processThumbnail = useCallback(
+    (selectedFile) => {
+      if (!selectedFile) {
+        return;
+      }
+
       if (!isImageValid(selectedFile)) {
         toast.error("Thumbnail must be a PNG, JPEG, or JPG image.");
         return;
       }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("Thumbnail file size exceeds 10MB limit.");
+
+      if (selectedFile.size > MAX_IMAGE_SIZE) {
+        toast.error("Thumbnail file size exceeds the 10MB limit.");
         return;
       }
+
+      revokeObjectUrl(thumbnailPreview);
+
       setThumbnail(selectedFile);
       setThumbnailPreview(URL.createObjectURL(selectedFile));
+    },
+    [isImageValid, thumbnailPreview],
+  );
+
+  const handleThumbnailChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+
+    if (selectedFile) {
+      processThumbnail(selectedFile);
     }
+
+    event.target.value = "";
   };
 
-  const handleAssetsChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    const validFiles = selectedFiles.filter((file) => {
-      if (!isImageValid(file)) {
-        toast.error(`Asset ${file.name} is not a valid PNG, JPEG, or JPG image.`);
-        return false;
+  const processAssets = useCallback(
+    (selectedFiles) => {
+      const files = Array.from(selectedFiles || []);
+
+      if (!files.length) {
+        return;
       }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`Asset ${file.name} exceeds 10MB limit.`);
-        return false;
+
+      const validFiles = files.filter((file) => {
+        if (!isImageValid(file)) {
+          toast.error(`${file.name} is not a valid PNG, JPEG, or JPG image.`);
+
+          return false;
+        }
+
+        if (file.size > MAX_IMAGE_SIZE) {
+          toast.error(`${file.name} exceeds the 10MB limit.`);
+
+          return false;
+        }
+
+        return true;
+      });
+
+      if (assets.length + validFiles.length > maximumAssets) {
+        toast.error(`You cannot upload more than ${maximumAssets} project assets.`);
+
+        return;
       }
-      return true;
-    });
-    const limit = assetLimit?.assetLimit || 5;
-    if (assets.length + validFiles.length > limit) {
-      toast.error(`Cannot upload more than ${limit} assets.`);
-      return;
-    }
-    setAssets((prevAssets) => [...prevAssets, ...validFiles]);
-    setAssetsPreviews((prevPreviews) => [...prevPreviews, ...validFiles.map((file) => URL.createObjectURL(file))]);
+
+      const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
+
+      setAssets((previousAssets) => [...previousAssets, ...validFiles]);
+
+      setAssetsPreviews((previousPreviews) => [...previousPreviews, ...newPreviews]);
+    },
+    [assets.length, isImageValid, maximumAssets],
+  );
+
+  const handleAssetsChange = (event) => {
+    processAssets(event.target.files);
+    event.target.value = "";
   };
 
   const handleDeleteAsset = (index) => {
-    setAssets((prevAssets) => prevAssets.filter((_, i) => i !== index));
-    setAssetsPreviews((prevPreviews) => prevPreviews.filter((_, i) => i !== index));
+    revokeObjectUrl(assetsPreviews[index]);
+
+    setAssets((previousAssets) => previousAssets.filter((_, assetIndex) => assetIndex !== index));
+
+    setAssetsPreviews((previousPreviews) => previousPreviews.filter((_, previewIndex) => previewIndex !== index));
+  };
+
+  const handleRemoveThumbnail = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    revokeObjectUrl(thumbnailPreview);
+
+    setThumbnail(null);
+    setThumbnailPreview("");
+  };
+
+  const handleRemoveResource = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    revokeObjectUrl(resourcePreview);
+
+    setResourceFileUpload(null);
+    setResourcePreview("");
   };
 
   const handleTagChange = (newTags) => {
-    const totalLength = newTags.join("").length;
+    const cleanedTags = newTags.map((tag) => tag.trim()).filter(Boolean);
+
+    const totalLength = cleanedTags.join("").length;
+
     if (totalLength > 500) {
       setTagError("Tags exceed the maximum length of 500 characters.");
       return;
     }
-    const hasDuplicate = newTags.some((tag, index) => newTags.indexOf(tag) !== index);
+
+    const normalizedTags = cleanedTags.map((tag) => tag.toLowerCase());
+
+    const hasDuplicate = normalizedTags.some((tag, index) => normalizedTags.indexOf(tag) !== index);
+
     if (hasDuplicate) {
       setTagError("Tags cannot be duplicates.");
       return;
     }
+
     setTagError("");
-    setProject({ ...project, tags: newTags });
+
+    setProject((previousProject) => ({
+      ...previousProject,
+      tags: cleanedTags,
+    }));
   };
 
   const handleHighlightChange = (index, value) => {
-    const updatedHighlights = [...highlights];
-    updatedHighlights[index] = value;
-    setHighlights(updatedHighlights);
-    const updatedErrors = [...highlightErrors];
-    updatedErrors[index] = value.length > 100 ? "Highlight cannot exceed 100 characters." : "";
-    setHighlightErrors(updatedErrors);
+    setHighlights((previousHighlights) => previousHighlights.map((highlight, highlightIndex) => (highlightIndex === index ? value : highlight)));
+
+    setHighlightErrors((previousErrors) =>
+      previousErrors.map((error, errorIndex) => {
+        if (errorIndex !== index) {
+          return error;
+        }
+
+        return value.length > 100 ? "Highlight cannot exceed 100 characters." : "";
+      }),
+    );
   };
 
   const validateHighlights = () => {
+    const normalizedHighlights = highlights.filter((highlight) => highlight.trim()).map((highlight) => highlight.trim().toLowerCase());
+
+    const hasDuplicate = normalizedHighlights.some((highlight, index) => normalizedHighlights.indexOf(highlight) !== index);
+
     const errors = highlights.map((highlight) => {
-      if (highlight.trim() === "") return "Highlight cannot be empty.";
-      if (highlight.length > 100) return "Highlight cannot exceed 100 characters.";
+      if (!highlight.trim()) {
+        return "Highlight cannot be empty.";
+      }
+
+      if (highlight.length > 100) {
+        return "Highlight cannot exceed 100 characters.";
+      }
+
       return "";
     });
-    const nonEmptyHighlights = highlights.filter((h) => h.trim() !== "");
-    const hasDuplicate = nonEmptyHighlights.some((highlight, i) => nonEmptyHighlights.indexOf(highlight) !== i);
-    if (hasDuplicate) errors[0] = errors[0] || "Highlights cannot be duplicates.";
-    setHighlightErrors(errors);
-    return !errors.some((error) => error) && !hasDuplicate;
-  };
 
-  const handleHighlightBlur = () => {
-    validateHighlights();
+    if (hasDuplicate) {
+      errors[0] = errors[0] || "Highlights cannot contain duplicates.";
+    }
+
+    setHighlightErrors(errors);
+
+    return !errors.some(Boolean) && !hasDuplicate;
   };
 
   const addHighlight = () => {
-    setHighlights([...highlights, ""]);
-    setHighlightErrors([...highlightErrors, ""]);
+    setHighlights((previousHighlights) => [...previousHighlights, ""]);
+
+    setHighlightErrors((previousErrors) => [...previousErrors, ""]);
   };
 
   const removeHighlight = (index) => {
@@ -219,103 +379,149 @@ export const CreateProject = () => {
       toast.error("At least one highlight is required.");
       return;
     }
-    setHighlights(highlights.filter((_, i) => i !== index));
-    setHighlightErrors(highlightErrors.filter((_, i) => i !== index));
+
+    setHighlights((previousHighlights) => previousHighlights.filter((_, highlightIndex) => highlightIndex !== index));
+
+    setHighlightErrors((previousErrors) => previousErrors.filter((_, errorIndex) => errorIndex !== index));
   };
 
-  const handleTitleChange = (e) => {
-    const value = e.target.value;
+  const handleTitleChange = (event) => {
+    const value = event.target.value;
+
     if (value.length > 250) {
       setTitleError("Title cannot exceed 250 characters.");
-    } else {
-      setTitleError("");
-      setProject({ ...project, title: value });
-    }
-  };
-
-  const handleMetaDescriptionChange = (e) => {
-    const value = e.target.value;
-    if (value.length > 160) {
-      setMetaDescError("Meta description cannot exceed 160 characters.");
-    } else {
-      setMetaDescError("");
-      setProject({ ...project, metaDescription: value });
-    }
-  };
-
-  const handleDropThumbnail = useCallback((event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) handleThumbnailChange({ target: { files: [file] } });
-  }, []);
-
-  const handleDropAssets = useCallback((event) => {
-    event.preventDefault();
-    const files = event.dataTransfer.files;
-    if (files.length) handleAssetsChange({ target: { files } });
-  }, []);
-
-  const handleDropResource = useCallback((event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) handleResourceFileUploadChange({ target: { files: [file] } });
-  }, []);
-
-  const handleCreate = async (publishType) => {
-    // Determine visibility based on publishType
-    let finalVisibility = visibility;
-    if (publishType === "draft") {
-      finalVisibility = "private";
-    } else if (publishType === "publish") {
-      finalVisibility = "public";
-    }
-
-    if (!title.trim()) {
-      toast.error("Title is required.");
       return;
     }
+
+    setTitleError("");
+
+    setProject((previousProject) => ({
+      ...previousProject,
+      title: value,
+    }));
+  };
+
+  const handleMetaDescriptionChange = (event) => {
+    const value = event.target.value;
+
+    if (value.length > 160) {
+      setMetaDescError("Meta description cannot exceed 160 characters.");
+      return;
+    }
+
+    setMetaDescError("");
+
+    setProject((previousProject) => ({
+      ...previousProject,
+      metaDescription: value,
+    }));
+  };
+
+  const handleDropThumbnail = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      const file = event.dataTransfer.files?.[0];
+
+      if (file) {
+        processThumbnail(file);
+      }
+    },
+    [processThumbnail],
+  );
+
+  const handleDropAssets = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      processAssets(event.dataTransfer.files);
+    },
+    [processAssets],
+  );
+
+  const handleDropResource = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      const file = event.dataTransfer.files?.[0];
+
+      if (file) {
+        processResourceFile(file);
+      }
+    },
+    [processResourceFile],
+  );
+
+  const clearCreatedFilePreviews = () => {
+    revokeObjectUrl(thumbnailPreview);
+    revokeObjectUrl(resourcePreview);
+
+    assetsPreviews.forEach((preview) => {
+      revokeObjectUrl(preview);
+    });
+  };
+
+  const handleCreate = async (publishType) => {
+    const finalVisibility = publishType === "draft" ? "private" : publishType === "publish" ? "public" : visibility;
+
+    if (!title.trim()) {
+      setTitleError("Project title is required.");
+      toast.error("Project title is required.");
+      return;
+    }
+
     if (!thumbnail) {
       toast.error("Thumbnail is required.");
       return;
     }
+
     if (!category) {
       toast.error("Category is required.");
       return;
     }
+
     if (resourceFileUrl && resourceFileUpload) {
-      toast.error("Please provide either a URL or an uploaded file, not both.");
+      toast.error("Please provide either a resource URL or an uploaded file, not both.");
       return;
     }
+
     if (resourceFileError) {
       toast.error(resourceFileError);
       return;
     }
+
     if (discountError) {
       toast.error(discountError);
       return;
     }
+
     if (discountEnabled && parseFloat(discount) > 0 && !project.discountDate) {
       toast.error("Discount date is required when a discount is provided.");
       return;
     }
+
     if (discountEnabled && project.discountDate) {
       const selectedDate = new Date(project.discountDate);
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+
       if (selectedDate <= today) {
         toast.error("Discount date must be in the future.");
         return;
       }
     }
+
     if (!validateHighlights()) {
-      toast.error("Please fix highlight errors.");
+      toast.error("Please fix the highlight errors.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("metaDescription", metaDescription);
+
+    formData.append("title", title.trim());
+    formData.append("description", description || "");
+    formData.append("metaDescription", metaDescription.trim());
     formData.append("groupId", groupId);
     formData.append("thumbnail", thumbnail);
     formData.append("visibility", finalVisibility);
@@ -323,65 +529,93 @@ export const CreateProject = () => {
     formData.append("urllink", urllink);
     formData.append("price", price || 0);
     formData.append("discount", discountEnabled ? discount || 0 : 0);
+
     if (discountEnabled && discount && project.discountDate) {
       formData.append("discountDate", project.discountDate);
     }
+
     if (tags.length > 0) {
       formData.append("tags", JSON.stringify(tags.map((tag) => ({ tag }))));
     }
+
     if (formats.length > 0) {
       formData.append("formats", JSON.stringify(formats.map((format) => ({ format }))));
     }
+
     if (highlights.length > 0) {
-      formData.append("highlights", JSON.stringify(highlights.filter((h) => h.trim() !== "").map((highlight) => ({ highlight: highlight.trim() }))));
+      const formattedHighlights = highlights
+        .filter((highlight) => highlight.trim())
+        .map((highlight) => ({
+          highlight: highlight.trim(),
+        }));
+
+      formData.append("highlights", JSON.stringify(formattedHighlights));
     }
-    if (category) {
-      formData.append("category", category._id);
-    }
+
+    formData.append("category", category?._id || category);
+
     assets.forEach((asset) => {
       formData.append("assets", asset);
     });
+
     if (resourceFileUrl) {
-      formData.append("resourceFile", JSON.stringify({ type: "url", url: resourceFileUrl }));
+      formData.append(
+        "resourceFile",
+        JSON.stringify({
+          type: "url",
+          url: resourceFileUrl,
+        }),
+      );
     } else if (resourceFileUpload) {
       if (!(resourceFileUpload instanceof File)) {
-        toast.error("Invalid resource file selected. Please upload a valid file.");
+        toast.error("Invalid resource file selected.");
         return;
       }
-      formData.append("resourceFileUpload", resourceFileUpload);
-      formData.append("resourceFile", JSON.stringify({ type: "file" }));
-    }
 
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value);
+      formData.append("resourceFileUpload", resourceFileUpload);
+
+      formData.append(
+        "resourceFile",
+        JSON.stringify({
+          type: "file",
+        }),
+      );
     }
 
     try {
       const resultAction = await dispatch(createProject(formData));
+
       if (createProject.fulfilled.match(resultAction)) {
         await dispatch(getAllProject());
+
+        clearCreatedFilePreviews();
+
         setThumbnail(null);
+        setThumbnailPreview("");
         setAssets([]);
+        setAssetsPreviews([]);
         setResourceFileUpload(null);
         setResourceFileUrl("");
-        setThumbnailPreview(null);
-        setAssetsPreviews([]);
-        setResourcePreview(null);
+        setResourcePreview("");
         setProject(initialState);
         setDescription("");
         setHighlights([""]);
         setHighlightErrors([""]);
         setDiscountEnabled(false);
-        toast.success(publishType === "draft" ? "Draft saved successfully!" : "Project published successfully!");
+
+        toast.success(publishType === "draft" ? "Draft saved successfully." : "Project published successfully.");
+
         navigate("/all-projects");
       } else {
         const errorMessage = isError?.message?.includes("validation failed")
-          ? "Invalid input data. Please check tags, formats, highlights, or resource file."
+          ? "Invalid input data. Check the tags, formats, highlights, or resource file."
           : isError?.message || "Failed to create project.";
+
         toast.error(errorMessage);
       }
     } catch (error) {
       console.error("Create project error:", error);
+
       toast.error("An unexpected error occurred while creating the project.");
     }
   };
@@ -390,328 +624,591 @@ export const CreateProject = () => {
     <>
       <StickyHeader>
         <HeadingTwo>New Project</HeadingTwo>
-        <div className="flexC gap-2">
-          <GhostButton onClick={() => handleCreate("draft")}>Save draft</GhostButton>
-          <TertiaryButton onClick={() => handleCreate("publish")}>Publish now</TertiaryButton>
+
+        <div className="flex items-center gap-2">
+          <GhostButton type="button" onClick={() => handleCreate("draft")}>
+            Save draft
+          </GhostButton>
+
+          <TertiaryButton type="button" onClick={() => handleCreate("publish")}>
+            Publish now
+          </TertiaryButton>
         </div>
       </StickyHeader>
 
-      <section className="flex justify-between gap-3">
-        <div className="w-2/3">
-          <Wrapper className="p-5">
-            <InputTitle className="mb-4">Project details</InputTitle>
-            <div className="input">
-              <div className="flex items-center gap-1">
-                <InputLabel className="my-2">Project Title</InputLabel>
-                <Tooltip className="bg-black text-white dark:bg-white dark:text-black text-xs" content="Maximum 250 characters. No HTML or emoji allowed" placement="right">
-                  <button>
-                    <CiCircleQuestion />
-                  </button>
-                </Tooltip>
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
+        {/* Left column */}
+        <div className="min-w-0">
+          {/* Project details */}
+          <Wrapper className="group relative overflow-hidden p-5 sm:p-6">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-indigo-500/[0.016] blur-[90px] transition-all duration-700 group-hover:bg-indigo-500/[0.026]" />
+
+            <div className="relative z-10">
+              <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <InputTitle className="mb-1">Project details</InputTitle>
+
+                <p className="text-[9px] text-gray-400 dark:text-white/25">Add the title and short description for your project.</p>
               </div>
-              <div className="relative">
-                <Input type="text" name="title" value={title} handleChange={handleTitleChange} placeholder="ie. Building a Responsive Navbar with Tailwind CSS" />
-                <p className="absolute bottom-1 right-3 text-primary-dark dark:text-primary text-xs 3xl:text-sm">{title.length}/250</p>
-                {titleError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{titleError}</p>}
+
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <InputLabel>Project title</InputLabel>
+
+                    <Tooltip
+                      className="rounded-lg border border-white/[0.08] bg-[#11151d] px-3 py-2 text-[10px] text-white/90 shadow-xl"
+                      content="Maximum 250 characters. No HTML or emoji allowed."
+                      placement="right"
+                    >
+                      <button type="button" aria-label="Project title information" className="text-gray-400 transition-colors hover:text-indigo-500 dark:text-white/25 dark:hover:text-indigo-200/70">
+                        <CiCircleQuestion />
+                      </button>
+                    </Tooltip>
+                  </div>
+
+                  <span className={`text-[9px] font-medium tabular-nums ${title.length >= 240 ? "text-rose-600 dark:text-rose-200/75" : "text-gray-400 dark:text-white/25"}`}>{title.length}/250</span>
+                </div>
+
+                <Input type="text" name="title" value={title} handleChange={handleTitleChange} placeholder="Building a responsive navbar with Tailwind CSS" />
+
+                {titleError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{titleError}</p>}
               </div>
-            </div>
-            <div className="input mt-4">
-              <div className="flex items-center gap-1">
-                <InputLabel className="my-2">Meta Description</InputLabel>
-                <Tooltip className="bg-black text-white dark:bg-white dark:text-black text-xs" content="Maximum 160 characters. No HTML or emoji allowed" placement="right">
-                  <button>
-                    <CiCircleQuestion />
-                  </button>
-                </Tooltip>
-              </div>
-              <div className="relative">
+
+              <div className="mt-5">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <InputLabel>Meta description</InputLabel>
+
+                    <Tooltip
+                      className="rounded-lg border border-white/[0.08] bg-[#11151d] px-3 py-2 text-[10px] text-white/90 shadow-xl"
+                      content="Maximum 160 characters. No HTML or emoji allowed."
+                      placement="right"
+                    >
+                      <button
+                        type="button"
+                        aria-label="Meta description information"
+                        className="text-gray-400 transition-colors hover:text-indigo-500 dark:text-white/25 dark:hover:text-indigo-200/70"
+                      >
+                        <CiCircleQuestion />
+                      </button>
+                    </Tooltip>
+                  </div>
+
+                  <span className={`text-[9px] font-medium tabular-nums ${metaDescription.length >= 150 ? "text-rose-600 dark:text-rose-200/75" : "text-gray-400 dark:text-white/25"}`}>
+                    {metaDescription.length}/160
+                  </span>
+                </div>
+
                 <Input
-                  className="pt-5 pb-20 rounded-xl"
+                  className="rounded-xl pb-20 pt-5"
                   type="text"
                   name="metaDescription"
                   value={metaDescription}
                   handleChange={handleMetaDescriptionChange}
-                  placeholder="ie. Learn how to build modern web applications using the latest frontend and backend technologies."
+                  placeholder="Describe the purpose and main features of the project."
                 />
-                <p className="absolute bottom-1 right-3 text-primary-dark dark:text-primary text-xs 3xl:text-sm">{metaDescription.length}/160</p>
-                {metaDescError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{metaDescError}</p>}
+
+                {metaDescError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{metaDescError}</p>}
               </div>
             </div>
           </Wrapper>
-          <Wrapper className="p-5 my-3">
-            <InputTitle className="mb-4">Category & attributes</InputTitle>
-            <div className="input">
-              <InputLabel className="my-2">Tags</InputLabel>
-              <TagsInput className={`${inputClassName} !p-0 !px-2 !pt-2 rounded-xl !min-h-20 !h-auto`} value={tags} onChange={handleTagChange} inputProps={{ placeholder: "Add Tag" }} />
-              {tagError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{tagError}</p>}
-            </div>
-            <div className="input my-5">
-              <InputLabel className="my-2">Category</InputLabel>
-              <CategoryDropDown type="project" value={category} onChange={(selectedOption) => setProject({ ...project, category: selectedOption })} />
-            </div>
-            <div>
-              <InputLabel className="my-2">Layout</InputLabel>
-              <select name="layout" className={`${inputClassName} !px-2 outline-none bg-transparent`} value={layout} onChange={handleInputChange}>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="">
-                  Select Layout
-                </option>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="flex">
-                  Flex
-                </option>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="grid">
-                  Grid
-                </option>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="responsive">
-                  Responsive
-                </option>
-                <option className="textColor text-xs 3xl:text-sm dark:!bg-black dark:text-white" value="non-responsive">
-                  Non-Responsive
-                </option>
-              </select>
-            </div>
-          </Wrapper>
-          <Wrapper className="p-5 w-full my-3">
-            <InputTitle className="mb-4">Project Showcase Images</InputTitle>
-            <InputLabel className="my-2">
-              Asset Images ({assets.length}/{assetLimit?.assetLimit || 5})
-            </InputLabel>
-            <div
-              onDrop={handleDropAssets}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center w-full h-56 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
-            >
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <IoCameraSharp size={30} />
-                <p className="text-sm text-gray-500 dark:text-gray-400 textSizeSm">
-                  Drag and drop an image or
-                  <span className="textColor font-medium cursor-pointer pl-1" onClick={() => assetsInputRef.current.click()}>
-                    click to browse
-                  </span>
-                </p>
-                <input
-                  ref={assetsInputRef}
-                  id="assets"
-                  type="file"
-                  name="assets"
-                  multiple
-                  className="relative m-0 w-full text-xs 3xl:text min-w-0 flex-auto cursor-pointer rounded-lg textColor highlightbg bg-clip-padding px-3 py-1 3xl:py-[8px] font-normal leading-[2.15] transition duration-300 ease-in-out file:-mx-3 file:-my-[8px] file:cursor-pointer file:overflow-hidden file:rounded-none file:border-0 file:border-solid file:border-inherit file:bg-neutral-100 file:px-3 file:py-[8px] file:text-neutral-700 file:transition file:duration-150 file:ease-in-out file:[border-inline-end-width:1px] file:[margin-inline-end:0.75rem] hover:file:bg-neutral-200 focus:border-primarybg focus:text-neutral-700 focus:outline-none hidden"
-                  onChange={handleAssetsChange}
-                  accept="image/png,image/jpeg,image/jpg"
-                />
+
+          {/* Category and attributes */}
+          <Wrapper className="group relative my-3 overflow-hidden p-5 sm:p-6">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -bottom-24 -left-24 size-64 rounded-full bg-cyan-500/[0.012] blur-[90px] transition-all duration-700 group-hover:bg-cyan-500/[0.022]" />
+
+            <div className="relative z-10">
+              <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <InputTitle className="mb-1">Category & attributes</InputTitle>
+
+                <p className="text-[9px] text-gray-400 dark:text-white/25">Organise the project using tags, a category, and layout type.</p>
               </div>
-            </div>
-            {assetsPreviews.length > 0 && (
-              <div className="mt-3 flex gap-2 flex-wrap">
-                {assetsPreviews.map((preview, index) => (
-                  <div key={index} className="relative w-32 h-32">
-                    <img src={preview} alt={`Asset Preview ${index}`} className="w-full h-full rounded-lg object-cover" />
-                    <button
-                      onClick={() => handleDeleteAsset(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                      title="Delete Image"
-                    >
-                      <MdClose />
-                    </button>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <InputLabel>Tags</InputLabel>
+
+                  <span className="text-[9px] text-gray-400 dark:text-white/25">{tags.join("").length}/500</span>
+                </div>
+
+                <div className="rounded-2xl border border-gray-200/80 bg-gray-50/55 p-1 transition-all focus-within:border-indigo-400/35 focus-within:ring-4 focus-within:ring-indigo-500/[0.04] dark:border-white/[0.055] dark:bg-white/[0.02] dark:focus-within:border-indigo-300/[0.13]">
+                  <TagsInput
+                    className={`${inputClassName} !h-auto !min-h-20 !border-0 !bg-transparent !px-2 !pt-2 [&_.react-tagsinput-input]:!m-0 [&_.react-tagsinput-input]:!h-8 [&_.react-tagsinput-input]:!bg-transparent [&_.react-tagsinput-input]:!text-[11px] [&_.react-tagsinput-input]:!text-gray-700 [&_.react-tagsinput-input]:!outline-none dark:[&_.react-tagsinput-input]:!text-white/65 [&_.react-tagsinput-tag]:!mb-1 [&_.react-tagsinput-tag]:!mr-1.5 [&_.react-tagsinput-tag]:!inline-flex [&_.react-tagsinput-tag]:!items-center [&_.react-tagsinput-tag]:!rounded-full [&_.react-tagsinput-tag]:!border [&_.react-tagsinput-tag]:!border-indigo-300/25 [&_.react-tagsinput-tag]:!bg-indigo-500/[0.07] [&_.react-tagsinput-tag]:!px-2.5 [&_.react-tagsinput-tag]:!py-1 [&_.react-tagsinput-tag]:!text-[9px] [&_.react-tagsinput-tag]:!text-indigo-700 dark:[&_.react-tagsinput-tag]:!border-indigo-300/[0.10] dark:[&_.react-tagsinput-tag]:!bg-indigo-300/[0.045] dark:[&_.react-tagsinput-tag]:!text-indigo-200/70`}
+                    value={tags}
+                    onChange={handleTagChange}
+                    inputProps={{
+                      placeholder: "Add tag",
+                    }}
+                  />
+                </div>
+
+                {tagError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{tagError}</p>}
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <InputLabel className="mb-2">Category</InputLabel>
+
+                  <div className="rounded-2xl border border-gray-200/80 bg-gray-50/45   dark:border-white/[0.05] dark:bg-white/[0.018]">
+                    <CategoryDropDown
+                      type="project"
+                      value={category}
+                      onChange={(selectedOption) =>
+                        setProject((previousProject) => ({
+                          ...previousProject,
+                          category: selectedOption,
+                        }))
+                      }
+                    />
                   </div>
-                ))}
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Layout</InputLabel>
+
+                  <CustomDropdown
+                    name="layout"
+                    value={layout}
+                    onChange={handleInputChange}
+                    placeholder="Select layout"
+                    className="w-full"
+                    options={[
+                      { value: "flex", label: "Flex" },
+                      { value: "grid", label: "Grid" },
+                      { value: "responsive", label: "Responsive" },
+                      { value: "non-responsive", label: "Non-responsive" },
+                    ]}
+                  />
+                </div>
+                {/*  <div>
+                  <InputLabel className="mb-2">Layout</InputLabel>
+
+                  <select
+                    name="layout"
+                    value={layout}
+                    onChange={handleInputChange}
+                    className={`${inputClassName} !rounded-2xl !border-gray-200/80 !bg-gray-50/45 !px-3 !text-[11px] outline-none dark:!border-white/[0.055] dark:!bg-white/[0.018] dark:!text-white/65`}
+                  >
+                    <option className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90" value="">
+                      Select layout
+                    </option>
+
+                    <option className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90" value="flex">
+                      Flex
+                    </option>
+
+                    <option className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90" value="grid">
+                      Grid
+                    </option>
+
+                    <option className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90" value="responsive">
+                      Responsive
+                    </option>
+
+                    <option className="bg-white text-gray-800 dark:bg-[#11151d] dark:text-white/90" value="non-responsive">
+                      Non-responsive
+                    </option>
+                  </select>
+                </div> */}
               </div>
-            )}
+            </div>
           </Wrapper>
-          <Wrapper className="p-5">
-            <Editor customId={groupId} value={description} onChange={setDescription} folderName="project/description" folder="project" subfolder="description" />
+
+          {/* Project assets */}
+          <Wrapper className="group relative my-3 overflow-hidden p-5 sm:p-6">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-violet-500/[0.014] blur-[90px] transition-all duration-700 group-hover:bg-violet-500/[0.024]" />
+
+            <div className="relative z-10">
+              <div className="mb-5 flex items-start justify-between gap-3 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <div>
+                  <InputTitle className="mb-1">Project showcase images</InputTitle>
+
+                  <p className="text-[9px] text-gray-400 dark:text-white/25">Upload images that demonstrate the project interface and features.</p>
+                </div>
+
+                <span className="rounded-full border border-violet-300/20 bg-violet-500/[0.055] px-2.5 py-1 text-[8px] font-semibold text-violet-700 dark:border-violet-300/[0.09] dark:bg-violet-300/[0.04] dark:text-violet-200/70">
+                  {assets.length}/{maximumAssets}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => assetsInputRef.current?.click()}
+                onDrop={handleDropAssets}
+                onDragOver={(event) => event.preventDefault()}
+                className="flex h-56 w-full flex-col items-center justify-center rounded-3xl border border-dashed border-gray-300/80 bg-gray-50/60 px-5 text-center transition-all duration-300 hover:border-violet-400/40 hover:bg-violet-500/[0.025] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-violet-300/[0.15] dark:hover:bg-violet-300/[0.025]"
+              >
+                <span className="relative flex size-14 items-center justify-center overflow-hidden rounded-2xl border border-violet-300/20 bg-violet-500/[0.07] text-violet-600 shadow-[0_10px_26px_rgba(124,58,237,0.10)] dark:border-violet-300/[0.10] dark:bg-violet-300/[0.045] dark:text-violet-200/70">
+                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.10] to-transparent" />
+
+                  <IoCameraSharp className="relative z-10" size={25} />
+                </span>
+
+                <span className="mt-4 text-[11px] font-medium text-gray-600 dark:text-white/50">Drag and drop project images</span>
+
+                <span className="mt-1.5 text-[9px] text-gray-400 dark:text-white/25">or click to browse PNG, JPG and JPEG</span>
+
+                <span className="mt-3 rounded-full border border-gray-200/70 bg-white/60 px-3 py-1 text-[8px] uppercase tracking-[0.08em] text-gray-400 dark:border-white/[0.05] dark:bg-white/[0.02] dark:text-white/25">
+                  Maximum 10MB each
+                </span>
+              </button>
+
+              <input ref={assetsInputRef} id="assets" type="file" name="assets" multiple className="hidden" onChange={handleAssetsChange} accept="image/png,image/jpeg,image/jpg" />
+
+              {assetsPreviews.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {assetsPreviews.map((preview, index) => (
+                    <div
+                      key={`${preview}-${index}`}
+                      className="group/asset relative aspect-square overflow-hidden rounded-2xl border border-gray-200/70 bg-gray-100 dark:border-white/[0.055] dark:bg-white/[0.018]"
+                    >
+                      <img src={preview} alt={`Project asset ${index + 1}`} className="h-full w-full object-cover transition-transform duration-500 group-hover/asset:scale-105" />
+
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity group-hover/asset:opacity-100" />
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAsset(index)}
+                        title="Delete image"
+                        aria-label={`Delete asset ${index + 1}`}
+                        className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-lg border border-rose-300/20 bg-rose-500/85 text-white shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
+                      >
+                        <MdClose size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Wrapper>
+
+          {/* Editor */}
+          <Wrapper className="group relative overflow-hidden p-5 sm:p-6">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -bottom-24 -right-24 size-72 rounded-full bg-teal-500/[0.014] blur-[95px] transition-all duration-700 group-hover:bg-teal-500/[0.024]" />
+
+            <div className="relative z-10">
+              <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <InputTitle className="mb-1">Project content</InputTitle>
+
+                <p className="text-[9px] text-gray-400 dark:text-white/25">Write and format the full project overview.</p>
+              </div>
+
+              <div className="min-h-[400px] rounded-2xl border border-gray-200/70 bg-gray-50/35 p-2 dark:border-white/[0.045] dark:bg-white/[0.014]">
+                <Editor customId={groupId} value={description} onChange={setDescription} folderName="project/description" folder="project" subfolder="description" />
+              </div>
+            </div>
           </Wrapper>
         </div>
 
-        <div className="w-1/3">
-          <Wrapper className="p-5 w-full">
-            <InputTitle className="mb-4">Upload product files</InputTitle>
-            <div className="input">
-              <InputLabel className="my-2">Resource File URL (e.g., GitHub link)</InputLabel>
-              <Input type="text" name="resourceFileUrl" placeholder="https://github.com/user/repo" value={resourceFileUrl} handleChange={handleResourceFileUrlChange} />
-              {resourceFileError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{resourceFileError}</p>}
-            </div>
-            <div className="input mt-4">
-              <InputLabel className="my-2">Upload Resource File (Max 100MB - ZIP, PDF, Images, etc.)</InputLabel>
-              <div
+        {/* Right column */}
+        <aside className="min-w-0">
+          {/* Product files */}
+          <Wrapper className="group relative overflow-hidden p-5">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-blue-500/[0.014] blur-[80px] transition-all duration-700 group-hover:bg-blue-500/[0.024]" />
+
+            <div className="relative z-10">
+              <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <InputTitle className="mb-1">Upload product files</InputTitle>
+
+                <p className="text-[9px] text-gray-400 dark:text-white/25">Add either an external URL or upload a resource file.</p>
+              </div>
+
+              <div>
+                <InputLabel className="mb-2">Resource file URL</InputLabel>
+
+                <Input type="text" name="resourceFileUrl" placeholder="https://github.com/user/repo" value={resourceFileUrl} handleChange={handleResourceFileUrlChange} />
+
+                {resourceFileError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{resourceFileError}</p>}
+              </div>
+
+              <div className="my-4 flex items-center gap-3">
+                <span className="h-px flex-1 bg-gray-200 dark:bg-white/[0.05]" />
+
+                <span className="text-[8px] font-semibold uppercase tracking-[0.1em] text-gray-400 dark:text-white/20">Or upload</span>
+
+                <span className="h-px flex-1 bg-gray-200 dark:bg-white/[0.05]" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => resourceInputRef.current?.click()}
                 onDrop={handleDropResource}
-                onDragOver={(e) => e.preventDefault()}
-                className="flex flex-col items-center justify-center w-full h-40 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
+                onDragOver={(event) => event.preventDefault()}
+                className="relative flex h-44 w-full flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-gray-300/80 bg-gray-50/60 p-4 text-center transition-all duration-300 hover:border-blue-400/40 hover:bg-blue-500/[0.025] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-blue-300/[0.15] dark:hover:bg-blue-300/[0.025]"
               >
                 {resourcePreview ? (
-                  <div className="relative w-full h-40 flex flex-col items-center justify-center p-4">
-                    <div className="flex items-center gap-2">
-                      <FaFolder size={30} />
-                      <span className="text-sm font-medium text-ellipsis overflow-hidden max-w-[200px]">{resourceFileUpload.name}</span>
-                    </div>
-                    <span className="text-xs text-gray-500 mt-2">{(resourceFileUpload.size / (1024 * 1024)).toFixed(2)} MB</span>
+                  <>
+                    <span className="flex size-12 items-center justify-center rounded-2xl border border-blue-300/20 bg-blue-500/[0.07] text-blue-600 dark:border-blue-300/[0.09] dark:bg-blue-300/[0.04] dark:text-blue-200/70">
+                      <FaFolder size={22} />
+                    </span>
+
+                    <span className="mt-3 max-w-[230px] truncate text-[11px] font-semibold text-gray-700 dark:text-white/65">{resourceFileUpload?.name}</span>
+
+                    <span className="mt-1 text-[9px] text-gray-400 dark:text-white/25">{((resourceFileUpload?.size || 0) / (1024 * 1024)).toFixed(2)} MB</span>
+
                     <button
-                      onClick={() => {
-                        setResourceFileUpload(null);
-                        setResourcePreview(null);
-                      }}
-                      className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                      title="Remove Resource"
+                      type="button"
+                      onClick={handleRemoveResource}
+                      title="Remove resource"
+                      aria-label="Remove resource file"
+                      className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/85 text-white shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
                     >
-                      <MdClose />
+                      <MdClose size={15} />
                     </button>
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <FaFolder size={30} />
-                    <p className="text-sm text-gray-500 dark:text-gray-400 textSizeSm">
-                      Drag and drop any file (ZIP, PDF, etc.) or
-                      <span className="textColor font-medium cursor-pointer pl-1" onClick={() => resourceInputRef.current.click()}>
-                        click to browse
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-400">Max 100MB</p>
-                  </div>
+                  <>
+                    <span className="flex size-12 items-center justify-center rounded-2xl border border-blue-300/20 bg-blue-500/[0.07] text-blue-600 dark:border-blue-300/[0.09] dark:bg-blue-300/[0.04] dark:text-blue-200/70">
+                      <FaFolder size={22} />
+                    </span>
+
+                    <span className="mt-3 text-[10px] font-medium text-gray-600 dark:text-white/50">Drag and drop any file</span>
+
+                    <span className="mt-1 text-[9px] text-gray-400 dark:text-white/25">ZIP, PDF, images and other files</span>
+
+                    <span className="mt-2 text-[8px] font-semibold uppercase tracking-[0.08em] text-blue-600 dark:text-blue-200/60">Maximum 100MB</span>
+                  </>
                 )}
-                <input ref={resourceInputRef} id="resourceFileUpload" type="file" name="resourceFileUpload" className="hidden" onChange={handleResourceFileUploadChange} />
-              </div>
-              {resourceFileUpload && (
-                <p className="text-xs mt-2 text-gray-500">
-                  File type: {resourceFileUpload.type || "Unknown"} | Size: {(resourceFileUpload.size / (1024 * 1024)).toFixed(2)} MB
-                </p>
-              )}
+              </button>
+
+              <input ref={resourceInputRef} id="resourceFileUpload" type="file" name="resourceFileUpload" className="hidden" onChange={handleResourceFileUploadChange} />
             </div>
           </Wrapper>
-          <Wrapper className="p-5 w-full  my-3">
-            <InputTitle className="mb-4">Thumbnail image</InputTitle>
-            <div
-              onDrop={handleDropThumbnail}
-              onDragOver={(e) => e.preventDefault()}
-              className="flex flex-col items-center justify-center w-full h-56 transition cursor-pointer bg-light-surface1/50 dark:bg-dark-surface1/50 rounded-3xl border border-transparent hover:border hover:border-gray-200 dark:hover:border-gray-800"
-            >
-              {thumbnailPreview ? (
-                <div className="relative w-full h-56 flex items-center justify-center">
-                  <img src={thumbnailPreview} alt="Thumbnail Preview" className="w-full h-full rounded-3xl object-cover" />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setThumbnail(null);
-                      setThumbnailPreview(null);
-                    }}
-                    className="absolute top-3 right-3 shadow-xl bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    title="Remove Thumbnail"
-                    aria-label="Remove thumbnail image"
-                  >
-                    <MdClose />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <IoCameraSharp size={30} />
-                  <p className="text-sm text-gray-500 dark:text-gray-400 textSizeSm">
-                    Drag and drop an image or
-                    <span className="textColor font-medium cursor-pointer" onClick={() => thumbnailInputRef.current.click()}>
-                      click to browse
+
+          {/* Thumbnail */}
+          <Wrapper className="group relative my-3 overflow-hidden p-5">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-violet-500/[0.014] blur-[80px] transition-all duration-700 group-hover:bg-violet-500/[0.024]" />
+
+            <div className="relative z-10">
+              <div className="mb-4 flex items-center justify-between">
+                <InputTitle>Thumbnail image</InputTitle>
+
+                <span className="rounded-full border border-gray-200/70 bg-gray-50/60 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.08em] text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.02] dark:text-white/30">
+                  Max 10MB
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => thumbnailInputRef.current?.click()}
+                onDrop={handleDropThumbnail}
+                onDragOver={(event) => event.preventDefault()}
+                className="relative flex h-60 w-full flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-gray-300/80 bg-gray-50/60 text-center transition-all duration-300 hover:border-violet-400/40 hover:bg-violet-500/[0.025] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-violet-300/[0.15] dark:hover:bg-violet-300/[0.025]"
+              >
+                {thumbnailPreview ? (
+                  <>
+                    <img src={thumbnailPreview} alt="Thumbnail preview" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.015]" />
+
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/10" />
+
+                    <span className="absolute bottom-3 left-3 rounded-lg border border-white/[0.12] bg-black/45 px-2.5 py-1.5 text-[9px] font-medium text-white/90 backdrop-blur-xl">
+                      Thumbnail preview
                     </span>
-                  </p>
-                </div>
-              )}
+
+                    <button
+                      type="button"
+                      onClick={handleRemoveThumbnail}
+                      title="Remove thumbnail"
+                      aria-label="Remove thumbnail image"
+                      className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/85 text-white shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
+                    >
+                      <MdClose size={15} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex size-14 items-center justify-center overflow-hidden rounded-2xl border border-violet-300/20 bg-violet-500/[0.07] text-violet-600 shadow-[0_10px_26px_rgba(124,58,237,0.10)] dark:border-violet-300/[0.10] dark:bg-violet-300/[0.045] dark:text-violet-200/70">
+                      <IoCameraSharp size={25} />
+                    </span>
+
+                    <span className="mt-4 text-[11px] font-medium text-gray-600 dark:text-white/50">Drag and drop an image</span>
+
+                    <span className="mt-1.5 text-[9px] text-gray-400 dark:text-white/25">or click to browse</span>
+                  </>
+                )}
+              </button>
+
               <input ref={thumbnailInputRef} id="thumbnail" type="file" name="thumbnail" className="hidden" onChange={handleThumbnailChange} accept="image/png,image/jpeg,image/jpg" />
             </div>
           </Wrapper>
 
-          <Wrapper className="p-5">
-            <InputTitle className="mb-4">Price</InputTitle>
-            <div className="input">
-              <InputLabel className="my-2">Price (USD)</InputLabel>
-              <div className="relative">
-                <Input type="number" name="price" className="pl-12" value={price} handleChange={handleInputChange} min="0" step="0.01" />
-                <div className="icon h-9 w-9 3xl:h-10 3xl:w-10 bg-green-300 rounded-full flexC text-white absolute top-1 left-1">
-                  <CiDollar size={25} />
+          {/* Price */}
+          <Wrapper className="group relative overflow-hidden p-5">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -bottom-20 -right-20 size-56 rounded-full bg-emerald-500/[0.014] blur-[80px] transition-all duration-700 group-hover:bg-emerald-500/[0.024]" />
+
+            <div className="relative z-10">
+              <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <InputTitle>Price</InputTitle>
+              </div>
+
+              <div>
+                <InputLabel className="mb-2">Price (USD)</InputLabel>
+
+                <div className="relative">
+                  <Input type="number" name="price" className="pl-12" value={price} handleChange={handleInputChange} min="0" step="0.01" />
+
+                  <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-emerald-300/20 bg-emerald-500/[0.10] text-emerald-700 dark:border-emerald-300/[0.10] dark:bg-emerald-300/[0.055] dark:text-emerald-200/75 3xl:size-10">
+                    <CiDollar size={23} />
+                  </span>
                 </div>
               </div>
-            </div>
-            <div className="input py-3">
-              <div className="flexbC">
-                <InputLabel className="my-2">Discount</InputLabel>
-                <Switch
-                  id="custom-switch-component"
-                  checked={discountEnabled}
-                  onChange={(e) => setDiscountEnabled(e.target.checked)}
-                  ripple={false}
-                  className="group inline-flex w-11 h-6 items-center rounded-full bg-dark-surface1 shadow-[0_0_0_1.5px_inset] shadow-s-stroke2 transition-colors data-[checked]:bg-[#282828] data-[checked]:shadow-[0_1.5px_0_inset] data-[checked]:shadow-white/20 dark:shadow-[inset_0_0_0_1.5px_rgba(248,248,248,0.20),inset_2px_0_8px_2px_rgba(248,248,248,0.20)] dark:data-[checked]:shadow-[inset_2px_0_8px_2px_rgba(248,248,248,0.20)]"
-                  containerProps={{
-                    className: "w-11 h-6",
-                  }}
-                  circleProps={{
-                    className: "before:hidden left-0.5 border-none",
-                  }}
-                />
-              </div>
-              {discountEnabled && (
-                <>
-                  <div className="relative mt-2">
-                    <Input type="number" name="discount" className="pl-12" value={discount} handleChange={handleInputChange} min="0" step="0.01" />
-                    <div className="icon h-9 w-9 3xl:h-10 3xl:w-10 bg-red-300 rounded-full flexC text-white absolute top-1 left-1">
-                      <CiDiscount1 size={25} />
-                    </div>
+
+              <div className="py-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <InputLabel>Discount</InputLabel>
+
+                    <p className="mt-1 text-[8px] text-gray-400 dark:text-white/20">Apply a temporary reduced price</p>
                   </div>
-                  {discountError && <p className="text-red-500 text-xs 3xl:text-sm mt-1">{discountError}</p>}
-                </>
-              )}
-            </div>
-            {discountEnabled && (
-              <div className="input">
-                <InputLabel className="my-2">Duration of Discount</InputLabel>
-                <div className="relative">
+
+                  <Switch
+                    id="discount-switch"
+                    checked={discountEnabled}
+                    onChange={(event) => setDiscountEnabled(event.target.checked)}
+                    ripple={false}
+                    className="h-full w-full bg-gray-300 checked:bg-rose-500 dark:bg-white/[0.12]"
+                    containerProps={{
+                      className: "w-11 h-6",
+                    }}
+                    circleProps={{
+                      className: "before:hidden left-0.5 border-none",
+                    }}
+                  />
+                </div>
+
+                {discountEnabled && (
+                  <div className="relative mt-3">
+                    <Input type="number" name="discount" className="pl-12" value={discount} handleChange={handleInputChange} min="0" step="0.01" />
+
+                    <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full border border-rose-300/20 bg-rose-500/[0.10] text-rose-700 dark:border-rose-300/[0.10] dark:bg-rose-300/[0.055] dark:text-rose-200/75 3xl:size-10">
+                      <CiDiscount1 size={23} />
+                    </span>
+                  </div>
+                )}
+
+                {discountError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{discountError}</p>}
+              </div>
+
+              {discountEnabled && (
+                <div>
+                  <InputLabel className="mb-2">Discount end date</InputLabel>
+
                   <DatePicker
-                    className={`!w-full h-11 3xl:h-12 px-5 textColor textSizeSm border border-gray-100 dark:border-gray-800/50 focus:border-gray-200 dark:focus:border-gray-800 rounded-full placeholder:text-xs placeholder:3xl:text-sm placeholder:text-gray-800/20 dark:placeholder:text-gray-500/50`}
+                    className="h-11 w-full rounded-2xl border border-gray-200/80 bg-gray-50/55 px-4 text-[11px] text-gray-700 outline-none transition-all focus:border-indigo-400/40 focus:ring-4 focus:ring-indigo-500/[0.04] dark:border-white/[0.055] dark:bg-white/[0.02] dark:text-white/65 dark:focus:border-indigo-300/[0.13] 3xl:h-12"
                     selected={project.discountDate ? new Date(project.discountDate) : null}
-                    onChange={(date) => setProject({ ...project, discountDate: date ? date.toISOString() : "" })}
-                    minDate={new Date(Date.now() + 24 * 60 * 60 * 1000)} // Tomorrow
+                    onChange={(date) =>
+                      setProject((previousProject) => ({
+                        ...previousProject,
+                        discountDate: date ? date.toISOString() : "",
+                      }))
+                    }
+                    minDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
                     placeholderText="Select discount end date"
                   />
                 </div>
-              </div>
-            )}
-          </Wrapper>
-          <Wrapper className="p-5 w-full my-3">
-            <InputTitle className="mb-4">Demos</InputTitle>
-            <div className="input">
-              <InputLabel className="my-2">Live demo</InputLabel>
-              <Input type="text" name="urllink" placeholder="Please enter url link" value={urllink} handleChange={handleInputChange} />
+              )}
             </div>
           </Wrapper>
-          <Wrapper className="p-5 w-full my-3">
-            <InputTitle className="mb-4">Highlights</InputTitle>
-            {highlights.map((highlight, index) => (
-              <div key={index} className="mb-4">
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    name={`highlight-${index}`}
-                    className={`${inputClassName} pl-10 pr-20 w-full ${highlightErrors[index] ? "border-red-500 dark:border-red-500" : ""}`}
-                    placeholder="Write the main highlight of project"
-                    value={highlight}
-                    onChange={(e) => handleHighlightChange(index, e.target.value)}
-                    onBlur={handleHighlightBlur}
-                  />
-                  <div className="icon h-9 w-9 3xl:h-10 3xl:w-10 rounded-full flexC text-white absolute top-1 left-1">
-                    <IoIosCheckmarkCircle size={25} className={highlight.trim() !== "" ? "text-green-400" : "text-gray-400"} />
-                  </div>
-                  {index === highlights.length - 1 && (
-                    <button onClick={addHighlight} className="absolute top-1 right-1 h-9 w-9 3xl:h-10 3xl:w-10 rounded-full flexC text-white" title="Add another highlight">
-                      <FaCirclePlus size={20} className="text-blue-500" />
-                    </button>
-                  )}
-                  {highlights.length > 1 && (
-                    <button onClick={() => removeHighlight(index)} className="absolute top-1 right-10 h-9 w-9 3xl:h-10 3xl:w-10 rounded-full flexC text-white" title="Remove highlight">
-                      <FaCircleMinus size={20} className="text-red-500" />
-                    </button>
-                  )}
-                </div>
-                {highlightErrors[index] && <p className="text-red-500 text-xs 3xl:text-sm mt-1 ml-2">{highlightErrors[index]}</p>}
+
+          {/* Demo */}
+          <Wrapper className="group relative my-3 overflow-hidden p-5">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="relative z-10">
+              <InputTitle className="mb-4">Demo</InputTitle>
+
+              <InputLabel className="mb-2">Live demo URL</InputLabel>
+
+              <Input type="text" name="urllink" placeholder="https://your-project-demo.com" value={urllink} handleChange={handleInputChange} />
+            </div>
+          </Wrapper>
+
+          {/* Highlights */}
+          <Wrapper className="group relative my-3 overflow-hidden p-5">
+            {/* Wrapper background remains unchanged */}
+
+            <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-amber-500/[0.012] blur-[80px]" />
+
+            <div className="relative z-10">
+              <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <InputTitle className="mb-1">Highlights</InputTitle>
+
+                <p className="text-[9px] text-gray-400 dark:text-white/25">Add the main benefits and features of the project.</p>
               </div>
-            ))}
+
+              <div className="space-y-3">
+                {highlights.map((highlight, index) => (
+                  <div key={index}>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name={`highlight-${index}`}
+                        className={`${inputClassName} w-full !rounded-2xl pl-11 pr-20 ${
+                          highlightErrors[index] ? "!border-rose-500/70 dark:!border-rose-300/40" : "!border-gray-200/80 dark:!border-white/[0.055]"
+                        } !bg-gray-50/55 dark:!bg-white/[0.018]`}
+                        placeholder="Write a main project highlight"
+                        value={highlight}
+                        onChange={(event) => handleHighlightChange(index, event.target.value)}
+                        onBlur={validateHighlights}
+                      />
+
+                      <span className="absolute left-1 top-1 flex size-9 items-center justify-center rounded-full 3xl:size-10">
+                        <IoIosCheckmarkCircle size={23} className={highlight.trim() ? "text-emerald-500 dark:text-emerald-200/70" : "text-gray-400 dark:text-white/20"} />
+                      </span>
+
+                      {highlights.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeHighlight(index)}
+                          className="absolute right-10 top-1 flex size-9 items-center justify-center rounded-full text-rose-500 transition-all hover:bg-rose-500/[0.08] dark:text-rose-200/70"
+                          title="Remove highlight"
+                          aria-label="Remove highlight"
+                        >
+                          <FaCircleMinus size={18} />
+                        </button>
+                      )}
+
+                      {index === highlights.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={addHighlight}
+                          className="absolute right-1 top-1 flex size-9 items-center justify-center rounded-full text-blue-500 transition-all hover:bg-blue-500/[0.08] dark:text-blue-200/70"
+                          title="Add another highlight"
+                          aria-label="Add another highlight"
+                        >
+                          <FaCirclePlus size={18} />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="mt-1 flex items-center justify-between gap-3 px-2">
+                      {highlightErrors[index] ? <p className="text-[9px] font-medium text-rose-600 dark:text-rose-200/75">{highlightErrors[index]}</p> : <span />}
+
+                      <span className="text-[8px] tabular-nums text-gray-400 dark:text-white/20">{highlight.length}/100</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </Wrapper>
 
           <ProjectToolsSection formats={formats} setProject={setProject} formatError={formatError} setFormatError={setFormatError} />
-          <div className="pb-96"></div>
-        </div>
+
+          <div className="h-16" />
+        </aside>
       </section>
     </>
   );

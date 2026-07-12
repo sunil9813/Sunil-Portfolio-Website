@@ -4,6 +4,8 @@ const cloudinary = require("cloudinary").v2;
 const Filter = require("bad-words");
 const SubjectModel = require("../../models/educationModel/SubjectModel");
 const ChapterModel = require("../../models/educationModel/ChapterModel");
+const https = require("https");
+const axios = require("axios");
 
 const createSubject = asyncHandler(async (req, res) => {
   const { name, description, metaDescription, university, faculty, program, accessType, groupId, visibility, scheduledPublish, tags, highlights, price, discount, discountDate } = req.body;
@@ -418,35 +420,48 @@ const deleteSubject = asyncHandler(async (req, res) => {
 const getChaptersBySubjectSlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
 
-  try {
-    // Step 1: Find the subject by slug
-    const subject = await SubjectModel.findOne({ slug });
+  const subject = await SubjectModel.findOne({ slug });
 
-    if (!subject) {
-      res.status(404);
-      throw new Error("Subject not found");
-    }
-
-    const subjectData = {
-      name: subject.name,
-      logo: subject?.thumbnail,
-    };
-    // Step 2: Find chapters with that subject
-    const chapters = await ChapterModel.find({ subject: subject._id }).sort({ createdAt: 1 }).populate({
-      path: "user",
-      select: "avatar name email",
-    });
-
-    res.status(200).json({
-      success: true,
-      total: chapters.length,
-      subject: subjectData,
-      chapters,
-    });
-  } catch (err) {
-    res.status(err.statusCode || 500);
-    throw new Error(err.message || "Failed to fetch chapters for the subject.");
+  if (!subject) {
+    res.status(404);
+    throw new Error("Subject not found");
   }
+
+  const resourceFile = subject?.resourceFile?.file?.filePath ? subject.resourceFile : null;
+
+  const subjectData = {
+    _id: subject._id,
+    name: subject.name,
+    slug: subject.slug,
+    description: subject.description,
+    metaDescription: subject.metaDescription,
+    logo: subject?.thumbnail,
+    thumbnail: subject?.thumbnail,
+    resourceFile,
+  };
+
+  if (resourceFile) {
+    return res.status(200).json({
+      success: true,
+      total: 1,
+      isPdfCourse: true,
+      subject: subjectData,
+      chapters: [],
+    });
+  }
+
+  const chapters = await ChapterModel.find({ subject: subject._id }).sort({ createdAt: 1 }).populate({
+    path: "user",
+    select: "avatar name email",
+  });
+
+  res.status(200).json({
+    success: true,
+    total: chapters.length,
+    isPdfCourse: false,
+    subject: subjectData,
+    chapters,
+  });
 });
 
 const getAllSubjectsWithChapters = asyncHandler(async (req, res) => {
@@ -802,6 +817,118 @@ const updateSubject = asyncHandler(async (req, res) => {
   }
 });
 
+const getSubjectPdf = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  const subject = await SubjectModel.findOne({ slug });
+
+  if (!subject) {
+    return res.status(404).json({ message: "Subject not found." });
+  }
+
+  const pdfFile = subject?.resourceFile?.file;
+
+  if (!pdfFile?.filePath) {
+    return res.status(404).json({ message: "PDF resource file not found." });
+  }
+
+  const fileName = pdfFile.fileName || "course-resource.pdf";
+  const safeFileName = fileName.replace(/["]/g, "");
+  const publicId = pdfFile.publicId || "";
+  const hasPdfExtension = publicId.toLowerCase().endsWith(".pdf");
+  const publicIdWithoutPdf = hasPdfExtension ? publicId.slice(0, -4) : publicId;
+
+  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 10;
+
+  const possibleUrls = [];
+
+  if (pdfFile.filePath) {
+    possibleUrls.push(pdfFile.filePath);
+  }
+
+  if (publicId) {
+    possibleUrls.push(
+      cloudinary.url(publicId, {
+        resource_type: "raw",
+        type: "upload",
+        secure: true,
+      }),
+    );
+
+    possibleUrls.push(
+      cloudinary.url(publicId, {
+        resource_type: "raw",
+        type: "upload",
+        secure: true,
+        sign_url: true,
+      }),
+    );
+
+    possibleUrls.push(
+      cloudinary.url(publicIdWithoutPdf, {
+        resource_type: "raw",
+        type: "upload",
+        secure: true,
+        format: "pdf",
+        sign_url: true,
+      }),
+    );
+
+    possibleUrls.push(
+      cloudinary.utils.private_download_url(publicIdWithoutPdf, "pdf", {
+        resource_type: "raw",
+        type: "upload",
+        expires_at: expiresAt,
+        attachment: false,
+      }),
+    );
+
+    possibleUrls.push(
+      cloudinary.utils.private_download_url(publicId, "pdf", {
+        resource_type: "raw",
+        type: "upload",
+        expires_at: expiresAt,
+        attachment: false,
+      }),
+    );
+  }
+
+  let lastError = null;
+
+  for (const url of possibleUrls.filter(Boolean)) {
+    try {
+      const pdfResponse = await axios.get(url, {
+        responseType: "stream",
+        maxRedirects: 5,
+        validateStatus: (status) => status >= 200 && status < 300,
+        headers: {
+          Accept: "application/pdf,application/octet-stream,*/*",
+          "User-Agent": "Mozilla/5.0",
+        },
+      });
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename="${safeFileName}"`);
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+
+      if (pdfResponse.headers["content-length"]) {
+        res.setHeader("Content-Length", pdfResponse.headers["content-length"]);
+      }
+
+      return pdfResponse.data.pipe(res);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  return res.status(502).json({
+    message: "PDF file could not be loaded from storage.",
+    error: lastError?.response?.status ? `Cloudinary returned ${lastError.response.status}` : lastError?.message,
+    fix: "Enable PDF/ZIP delivery in Cloudinary security settings, then re-upload the PDF.",
+  });
+});
 module.exports = {
   createSubject,
   getAllSubject,
@@ -810,4 +937,5 @@ module.exports = {
   getUserSubjects,
   getChaptersBySubjectSlug,
   getAllSubjectsWithChapters,
+  getSubjectPdf,
 };

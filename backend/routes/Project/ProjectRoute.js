@@ -38,8 +38,7 @@ router.post("/", protect, uploadAssetsandThumbnail, validation(createProjectVali
 router.delete("/remove/:id", protect, deleteProject);
 router.delete("/remove", protect, deleteProject);
 
-router.put("/:id", protect, upload.array("assets"), updateProject);
-
+router.put("/:slug", protect, uploadAssetsandThumbnail, updateProject);
 router.patch("/featured/:projectId", protect, updateProjectFeaturedStatus);
 router.patch("/visibility/:projectId", protect, updateProjectVisibility);
 

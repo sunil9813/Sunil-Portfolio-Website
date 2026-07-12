@@ -67,7 +67,14 @@ export const updateVisibility = createAsyncThunk("projects/updateVisibility", as
     return thunkAPI.rejectWithValue(message);
   }
 });
-
+export const updateProject = createAsyncThunk("projects/update", async ({ slug, formData }, thunkAPI) => {
+  try {
+    return await projectService.updateProject({ slug, formData });
+  } catch (error) {
+    const message = (error.response && error.response.data && (error.response.data.error || error.response.data.message)) || error.message || error.toString();
+    return thunkAPI.rejectWithValue(message);
+  }
+});
 const projectSlice = createSlice({
   name: "project",
   initialState,
@@ -205,6 +212,23 @@ const projectSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
+        toast.error(action.payload);
+      })
+      .addCase(updateProject.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateProject.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.message = action.payload?.message;
+        state.project = action.payload?.data || state.project;
+      })
+      .addCase(updateProject.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.message = action.payload;
         toast.error(action.payload);
       });
   },

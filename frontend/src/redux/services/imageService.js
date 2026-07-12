@@ -9,8 +9,17 @@ const config = {
   },
 };
 
-const getAllImages = async ({ folder, subfolder }) => {
-  const url = subfolder ? `${API_URL}${folder}/${subfolder}` : `${API_URL}${folder}`;
+const getAllImages = async ({ folder, subfolder, groupId }) => {
+  const baseUrl = subfolder ? `${API_URL}${folder}/${subfolder}` : `${API_URL}${folder}`;
+
+  const query = new URLSearchParams();
+
+  if (groupId) {
+    query.append("groupId", groupId);
+  }
+
+  const url = query.toString() ? `${baseUrl}?${query.toString()}` : baseUrl;
+
   const response = await axios.get(url);
   return response.data;
 };

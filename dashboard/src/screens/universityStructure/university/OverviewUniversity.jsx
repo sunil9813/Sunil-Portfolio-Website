@@ -1,5 +1,5 @@
 import { deleteUniversity, getAllUniversity } from "@/redux/slices/universityStructure/universitySlice";
-import { BreadcrumbsComponent, Table, Wrapper } from "@/utils/Router";
+import { Table, Wrapper } from "@/routes";
 import { useEffect } from "react";
 import { confirmAlert } from "react-confirm-alert";
 import { useDispatch, useSelector } from "react-redux";
@@ -39,9 +39,6 @@ export const OverviewUniversity = () => {
   return (
     <>
       <Wrapper className="university-list">
-        <div className="px-5 pt-5">
-          <BreadcrumbsComponent currentPage="All University" space={true} />
-        </div>
         <Table
           head={TABLE_HEAD}
           rowData={universityList}

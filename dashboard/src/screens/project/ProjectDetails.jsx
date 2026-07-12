@@ -1,21 +1,100 @@
-import { getUserFavorite } from "@/redux/slices/common/favoriteSlice";
-import { getProjectPrivate, updateFeaturedStatus, updateVisibility } from "@/redux/slices/projectSlice";
-import { FavoriteButton, HeadingThree, LikeButton, RichTextRenderer, Wrapper } from "@/utils/Router";
 import { useEffect, useMemo, useState } from "react";
-import { FaCloudDownloadAlt, FaComments } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate, useParams } from "react-router-dom";
+import { Switch } from "@material-tailwind/react";
 import { toast } from "react-toastify";
+import { FaCloudDownloadAlt, FaComments, FaLock, FaStar } from "react-icons/fa";
 import { VscVerifiedFilled } from "react-icons/vsc";
-import { generateItemColor } from "@/utils";
 import { BiSolidChevronRight } from "react-icons/bi";
 import { IoCheckmarkCircle, IoCloudDownloadOutline, IoEye } from "react-icons/io5";
-import { IconWithFallback } from "./ProjectToolsSection";
-import { Switch } from "@material-tailwind/react";
+
+import { getProjectPrivate, updateFeaturedStatus, updateVisibility } from "@/redux/slices/projectSlice";
+import { getUserFavorite } from "@/redux/slices/common/favoriteSlice";
+import { FavoriteButton, HeadingThree, LikeButton, RichTextRenderer, Wrapper } from "@/routes";
+import { generateItemColor } from "@/utils";
 import { ActionButton } from "@/components/customeUI/Button";
+import { IconWithFallback } from "./ProjectToolsSection";
+
+const getViewCount = (views) => {
+  if (Array.isArray(views)) {
+    return views.length;
+  }
+
+  return Number(views) || 0;
+};
+
+const formatNumber = (value) => {
+  return new Intl.NumberFormat("en-AU").format(Number(value) || 0);
+};
+
+const ProjectDetailsSkeleton = () => {
+  return (
+    <Wrapper className="relative overflow-hidden">
+      {/* Wrapper background remains unchanged */}
+
+      <div className="h-[42vh] animate-pulse rounded-t-3xl bg-gray-200 dark:bg-white/[0.045]" />
+
+      <div className="space-y-5 px-5 py-6 sm:px-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="h-8 w-3/4 animate-pulse rounded-lg bg-gray-200 dark:bg-white/[0.045]" />
+
+          <div className="flex gap-2">
+            <div className="h-9 w-24 animate-pulse rounded-xl bg-gray-200 dark:bg-white/[0.045]" />
+            <div className="h-9 w-24 animate-pulse rounded-xl bg-gray-200 dark:bg-white/[0.045]" />
+          </div>
+        </div>
+
+        <div className="h-4 w-full animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+
+        <div className="flex flex-wrap gap-2">
+          {[...Array(5)].map((_, index) => (
+            <div key={index} className="h-8 w-20 animate-pulse rounded-full bg-gray-200 dark:bg-white/[0.045]" />
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-5 p-5 sm:p-8">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {[...Array(2)].map((_, index) => (
+            <div key={index} className="h-80 animate-pulse rounded-3xl bg-gray-200 dark:bg-white/[0.045] 3xl:h-[500px]" />
+          ))}
+        </div>
+
+        <div className="h-16 animate-pulse rounded-2xl bg-gray-200 dark:bg-white/[0.045]" />
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+          <div>
+            <div className="mb-5 h-7 w-32 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+
+            <div className="space-y-3">
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="h-4 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-5 h-7 w-28 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+
+            <div className="space-y-3">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <div className="size-5 animate-pulse rounded-full bg-gray-200 dark:bg-white/[0.045]" />
+                  <div className="h-4 flex-1 animate-pulse rounded bg-gray-200 dark:bg-white/[0.045]" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Wrapper>
+  );
+};
 
 export const ProjectDetails = () => {
   const { slug } = useParams();
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -23,318 +102,466 @@ export const ProjectDetails = () => {
   const { favoriteResource } = useSelector((state) => state.favorite);
   const { user } = useSelector((state) => state.auth);
   const likeState = useSelector((state) => state.like);
+
   const userId = user?._id;
 
-  // Local state for switches and their loading states
-  const [localVisibility, setLocalVisibility] = useState(project?.visibility || "private");
-  const [localFeatured, setLocalFeatured] = useState(project?.featured || false);
+  const [localVisibility, setLocalVisibility] = useState("private");
+  const [localFeatured, setLocalFeatured] = useState(false);
+  const [isVisibilityUpdating, setIsVisibilityUpdating] = useState(false);
+  const [isFeaturedUpdating, setIsFeaturedUpdating] = useState(false);
 
-  const isFavorited = useMemo(() => favoriteResource?.Project?.some((fav) => fav._id === project?._id), [favoriteResource, project?._id]);
+  const isFavorited = useMemo(() => {
+    return Boolean(favoriteResource?.Project?.some((favorite) => favorite?._id === project?._id));
+  }, [favoriteResource, project?._id]);
+
   const likeCount = useMemo(() => {
-    return likeState.likeCounts["project"]?.[project?._id] ?? project?.likes?.length ?? 0;
-  }, [likeState, project?._id, project?.likes]);
+    return likeState?.likeCounts?.project?.[project?._id] ?? project?.likes?.length ?? 0;
+  }, [likeState?.likeCounts, project?._id, project?.likes]);
 
-  // Initial fetch of project details
+  const viewCount = useMemo(() => {
+    return getViewCount(project?.numOfViews);
+  }, [project?.numOfViews]);
+
+  const resourceFileSize = useMemo(() => {
+    const size = project?.resourceFile?.file?.size;
+
+    if (!size) {
+      return null;
+    }
+
+    return (size / (1024 * 1024)).toFixed(2);
+  }, [project?.resourceFile?.file?.size]);
+
   useEffect(() => {
-    dispatch(getProjectPrivate(slug));
+    if (slug) {
+      dispatch(getProjectPrivate(slug));
+    }
   }, [slug, dispatch]);
 
-  // Fetch user's favorite resources
   useEffect(() => {
-    dispatch(getUserFavorite(userId));
+    if (userId) {
+      dispatch(getUserFavorite(userId));
+    }
   }, [dispatch, userId]);
 
-  // Sync local state with Redux state when project changes
   useEffect(() => {
-    if (project) {
-      setLocalVisibility(project.visibility);
-      setLocalFeatured(project.featured);
+    if (!project) {
+      return;
     }
+
+    setLocalVisibility(project?.visibility || "private");
+    setLocalFeatured(Boolean(project?.featured));
   }, [project]);
 
   const handleVisibilityToggle = async (projectId, newVisibility) => {
+    if (!projectId || isVisibilityUpdating) {
+      return;
+    }
+
+    const previousVisibility = localVisibility;
+
     try {
+      setIsVisibilityUpdating(true);
       setLocalVisibility(newVisibility);
-      await dispatch(updateVisibility({ projectId, visibility: newVisibility })).unwrap();
+
+      await dispatch(
+        updateVisibility({
+          projectId,
+          visibility: newVisibility,
+        }),
+      ).unwrap();
+
+      toast.success(`Project visibility changed to ${newVisibility}.`);
     } catch (error) {
-      toast.error("Failed to update visibility:", error);
-      setLocalVisibility(project.visibility);
+      setLocalVisibility(previousVisibility);
+
+      toast.error(error?.message || "Failed to update project visibility.");
+    } finally {
+      setIsVisibilityUpdating(false);
     }
   };
 
   const handleFeaturedToggle = async (projectId, newFeatured) => {
+    if (!projectId || isFeaturedUpdating) {
+      return;
+    }
+
+    const previousFeatured = localFeatured;
+
     try {
+      setIsFeaturedUpdating(true);
       setLocalFeatured(newFeatured);
-      await dispatch(updateFeaturedStatus({ projectId, featured: newFeatured })).unwrap();
+
+      await dispatch(
+        updateFeaturedStatus({
+          projectId,
+          featured: newFeatured,
+        }),
+      ).unwrap();
+
+      toast.success(newFeatured ? "Project added to featured items." : "Project removed from featured items.");
     } catch (error) {
-      toast.error("Failed to update featured status:", error);
-      setLocalFeatured(project.featured);
+      setLocalFeatured(previousFeatured);
+
+      toast.error(error?.message || "Failed to update featured status.");
+    } finally {
+      setIsFeaturedUpdating(false);
     }
   };
 
   const handleFilterClick = (filterType, value) => {
+    if (!value) {
+      return;
+    }
+
     if (filterType === "category") {
       navigate(`/filter?category=${encodeURIComponent(value)}`);
-    } else if (filterType === "tag") {
+
+      return;
+    }
+
+    if (filterType === "tag") {
       navigate(`/filter?tag=${encodeURIComponent(value)}`);
     }
   };
 
-  // Skeleton loader component
-  const SkeletonLoader = () => (
-    <Wrapper className="relative">
-      {/* Header Skeleton */}
-
-      <div className="top-header relative h-[40vh] rounded-t-3xl overflow-hidden bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-
-      {/* Title and description skeleton */}
-      <div className="title-desc w-full px-8 py-3">
-        <div className="flex justify-between items-center gap-5 mb-4">
-          <div className="h-8 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          <div className="flex gap-4">
-            <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-            <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          </div>
-        </div>
-        <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-        <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-6"></div>
-
-        {/* User and category skeleton */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-          <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-        </div>
-
-        {/* Tags skeleton */}
-        <div className="flex gap-2 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-
-      {/* Images skeleton */}
-      <div className="p-8">
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="h-96 3xl:h-[500px] rounded-3xl bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-          ))}
-        </div>
-
-        {/* Download section skeleton */}
-        <div className="flex justify-between items-center my-5 p-3 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse h-16"></div>
-
-        {/* Content skeleton */}
-        <div className="flex justify-between gap-3 px-16">
-          <div className="w-2/3">
-            <div className="h-8 w-1/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-3"></div>
-            ))}
-          </div>
-          <div className="w-1/3">
-            <div className="h-8 w-1/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex gap-2 mb-3">
-                <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Wrapper>
-  );
-
   if (isLoading) {
-    return <SkeletonLoader />;
+    return <ProjectDetailsSkeleton />;
   }
 
   return (
-    <>
-      <Wrapper className="relative">
-        <div className="top-header relative h-[40vh] rounded-t-3xl overflow-hidden">
-          <div className="h-[40vh] rounded-t-3xl w-full">
-            <img src={project?.thumbnail?.filePath} alt={project?.thumbnail?.publicId} className="w-full h-full object-cover rounded-t-3xl" />
-          </div>
-          <div className="bg-gradient-to-b h-[40vh] absolute top-0 left-0 w-full rounded-t-3xl bg-light-surface1/90 dark:bg-dark-surface1/95"> </div>
-          <div className=" absolute top-0 right-0 m-8">
-            <FavoriteButton resourceType="Project" resourceId={project?._id} initialFavorited={isFavorited} />
-          </div>
+    <Wrapper className="group relative overflow-hidden">
+      {/* Wrapper background remains unchanged */}
 
-          <div className="title-desc w-full absolute bottom-0 px-8 py-3">
-            <div className="flex justify-between items-center gap-5 absolute top-8 right-0 m-8 z-10">
-              <div>
-                <Switch
-                  id="visibility-switch"
-                  ripple={false}
-                  className="h-full w-full checked:bg-[#2ec946]"
-                  label={localVisibility === "public" ? "Public" : "Private"}
-                  checked={localVisibility === "public"}
-                  onChange={() => handleVisibilityToggle(project?._id, localVisibility === "public" ? "private" : "public")}
-                  containerProps={{ className: "w-11 h-6" }}
-                  labelProps={{ className: "text-white font-normal capitalize" }}
-                  circleProps={{ className: "before:hidden left-0.5 border-none" }}
-                />
-              </div>
-              <div>
-                <Switch
-                  id="featured-switch"
-                  ripple={false}
-                  className="h-full w-full checked:bg-[#2ec946]"
-                  label={localFeatured === true ? "Featured In Home" : "None"}
-                  checked={localFeatured === true}
-                  onChange={() => handleFeaturedToggle(project?._id, !localFeatured)}
-                  containerProps={{ className: "w-11 h-6" }}
-                  labelProps={{ className: "text-white font-normal capitalize" }}
-                  circleProps={{ className: "before:hidden left-0.5 border-none" }}
-                />
-              </div>
+      <div className="pointer-events-none absolute -right-24 top-[35vh] size-72 rounded-full bg-indigo-500/[0.014] blur-[100px]" />
+
+      <div className="pointer-events-none absolute -bottom-24 -left-24 size-72 rounded-full bg-cyan-500/[0.012] blur-[100px]" />
+
+      {/* Project hero */}
+      <section className="relative min-h-[460px] overflow-hidden rounded-t-3xl">
+        {project?.thumbnail?.filePath ? (
+          <img
+            src={project.thumbnail.filePath}
+            alt={project?.thumbnail?.publicId || project?.title || "Project thumbnail"}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.02]"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.16),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(6,182,212,0.10),transparent_42%)]" />
+        )}
+
+        {/* Existing coloured image overlay retained */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#111827]/70 via-[#111827]/82 to-[#0d1118]/98" />
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.16),transparent_36%),radial-gradient(circle_at_bottom_left,rgba(20,184,166,0.08),transparent_38%)]" />
+
+        {/* Favourite button */}
+        <div className="absolute right-4 top-4 z-20 sm:right-7 sm:top-7">
+          <FavoriteButton resourceType="Project" resourceId={project?._id} initialFavorited={isFavorited} />
+        </div>
+
+        {/* Publishing controls */}
+        <div className="absolute left-4 top-4 z-20 max-w-[calc(100%-150px)] rounded-2xl border border-white/[0.10] bg-black/40 p-2.5 shadow-[0_14px_34px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:left-7 sm:top-7">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.045] px-2 py-1.5">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-emerald-300/[0.12] bg-emerald-300/[0.07] text-emerald-100/80">
+                <FaLock size={10} />
+              </span>
+
+              <Switch
+                id="visibility-switch"
+                ripple={false}
+                disabled={isVisibilityUpdating}
+                checked={localVisibility === "public"}
+                onChange={() => handleVisibilityToggle(project?._id, localVisibility === "public" ? "private" : "public")}
+                label={localVisibility === "public" ? "Public" : "Private"}
+                className="h-full w-full bg-white/20 checked:bg-emerald-500"
+                containerProps={{
+                  className: "w-10 h-5",
+                }}
+                labelProps={{
+                  className: "text-white/90 text-[10px] font-medium capitalize",
+                }}
+                circleProps={{
+                  className: "before:hidden left-0.5 border-none",
+                }}
+              />
             </div>
 
-            <div className="flex items-center">
-              <h1 className="textColor text-xl 3xl:text-2xl capitalize py-4">{project?.title}</h1>
-              <VscVerifiedFilled size={20} className="text-green-400" />
+            <div className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.045] px-2 py-1.5">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-amber-300/[0.12] bg-amber-300/[0.07] text-amber-100/80">
+                <FaStar size={10} />
+              </span>
+
+              <Switch
+                id="featured-switch"
+                ripple={false}
+                disabled={isFeaturedUpdating}
+                checked={localFeatured}
+                onChange={() => handleFeaturedToggle(project?._id, !localFeatured)}
+                label={localFeatured ? "Featured" : "Not Featured"}
+                className="h-full w-full bg-white/20 checked:bg-amber-500"
+                containerProps={{
+                  className: "w-10 h-5",
+                }}
+                labelProps={{
+                  className: "text-white/90 text-[10px] font-medium capitalize",
+                }}
+                circleProps={{
+                  className: "before:hidden left-0.5 border-none",
+                }}
+              />
             </div>
-            <p className="textColor text-xs opacity-70">{project?.metaDescription}</p>
-            <div className="flex items-center justify-between mt-5">
-              <div className="flexC gap-1">
-                <div>
+          </div>
+        </div>
+
+        {/* Project details */}
+        <div className="relative z-10 flex min-h-[460px] flex-col justify-end px-5 pb-6 pt-28 sm:px-8 sm:pb-8">
+          <div className="max-w-5xl">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold capitalize leading-tight tracking-[-0.025em] text-white/90 sm:text-2xl lg:text-3xl">{project?.title}</h1>
+
+              <VscVerifiedFilled size={21} className="shrink-0 text-emerald-400" />
+            </div>
+
+            {project?.metaDescription && <p className="mt-2 max-w-4xl text-[11px] leading-6 text-white/50 sm:text-[12px]">{project.metaDescription}</p>}
+          </div>
+
+          <div className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            {/* Author, category and formats */}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.045] py-1.5 pl-1.5 pr-3 backdrop-blur-xl">
                   {project?.user?.avatar === "https://cdn-icons-png.flaticon.com/512/3940/3940417.png" ? (
                     <div
-                      className="font-semibold capitalize w-5 h-5 3xl:w-7 3xl:h-7 rounded-full flex justify-center items-center text-white text-xs"
+                      className="flex size-7 items-center justify-center rounded-full text-[10px] font-semibold uppercase text-white"
                       style={{
                         background: generateItemColor(project?.user?.name || project?.name || "X"),
                       }}
                     >
-                      {(project?.user?.name?.charAt(0) || project?.name?.charAt(0)) ?? "?"}
+                      {project?.user?.name?.charAt(0) || project?.name?.charAt(0) || "?"}
                     </div>
                   ) : (
-                    <div className=" w-5 h-5 3xl:w-7 3xl:h-7 rounded-full">
+                    <div className="size-7 overflow-hidden rounded-full border border-white/[0.10] bg-white/[0.05]">
                       <img
                         src={project?.user?.avatar?.url || project?.avatar?.url}
-                        alt={project?.user?.avatar?.publicId || project?.avatar?.publicId}
-                        className="w-full h-full object-cover rounded-full"
+                        alt={project?.user?.avatar?.publicId || project?.avatar?.publicId || project?.user?.name || "Project author"}
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   )}
-                </div>
-                <span className="text-xs textColor opacity-70 capitalize">{project?.user?.name || project?.name}</span>
-                <BiSolidChevronRight className="textColor opacity-30" />
-                <span className="text-xs textColor opacity-70 capitalize cursor-pointer hover:opacity-100" onClick={() => handleFilterClick("category", project?.category?.title)}>
-                  {project?.category?.title}
-                </span>
-                <BiSolidChevronRight className="textColor opacity-30 mr-3" />
 
-                {project?.formats?.map((format) => {
-                  const iconName = format?.format?.toLowerCase() || "unknown";
-                  const label = format?.format || "Unknown";
-                  return (
-                    <div className="img size-7 highlightbg flexC rounded-full -ml-4" key={format?._id || Math.random()}>
-                      {iconName && <IconWithFallback value={iconName} alt={`${label} icon`} className="w-full h-full object-contain p-1.5 hover:z-10 focus:z-10 hover:cursor-pointer" />}
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flexC gap-1">
-                <button className="flexC gap-1 bg-white dark:bg-gray-500/10 p-2.5 px-4 rounded-full textColor">
-                  <IoEye />
-                  <span className="textSizeSm">{project?.numOfViews?.length === 0 ? "0" : project?.numOfViews}</span>
-                </button>
-                <button className="flexC gap-1 bg-white dark:bg-gray-500/10 p-2.5 px-4 rounded-full textColor">
-                  <LikeButton resourceType="project" contentId={project?._id} initialLikes={project?.likes || []} showtrue={true} />
-                  <span className="textSizeSm">{likeCount === 0 ? "0" : likeCount}</span>
-                </button>
-                <button className="flexC gap-1 bg-white dark:bg-gray-500/10 p-2.5 px-4 rounded-full textColor">
-                  <FaComments />
-                  <span className="textSizeSm">200</span>
-                </button>
-                <NavLink target="_blank" to={project?.urllink} className="flexC gap-1 bg-white dark:bg-gray-500/10 p-2.5 px-4 rounded-full textColor">
-                  <span className="textSizeSm">Preview</span>
-                </NavLink>
-                <ActionButton className="flex items-center gap-2 h-auto p-2.5 px-4">
-                  <span className="textSizeSm">Add to cart</span>
-                  <span className="textSizeSm font-semibold">${project?.price}</span>
-                </ActionButton>
-              </div>
-            </div>
-            <div className="tags flex items-center gap-1 py-1">
-              {project?.tags &&
-                project?.tags?.length > 0 &&
-                project?.tags?.map((tag) => (
-                  <button className="py-1 px-2 text-xs border border-teal-400 dark:border-teal-900 rounded-full italic text-teal-500" key={tag?._id} onClick={() => handleFilterClick("tag", tag.tag)}>
-                    {`#${tag.tag}`}
+                  <span className="max-w-[140px] truncate text-[10px] font-medium capitalize text-white/65">{project?.user?.name || project?.name || "Unknown author"}</span>
+                </div>
+
+                <BiSolidChevronRight className="text-white/20" />
+
+                {project?.category?.title && (
+                  <button
+                    type="button"
+                    onClick={() => handleFilterClick("category", project.category.title)}
+                    className="rounded-full border border-indigo-300/[0.12] bg-indigo-300/[0.06] px-3 py-1.5 text-[9px] font-semibold capitalize text-indigo-100/75 transition-all hover:border-indigo-300/25 hover:bg-indigo-300/[0.10]"
+                  >
+                    {project.category.title}
                   </button>
-                ))}
-            </div>
-          </div>
-        </div>
+                )}
 
-        <div className="description p-8">
-          <div className="grid grid-cols-2 gap-4">
-            {project?.assets?.map((image) => (
-              <div className="h-96 3xl:h-[500px] rounded-3xl" key={image?.publicId}>
-                <img src={image?.filePath} alt={image?.publicId} className="w-full h-full object-cover rounded-3xl" />
-              </div>
-            ))}
-          </div>
-          <div className="download-btn flex justify-between items-center my-5 highlightbg p-3 rounded-full">
-            <div className="flex items-center gap-4">
-              <div className="icon h-9 w-9 3xl:w-10 3xl:h-10 border border-gray-500/20 dark:border-gray-50/20 rounded-full flexC">
-                <FaCloudDownloadAlt size={18} className="textColor" />
-              </div>
-              <span className="text-green-600 text-xs 3xl:textSizeSm">You can download this product with the All-Access Pass.</span>
-            </div>
-            <button className="bg-green-500 px-6 py-2.5 rounded-full text-xs text-white">Get All-Access</button>
-          </div>
+                {project?.formats?.length > 0 && (
+                  <>
+                    <BiSolidChevronRight className="text-white/20" />
 
-          <div className="flex justify-between gap-3 px-16">
-            <div className="left w-2/3">
-              <HeadingThree className="mb-3">Overview</HeadingThree>
-              <RichTextRenderer content={project?.description || ""} />
-            </div>
-            <div className="left w-1/3">
-              <HeadingThree className="mb-3">Highlights</HeadingThree>
-              {project?.highlights?.map((highlight) => (
-                <div className="flex justify-start gap-1 mb-3" key={highlight?._id}>
-                  <p className="w-5">
-                    <IoCheckmarkCircle size={18} className="text-green-500" />
-                  </p>
-                  <div className="w-full">
-                    <p className="textColor textSizeSm">{highlight?.highlight}</p>
-                  </div>
-                </div>
-              ))}
-              <HeadingThree className="mb-3 mt-10">Format</HeadingThree>
+                    <div className="flex items-center pl-3">
+                      {project.formats.map((format, index) => {
+                        const iconName = format?.format?.toLowerCase() || "unknown";
+                        const label = format?.format || "Unknown";
 
-              <div className="flex flex-wrap gap-1">
-                {project?.formats?.map((format) => {
-                  const iconName = format?.format?.toLowerCase() || "unknown";
-                  const label = format?.format || "Unknown";
-                  return (
-                    <div
-                      className={`highlightbg px-4 py-2 text-xs rounded-full flex items-center gap-2 w-auto border border-transparent hover:border-gray-500/20 hover:cursor-pointer`}
-                      key={format?._id || Math.random()}
-                    >
-                      <div className="size-5 flexC">
-                        <IconWithFallback value={iconName} alt={`${label} icon`} />
-                      </div>
-                      <span>{format?.format}</span>
+                        return (
+                          <div
+                            key={format?._id || `${label}-${index}`}
+                            title={label}
+                            className="-ml-3 flex size-8 items-center justify-center overflow-hidden rounded-full border border-white/[0.10] bg-[#161b24]/90 p-1.5 shadow-[0_7px_18px_rgba(0,0,0,0.20)] transition-all hover:z-10 hover:-translate-y-0.5"
+                          >
+                            <IconWithFallback value={iconName} alt={`${label} icon`} className="h-full w-full object-contain" />
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </>
+                )}
               </div>
-              {project?.resourceFile?.type === "file" && (
-                <div className="flex items-center mt-8 gap-2">
-                  <IoCloudDownloadOutline />
-                  <span className="textColor textSizeSm">{(project?.resourceFile?.file?.size / (1024 * 1024)).toFixed(2)} MB</span>
+
+              {/* Tags */}
+              {project?.tags?.length > 0 && (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  {project.tags.map((tag) => (
+                    <button
+                      type="button"
+                      key={tag?._id || tag?.tag}
+                      onClick={() => handleFilterClick("tag", tag?.tag)}
+                      className="rounded-full border border-teal-300/[0.12] bg-teal-300/[0.055] px-2.5 py-1 text-[9px] font-medium italic text-teal-100/70 transition-all hover:border-teal-300/25 hover:bg-teal-300/[0.10]"
+                    >
+                      #{tag?.tag}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
+
+            {/* Statistics and actions */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.055] px-3 text-white/65 backdrop-blur-xl">
+                <IoEye className="text-blue-300/80" />
+
+                <span className="text-[10px] font-medium tabular-nums">{formatNumber(viewCount)}</span>
+              </div>
+
+              <div className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.055] px-2 text-white/65 backdrop-blur-xl">
+                <LikeButton resourceType="project" contentId={project?._id} initialLikes={project?.likes || []} showtrue />
+
+                <span className="pr-1 text-[10px] font-medium tabular-nums">{formatNumber(likeCount)}</span>
+              </div>
+
+              <div className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.055] px-3 text-white/65 backdrop-blur-xl">
+                <FaComments className="text-emerald-300/75" />
+
+                <span className="text-[10px] font-medium tabular-nums">200</span>
+              </div>
+
+              <NavLink
+                target="_blank"
+                rel="noopener noreferrer"
+                to={project?.urllink || "#"}
+                className={`inline-flex min-h-10 items-center rounded-xl border border-white/[0.09] bg-white/[0.055] px-4 text-[10px] font-semibold text-white/75 backdrop-blur-xl transition-all hover:border-white/[0.16] hover:bg-white/[0.10] ${
+                  !project?.urllink ? "pointer-events-none opacity-40" : ""
+                }`}
+              >
+                Preview
+              </NavLink>
+
+              <ActionButton className="flex h-10 items-center gap-2 rounded-xl px-4">
+                <span className="text-[10px]">Add to cart</span>
+
+                <span className="text-[10px] font-bold">${project?.price || 0}</span>
+              </ActionButton>
+            </div>
           </div>
         </div>
-      </Wrapper>
-    </>
+      </section>
+
+      {/* Project content */}
+      <section className="relative z-10 p-4 sm:p-6 lg:p-8">
+        {/* Asset gallery */}
+        {project?.assets?.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {project.assets.map((image) => (
+              <div
+                key={image?.publicId || image?.filePath}
+                className="group/image relative h-80 overflow-hidden rounded-3xl border border-gray-200/70 bg-gray-100 shadow-[0_14px_35px_rgba(15,23,42,0.08)] dark:border-white/[0.05] dark:bg-white/[0.018] dark:shadow-[0_16px_38px_rgba(0,0,0,0.22)] 3xl:h-[500px]"
+              >
+                <img
+                  src={image?.filePath}
+                  alt={image?.publicId || project?.title || "Project asset"}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover/image:scale-[1.02]"
+                />
+
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover/image:opacity-100" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Download banner */}
+        <div className="relative my-5 overflow-hidden rounded-2xl border border-emerald-300/20 bg-emerald-500/[0.055] p-3.5 dark:border-emerald-300/[0.08] dark:bg-emerald-300/[0.025]">
+          <div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-emerald-500/[0.08] blur-[45px]" />
+
+          <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-300/20 bg-emerald-500/[0.08] text-emerald-700 dark:border-emerald-300/[0.10] dark:bg-emerald-300/[0.045] dark:text-emerald-200/75">
+                <FaCloudDownloadAlt size={17} />
+              </div>
+
+              <div>
+                <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-100/75">All-Access download</p>
+
+                <p className="mt-0.5 text-[9px] leading-5 text-emerald-700/75 dark:text-emerald-200/45">You can download this product with the All-Access Pass.</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="w-fit rounded-xl border border-emerald-400/25 bg-emerald-600 px-5 py-2.5 text-[10px] font-semibold text-white shadow-[0_8px_20px_rgba(16,185,129,0.18)] transition-all hover:-translate-y-0.5 hover:bg-emerald-500"
+            >
+              Get All-Access
+            </button>
+          </div>
+        </div>
+
+        {/* Overview and project information */}
+        <div className="grid grid-cols-1 gap-8 pt-4 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] lg:px-8 xl:px-14">
+          {/* Overview */}
+          <div className="min-w-0">
+            <HeadingThree className="mb-4">Overview</HeadingThree>
+
+            <div className="text-gray-700 dark:text-white/65">
+              <RichTextRenderer content={project?.description || ""} />
+            </div>
+          </div>
+
+          {/* Highlights and formats */}
+          <aside className="min-w-0">
+            <div className="rounded-2xl border border-gray-200/70 bg-gray-50/45 p-4 dark:border-white/[0.045] dark:bg-white/[0.016]">
+              <HeadingThree className="mb-4">Highlights</HeadingThree>
+
+              <div className="space-y-3">
+                {project?.highlights?.map((highlight) => (
+                  <div key={highlight?._id || highlight?.highlight} className="flex items-start gap-2.5">
+                    <IoCheckmarkCircle size={17} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-200/65" />
+
+                    <p className="text-[10px] leading-5 text-gray-600 dark:text-white/45">{highlight?.highlight}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-7 border-t border-gray-200/70 pt-6 dark:border-white/[0.05]">
+                <HeadingThree className="mb-4">Format</HeadingThree>
+
+                <div className="flex flex-wrap gap-2">
+                  {project?.formats?.map((format, index) => {
+                    const iconName = format?.format?.toLowerCase() || "unknown";
+                    const label = format?.format || "Unknown";
+
+                    return (
+                      <div
+                        key={format?._id || `${label}-${index}`}
+                        className="flex items-center gap-2 rounded-full border border-gray-200/70 bg-white/60 px-3 py-2 text-[9px] font-medium text-gray-600 transition-all hover:border-indigo-300/30 hover:bg-indigo-500/[0.04] dark:border-white/[0.05] dark:bg-white/[0.022] dark:text-white/45 dark:hover:border-indigo-300/[0.10] dark:hover:text-indigo-200/65"
+                      >
+                        <div className="flex size-5 shrink-0 items-center justify-center">
+                          <IconWithFallback value={iconName} alt={`${label} icon`} className="h-full w-full object-contain" />
+                        </div>
+
+                        <span>{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {project?.resourceFile?.type === "file" && resourceFileSize && (
+                <div className="mt-7 flex items-center gap-3 rounded-xl border border-blue-300/20 bg-blue-500/[0.05] p-3 dark:border-blue-300/[0.08] dark:bg-blue-300/[0.025]">
+                  <span className="flex size-8 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/[0.07] text-blue-700 dark:border-blue-300/[0.09] dark:bg-blue-300/[0.04] dark:text-blue-200/70">
+                    <IoCloudDownloadOutline size={16} />
+                  </span>
+
+                  <div>
+                    <p className="text-[8px] font-medium uppercase tracking-[0.08em] text-gray-400 dark:text-white/25">Resource size</p>
+
+                    <p className="mt-0.5 text-[10px] font-semibold text-gray-700 dark:text-white/60">{resourceFileSize} MB</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      </section>
+    </Wrapper>
   );
 };

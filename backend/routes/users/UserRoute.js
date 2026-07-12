@@ -36,7 +36,7 @@ const {
   getUserProfileforPublicUser,
 } = require("../../controllers/users/UserControllers");
 const { protect, admin, verified } = require("../../middleware/authMiddleware");
-const { upload } = require("../../utils/uploadImg");
+const { upload, uploadProfileImage } = require("../../utils/uploadImg");
 
 /* ----------- Public User Access ------------ */
 router.post("/register", validation(CreateUser), register);
@@ -48,8 +48,9 @@ router.post("/google/callback", loginWithGoogle);
 /* ######### Private User Access ######### */
 router.get("/logout", logout);
 router.get("/profile", protect, getUserProfile);
-router.put("/profile/update", protect, upload.single("avatar"), updateUserProfile);
-router.put("/profile/cover", upload.single("cover"), protect, profileCoverUpload);
+router.put("/profile/update", protect, uploadProfileImage.single("avatar"), updateUserProfile);
+
+router.put("/profile/cover", protect, uploadProfileImage.single("cover"), profileCoverUpload);
 
 router.get("/login-status", loginStatus);
 

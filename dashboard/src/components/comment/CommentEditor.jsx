@@ -1,51 +1,50 @@
+import PropTypes from "prop-types";
+import { useEffect } from "react";
 import { BsTypeBold, BsTypeItalic, BsTypeStrikethrough, BsTypeUnderline } from "react-icons/bs";
+import { CiBoxList } from "react-icons/ci";
+import { FaHighlighter } from "react-icons/fa";
+import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatAlignRight } from "react-icons/md";
+
 import { EditorContent, Extension, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextStyle from "@tiptap/extension-text-style";
 import Placeholder from "@tiptap/extension-placeholder";
-import { FaHighlighter } from "react-icons/fa";
 import Highlight from "@tiptap/extension-highlight";
-import { MdFormatAlignCenter, MdFormatAlignJustify, MdFormatAlignLeft, MdFormatAlignRight } from "react-icons/md";
 import TextAlign from "@tiptap/extension-text-align";
-import PropTypes from "prop-types";
-import { Wrapper } from "../customeUI/Wrapper";
-import { Button } from "@material-tailwind/react";
-import { getFocusedEditor } from "@/textEditor/utils/EditorUtils";
 import BulletList from "@tiptap/extension-bullet-list";
 import ListItem from "@tiptap/extension-list-item";
-import { CiBoxList } from "react-icons/ci";
+
+import { Button } from "@material-tailwind/react";
+import { Wrapper } from "../customeUI/Wrapper";
+import { getFocusedEditor } from "@/textEditor/utils/EditorUtils";
+
+/* ==========================================================================
+   CUSTOM LIST ENTER BEHAVIOUR
+   ========================================================================== */
 
 const CustomListEnter = Extension.create({
   name: "customListEnter",
+
   addKeyboardShortcuts() {
     return {
       Enter: ({ editor }) => {
         const { state } = editor;
-        const { selection } = state;
-        const { $from } = selection;
+        const { $from } = state.selection;
 
-        console.log("Enter pressed, node:", $from.parent.type.name); // Debug
-
-        if ($from.parent.type.name === "listItem") {
-          console.log("Splitting list item"); // Debug
+        if (editor.isActive("listItem")) {
           return editor.chain().focus().splitListItem("listItem").run();
         }
 
         if ($from.parent.type.name === "paragraph" && $from.parent.textContent.length === 0) {
-          console.log("Empty paragraph, preventing split"); // Debug
-          return true; // Prevent extra paragraph
+          return editor.chain().focus().splitBlock().run();
         }
 
         return editor.chain().focus().splitBlock().run();
       },
-      // Optional: Exit list with Ctrl+Enter
-      "Ctrl-Enter": ({ editor }) => {
-        const { state } = editor;
-        const { selection } = state;
-        const { $from } = selection;
 
-        if ($from.parent.type.name === "listItem") {
+      "Ctrl-Enter": ({ editor }) => {
+        if (editor.isActive("listItem")) {
           return editor.chain().focus().liftListItem("listItem").run();
         }
 
@@ -55,61 +54,255 @@ const CustomListEnter = Extension.create({
   },
 });
 
-export const CommentEditor = ({ value, onChange, type, className }) => {
+/* ==========================================================================
+   TOOLBAR BUTTON
+   ========================================================================== */
+
+const ToolbarButton = ({ active = false, children, label, onClick }) => {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={`flex size-8 shrink-0 items-center justify-center rounded-lg border text-sm transition-all duration-200 ${
+        active
+          ? "border-teal-300/25 bg-teal-500/15 text-teal-700 shadow-[0_5px_14px_rgba(20,184,166,0.10)] dark:border-teal-300/[0.12] dark:bg-teal-300/[0.08] dark:text-teal-200/80"
+          : "border-gray-200/70 bg-white/65 text-gray-600 hover:border-teal-300/30 hover:bg-teal-500/[0.06] hover:text-teal-700 dark:border-white/[0.05] dark:bg-white/[0.025] dark:text-white/45 dark:hover:border-teal-300/[0.10] dark:hover:bg-teal-300/[0.05] dark:hover:text-teal-200/70"
+      }`}
+    >
+      {children}
+    </button>
+  );
+};
+
+ToolbarButton.propTypes = {
+  active: PropTypes.bool,
+  children: PropTypes.node.isRequired,
+  label: PropTypes.string.isRequired,
+  onClick: PropTypes.func.isRequired,
+};
+
+/* ==========================================================================
+   MENU BAR
+   ========================================================================== */
+
+const MenuBar = ({ editor, type }) => {
+  if (!editor) {
+    return null;
+  }
+
+  const isDefault = type === "default";
+
+  return (
+    <div
+      className={`relative z-20 flex items-center justify-between gap-3 border-gray-200/70 bg-gray-50/75 px-2.5 py-2 backdrop-blur-xl dark:border-white/[0.05] dark:bg-white/[0.018] ${
+        isDefault ? "border-b" : "border-t"
+      }`}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto pb-0.5">
+        <ToolbarButton label="Bold" active={editor.isActive("bold")} onClick={() => getFocusedEditor(editor).toggleBold().run()}>
+          <BsTypeBold />
+        </ToolbarButton>
+
+        <ToolbarButton label="Italic" active={editor.isActive("italic")} onClick={() => getFocusedEditor(editor).toggleItalic().run()}>
+          <BsTypeItalic />
+        </ToolbarButton>
+
+        <ToolbarButton label="Underline" active={editor.isActive("underline")} onClick={() => getFocusedEditor(editor).toggleUnderline().run()}>
+          <BsTypeUnderline />
+        </ToolbarButton>
+
+        <ToolbarButton label="Strikethrough" active={editor.isActive("strike")} onClick={() => getFocusedEditor(editor).toggleStrike().run()}>
+          <BsTypeStrikethrough />
+        </ToolbarButton>
+
+        <ToolbarButton label="Bullet list" active={editor.isActive("bulletList")} onClick={() => getFocusedEditor(editor).toggleBulletList().run()}>
+          <CiBoxList size={18} />
+        </ToolbarButton>
+
+        {!isDefault && (
+          <>
+            <span className="mx-2 h-5 w-px shrink-0 bg-gray-300/80 dark:bg-white/[0.07]" />
+
+            <ToolbarButton label="Highlight" active={editor.isActive("highlight")} onClick={() => getFocusedEditor(editor).toggleHighlight().run()}>
+              <FaHighlighter size={14} />
+            </ToolbarButton>
+
+            <ToolbarButton
+              label="Align left"
+              active={editor.isActive({
+                textAlign: "left",
+              })}
+              onClick={() => getFocusedEditor(editor).setTextAlign("left").run()}
+            >
+              <MdFormatAlignLeft size={18} />
+            </ToolbarButton>
+
+            <ToolbarButton
+              label="Align centre"
+              active={editor.isActive({
+                textAlign: "center",
+              })}
+              onClick={() => getFocusedEditor(editor).setTextAlign("center").run()}
+            >
+              <MdFormatAlignCenter size={18} />
+            </ToolbarButton>
+
+            <ToolbarButton
+              label="Align right"
+              active={editor.isActive({
+                textAlign: "right",
+              })}
+              onClick={() => getFocusedEditor(editor).setTextAlign("right").run()}
+            >
+              <MdFormatAlignRight size={18} />
+            </ToolbarButton>
+
+            <ToolbarButton
+              label="Justify"
+              active={editor.isActive({
+                textAlign: "justify",
+              })}
+              onClick={() => getFocusedEditor(editor).setTextAlign("justify").run()}
+            >
+              <MdFormatAlignJustify size={18} />
+            </ToolbarButton>
+          </>
+        )}
+      </div>
+
+      {!isDefault && (
+        <Button
+          type="submit"
+          color="teal"
+          className="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-[10px] font-semibold normal-case shadow-none transition-all hover:bg-teal-500 hover:shadow-[0_7px_18px_rgba(20,184,166,0.18)]"
+        >
+          Submit
+        </Button>
+      )}
+    </div>
+  );
+};
+
+MenuBar.propTypes = {
+  type: PropTypes.string,
+  editor: PropTypes.object,
+};
+
+/* ==========================================================================
+   COMMENT EDITOR
+   ========================================================================== */
+
+export const CommentEditor = ({ value = "", onChange = () => {}, type, className = "" }) => {
+  const isDefault = type === "default";
+
   const editor = useEditor({
-    content: value,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    content: value || "",
+
+    onUpdate: ({ editor: currentEditor }) => {
+      onChange(currentEditor.getHTML());
+    },
+
     extensions: [
       StarterKit.configure({
-        // Disable the default paragraph behavior
+        bulletList: false,
+        listItem: false,
+
         paragraph: {
           HTMLAttributes: {
-            class: "my-0 leading-snug", // Remove margin and set tight line height
+            class: "my-0 leading-relaxed",
           },
         },
       }),
+
       Underline,
       TextStyle,
-      Highlight,
+
+      Highlight.configure({
+        multicolor: false,
+        HTMLAttributes: {
+          class: "rounded bg-amber-300/50 px-0.5 text-gray-900 dark:bg-amber-300/30 dark:text-white/90",
+        },
+      }),
+
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
+
       BulletList.configure({
         itemTypeName: "listItem",
         HTMLAttributes: {
           class: "list-disc pl-5",
         },
       }),
+
       ListItem.configure({
         HTMLAttributes: {
-          class: "my-0",
+          class: "my-0.5",
         },
       }),
-      Placeholder.configure({ placeholder: "Type something here..." }),
+
+      Placeholder.configure({
+        placeholder: "Type something here...",
+
+        emptyEditorClass: "before:pointer-events-none before:float-left before:h-0 before:text-gray-400 before:content-[attr(data-placeholder)] dark:before:text-white/25",
+      }),
+
       CustomListEnter,
     ],
+
     editorProps: {
       attributes: {
-        class: "focus:outline-none max-w-full mx-auto textSizeSm h-full textColor [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_p]:my-0 [&_li]:my-0",
+        class:
+          "min-h-[150px] max-w-full focus:outline-none text-[12px] leading-6 text-gray-700 dark:text-white/60 [&_p]:my-0 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_strong]:font-semibold [&_strong]:text-gray-900 dark:[&_strong]:text-white/90",
       },
     },
   });
 
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const nextValue = value || "";
+    const currentValue = editor.getHTML();
+
+    if (nextValue !== currentValue) {
+      editor.commands.setContent(nextValue, false);
+    }
+  }, [editor, value]);
+
+  if (isDefault) {
+    return (
+      <div
+        className={`editor-default group/editor relative overflow-hidden rounded-xl border border-gray-200/70 bg-gray-100/65 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] transition-all focus-within:border-teal-400/35 focus-within:shadow-[0_0_0_3px_rgba(20,184,166,0.05)] dark:border-white/[0.055] dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.015)] dark:focus-within:border-teal-300/[0.12] ${className}`}
+      >
+        <div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-teal-500/[0.025] blur-[50px]" />
+
+        <MenuBar editor={editor} type={type} />
+
+        <EditorContent editor={editor} className="relative z-10 min-h-[150px] px-3 py-3" />
+      </div>
+    );
+  }
+
   return (
-    <div className="relative editor-default">
-      {type === "default" ? (
-        <div className={`${className} bg-gray-900/10 dark:bg-gray-50/10 rounded-md`}>
+    <div className={`editor-default relative ${className}`}>
+      <Wrapper className="group/editor relative overflow-hidden">
+        {/* Wrapper background remains unchanged */}
+
+        <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-teal-500/[0.018] blur-[60px] transition-all duration-500 group-focus-within/editor:bg-teal-500/[0.03]" />
+
+        <div className="pointer-events-none absolute -bottom-16 -left-16 size-40 rounded-full bg-cyan-500/[0.014] blur-[60px]" />
+
+        <div className="relative z-10">
+          <EditorContent editor={editor} className="min-h-[170px] rounded-t-xl px-4 py-4" />
+
           <MenuBar editor={editor} type={type} />
-          <EditorContent editor={editor} className="min-h-[150px] pt-10 px-2" />
         </div>
-      ) : (
-        <>
-          <Wrapper>
-            <EditorContent editor={editor} className="min-h-[150px] rounded-lg p-3" />
-          </Wrapper>
-          <MenuBar editor={editor} type={type} />
-        </>
-      )}
+      </Wrapper>
     </div>
   );
 };
@@ -117,125 +310,6 @@ export const CommentEditor = ({ value, onChange, type, className }) => {
 CommentEditor.propTypes = {
   type: PropTypes.string,
   className: PropTypes.string,
-  value: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-};
-
-const MenuBar = ({ editor, type }) => {
-  if (!editor) {
-    return null;
-  }
-
-  return (
-    <>
-      {type === "default" ? (
-        <div className={`${type ? "absolute top-2 left-2 w-full flex items-center justify-between z-20" : "absolute bottom-2 left-2 w-full flex items-center justify-between"}`}>
-          <div className="flex items-center gap-1">
-            <button
-              className={
-                editor.isActive("bold") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC bg-gray-800/10 dark:bg-gray-50/10 rounded-md  text-gray-700 dark:text-white"
-              }
-              onClick={() => getFocusedEditor(editor).toggleBold().run()}
-            >
-              <BsTypeBold />
-            </button>
-            <button
-              className={
-                editor.isActive("italic") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC bg-gray-800/10 dark:bg-gray-50/10 rounded-md  text-gray-700 dark:text-white"
-              }
-              onClick={() => getFocusedEditor(editor).toggleItalic().run()}
-            >
-              <BsTypeItalic />
-            </button>
-            <button
-              className={
-                editor.isActive("underline") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC bg-gray-800/10 dark:bg-gray-50/10 rounded-md  text-gray-700 dark:text-white"
-              }
-              onClick={() => getFocusedEditor(editor).toggleUnderline().run()}
-            >
-              <BsTypeUnderline />
-            </button>
-            <button
-              className={
-                editor.isActive("strike") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC bg-gray-800/10 dark:bg-gray-50/10 rounded-md  text-gray-700 dark:text-white"
-              }
-              onClick={() => getFocusedEditor(editor).toggleStrike().run()}
-            >
-              <BsTypeStrikethrough />
-            </button>
-            <button
-              onClick={() => getFocusedEditor(editor).toggleBulletList().run()}
-              className={
-                editor.isActive("bulletList") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC bg-gray-800/10 dark:bg-gray-50/10 rounded-md  text-gray-700 dark:text-white"
-              }
-            >
-              <CiBoxList />
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className={`${type ? "absolute top-2 left-2 w-full flex items-center justify-between z-20" : "absolute bottom-2 left-2 w-full flex items-center justify-between"}`}>
-          <div className="flex items-center gap-1">
-            <button className={editor.isActive("bold") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"} onClick={() => getFocusedEditor(editor).toggleBold().run()}>
-              <BsTypeBold />
-            </button>
-            <button className={editor.isActive("italic") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"} onClick={() => getFocusedEditor(editor).toggleItalic().run()}>
-              <BsTypeItalic />
-            </button>
-            <button
-              className={editor.isActive("underline") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"}
-              onClick={() => getFocusedEditor(editor).toggleUnderline().run()}
-            >
-              <BsTypeUnderline />
-            </button>
-            <button className={editor.isActive("strike") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"} onClick={() => getFocusedEditor(editor).toggleStrike().run()}>
-              <BsTypeStrikethrough />
-            </button>
-
-            <div className="h-4 w-[1px] bg-white/20  mx-4" />
-            <div className="flex items-center space-x-1">
-              <button
-                className={editor.isActive("highlight") ? "is-active bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"}
-                onClick={() => getFocusedEditor(editor).toggleHighlight().run()}
-              >
-                <FaHighlighter size={18} />
-              </button>
-              <button
-                onClick={() => getFocusedEditor(editor).setTextAlign("left").run()}
-                className={editor.isActive({ textAlign: "left" }) ? "bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"}
-              >
-                <MdFormatAlignLeft />
-              </button>
-              <button
-                onClick={() => getFocusedEditor(editor).setTextAlign("center").run()}
-                className={editor.isActive({ textAlign: "center" }) ? "bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"}
-              >
-                <MdFormatAlignCenter />
-              </button>
-              <button
-                onClick={() => getFocusedEditor(editor).setTextAlign("right").run()}
-                className={editor.isActive({ textAlign: "right" }) ? "bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"}
-              >
-                <MdFormatAlignRight />
-              </button>
-              <button
-                onClick={() => getFocusedEditor(editor).setTextAlign("justify").run()}
-                className={editor.isActive({ textAlign: "justify" }) ? "bg-teal-400 text-white size-7 flexC  rounded-md" : "size-7 flexC"}
-              >
-                <MdFormatAlignJustify />
-              </button>
-            </div>
-          </div>
-          <Button type="submit" color="teal" className="mr-4">
-            Submit
-          </Button>
-        </div>
-      )}
-    </>
-  );
-};
-
-MenuBar.propTypes = {
-  type: PropTypes.string,
-  editor: PropTypes.object.isRequired,
+  value: PropTypes.string,
+  onChange: PropTypes.func,
 };

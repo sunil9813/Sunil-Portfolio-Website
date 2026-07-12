@@ -1,4 +1,4 @@
-import { CreateFaculty, ViewFaculty } from "@/utils/Router";
+import { CreateFaculty, ViewFaculty } from "@/routes";
 
 export const FacultyOverview = () => {
   return (

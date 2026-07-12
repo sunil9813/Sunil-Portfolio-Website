@@ -1,262 +1,342 @@
-import { FaRegUser, FaUniversity, FaUsers } from "react-icons/fa";
-import { AiFillSetting, AiOutlineUser } from "react-icons/ai";
-import { RiDashboardFill } from "react-icons/ri";
-import { BiCategoryAlt, BiImage } from "react-icons/bi";
-import { BsImageAlt } from "react-icons/bs";
-import { MdAutoGraph, MdOutlineCategory } from "react-icons/md";
-import { CiImageOn } from "react-icons/ci";
-import { PiBooksLight } from "react-icons/pi";
-import { GiBookshelf } from "react-icons/gi";
-import { GrChapterAdd } from "react-icons/gr";
+import {
+  BarChart3,
+  BookMarked,
+  BookOpen,
+  BookPlus,
+  BriefcaseBusiness,
+  Building2,
+  CircleUserRound,
+  FilePlus2,
+  FileText,
+  FileUser,
+  FolderKanban,
+  FolderOpen,
+  FolderPlus,
+  Gauge,
+  GraduationCap,
+  Heart,
+  Info,
+  KeyRound,
+  LayoutDashboard,
+  LibraryBig,
+  List,
+  MessageSquareQuote,
+  Newspaper,
+  PenLine,
+  PlusCircle,
+  School,
+  Settings,
+  Tags,
+  UserPlus,
+  UserRound,
+  Users,
+  Wrench,
+} from "lucide-react";
+
+/* ==========================================================================
+   ICON SETTINGS
+   ========================================================================== */
+
+const parentIconProps = {
+  size: 16,
+  strokeWidth: 1.8,
+};
+
+const childIconProps = {
+  size: 12,
+  strokeWidth: 1.8,
+};
+
+/* ==========================================================================
+   MAIN ADMIN MENU
+   ========================================================================== */
 
 export const menu = [
   {
     title: "Dashboard",
-    icon: <RiDashboardFill size={17} />,
+    icon: <LayoutDashboard {...parentIconProps} />,
     path: "/",
   },
-  /*  {
-    title: "Users",
-    icon: <FaUsers size={17} />,
-    path: "/users",
-  }, */
+
   {
     title: "Users",
-    icon: <FaUsers size={17} />,
+    icon: <Users {...parentIconProps} />,
     childrens: [
       {
-        title: "overview",
+        title: "Overview",
         path: "/overview",
+        icon: <Gauge {...childIconProps} />,
       },
       {
-        title: "all user",
+        title: "All Users",
         path: "/all-user",
+        icon: <UserRound {...childIconProps} />,
       },
       {
-        title: "create user",
+        title: "Create User",
         path: "/create-user",
+        icon: <UserPlus {...childIconProps} />,
       },
     ],
   },
+
   {
-    title: "Category",
-    icon: <MdOutlineCategory size={17} />,
+    title: "Categories",
+    icon: <Tags {...parentIconProps} />,
     childrens: [
       {
-        title: "overview",
+        title: "Overview",
         path: "/category-overview",
+        icon: <Gauge {...childIconProps} />,
       },
       {
-        title: "all category",
+        title: "All Categories",
         path: "/all-category",
+        icon: <List {...childIconProps} />,
       },
       {
-        title: "create category",
+        title: "Create Category",
         path: "/create-category",
+        icon: <FolderPlus {...childIconProps} />,
       },
     ],
   },
+
   {
-    title: "Blog",
-    icon: <CiImageOn size={17} />,
+    title: "Blogs",
+    icon: <Newspaper {...parentIconProps} />,
     childrens: [
       {
-        title: "overview",
+        title: "Overview",
         path: "/blog-overview",
+        icon: <Gauge {...childIconProps} />,
       },
       {
-        title: "all blog",
+        title: "All Blogs",
         path: "/all-blog",
+        icon: <FileText {...childIconProps} />,
       },
       {
-        title: "Your Creation",
+        title: "Your Creations",
         path: "/loginuser-blog",
+        icon: <PenLine {...childIconProps} />,
       },
       {
-        title: "create blog",
+        title: "Create Blog",
         path: "/create-blog",
+        icon: <FilePlus2 {...childIconProps} />,
       },
     ],
   },
+
   {
-    title: "project",
-    icon: <BsImageAlt size={17} />,
+    title: "Projects",
+    icon: <FolderKanban {...parentIconProps} />,
     childrens: [
       {
         title: "Overview",
         path: "/overview-project",
+        icon: <Gauge {...childIconProps} />,
       },
       {
-        title: "projects",
+        title: "All Projects",
         path: "/all-project",
+        icon: <FolderOpen {...childIconProps} />,
       },
       {
-        title: "Your Creation",
+        title: "Your Creations",
         path: "/users-create-project",
+        icon: <BriefcaseBusiness {...childIconProps} />,
       },
       {
-        title: "create project",
+        title: "Create Project",
         path: "/create-project",
+        icon: <FolderPlus {...childIconProps} />,
       },
     ],
   },
 
   {
-    title: "University",
-    icon: <FaUniversity size={17} />,
+    title: "Universities",
+    icon: <Building2 {...parentIconProps} />,
     childrens: [
       {
         title: "Overview",
         path: "/all-university",
+        icon: <Gauge {...childIconProps} />,
       },
       {
-        title: "Create",
+        title: "Create University",
         path: "/create-university",
+        icon: <PlusCircle {...childIconProps} />,
       },
       {
-        title: "Faculty",
+        title: "Faculties",
         path: "/all-faculty",
+        icon: <School {...childIconProps} />,
       },
     ],
   },
 
   {
-    title: "Program",
-    icon: <PiBooksLight size={17} />,
+    title: "Programs",
+    icon: <BookOpen {...parentIconProps} />,
     childrens: [
       {
         title: "Overview",
         path: "/all-program",
+        icon: <Gauge {...childIconProps} />,
       },
       {
-        title: "Create program",
+        title: "Create Program",
         path: "/create-program",
-      },
-    ],
-  },
-  {
-    title: "courses",
-    icon: <GiBookshelf size={17} />,
-    childrens: [
-      {
-        title: "Overview",
-        path: "/all-courses",
-      },
-      {
-        title: "Create courses",
-        path: "/create-courses",
-      },
-    ],
-  },
-  {
-    title: "chapter",
-    icon: <GrChapterAdd size={17} />,
-    childrens: [
-      {
-        title: "Overview",
-        path: "/all-chapter",
-      },
-      {
-        title: "Create chapter",
-        path: "/create-chapter",
-      },
-    ],
-  },
-  // Portfolio
-  {
-    title: "Portfolio",
-    icon: <MdAutoGraph size={17} />,
-    childrens: [
-      {
-        title: "About Us",
-        path: "/intro",
-      },
-      {
-        title: "resume",
-        path: "/resume",
-      },
-      {
-        title: "service",
-        path: "/service",
-      },
-      {
-        title: "testimonial",
-        path: "/testimonial",
+        icon: <BookPlus {...childIconProps} />,
       },
     ],
   },
 
   {
-    title: "Setting",
-    icon: <AiFillSetting size={17} />,
+    title: "Courses",
+    icon: <LibraryBig {...parentIconProps} />,
     childrens: [
       {
-        title: "Assets Limit",
-        path: "/assets-limit",
+        title: "Overview",
+        path: "/all-courses",
+        icon: <Gauge {...childIconProps} />,
+      },
+      {
+        title: "Create Course",
+        path: "/create-courses",
+        icon: <GraduationCap {...childIconProps} />,
+      },
+    ],
+  },
+
+  {
+    title: "Chapters",
+    icon: <BookMarked {...parentIconProps} />,
+    childrens: [
+      {
+        title: "Overview",
+        path: "/all-chapter",
+        icon: <Gauge {...childIconProps} />,
+      },
+      {
+        title: "Create Chapter",
+        path: "/create-chapter",
+        icon: <FilePlus2 {...childIconProps} />,
+      },
+    ],
+  },
+
+  {
+    title: "Portfolio",
+    icon: <BarChart3 {...parentIconProps} />,
+    childrens: [
+      {
+        title: "About",
+        path: "/intro",
+        icon: <Info {...childIconProps} />,
+      },
+      {
+        title: "Resume",
+        path: "/resume",
+        icon: <FileUser {...childIconProps} />,
+      },
+      {
+        title: "Services",
+        path: "/service",
+        icon: <Wrench {...childIconProps} />,
       },
     ],
   },
   {
-    title: "Profile",
-    icon: <FaRegUser size={17} />,
+    title: "Contact Us",
+    path: "/testimonial",
+    icon: <MessageSquareQuote {...childIconProps} />,
+  },
+  {
+    title: "Settings",
+    icon: <Settings {...parentIconProps} />,
     childrens: [
       {
-        title: "Profile",
+        title: "Assets Limit",
+        path: "/assets-limit",
+        icon: <Gauge {...childIconProps} />,
+      },
+    ],
+  },
+
+  {
+    title: "Profile",
+    icon: <CircleUserRound {...parentIconProps} />,
+    childrens: [
+      {
+        title: "My Profile",
         path: "/profile",
+        icon: <UserRound {...childIconProps} />,
       },
       {
-        title: "Favorite",
+        title: "Favourites",
         path: "/favorite",
+        icon: <Heart {...childIconProps} />,
       },
       {
         title: "Change Password",
         path: "/change-password",
+        icon: <KeyRound {...childIconProps} />,
       },
     ],
   },
 ];
 
+/* ==========================================================================
+   SECONDARY MENU
+   ========================================================================== */
+
 export const menus = [
   {
     title: "Dashboard",
-    icon: <RiDashboardFill size={17} />,
+    icon: <LayoutDashboard {...parentIconProps} />,
     path: "/",
   },
+
   {
     title: "Users",
-    icon: <FaUsers size={17} />,
+    icon: <Users {...parentIconProps} />,
     path: "/users",
   },
+
   {
-    title: "project",
-    icon: <BsImageAlt size={17} />,
+    title: "Projects",
+    icon: <FolderKanban {...parentIconProps} />,
     childrens: [
       {
-        title: "projects",
+        title: "All Projects",
         path: "/projects",
-        icon: <BiCategoryAlt size={17} />,
+        icon: <FolderOpen {...childIconProps} />,
       },
       {
-        title: "category",
+        title: "Categories",
         path: "/category",
-        icon: <BiCategoryAlt size={17} />,
+        icon: <Tags {...childIconProps} />,
       },
     ],
   },
 
   {
-    title: "Setting",
-    icon: <AiFillSetting size={17} />,
+    title: "Settings",
+    icon: <Settings {...parentIconProps} />,
     childrens: [
       {
         title: "Profile",
         path: "/profile",
-        icon: <AiOutlineUser size={17} />,
+        icon: <UserRound {...childIconProps} />,
       },
       {
         title: "Assets Limit",
         path: "/assets-limit",
-        icon: <BiImage size={17} />,
+        icon: <Gauge {...childIconProps} />,
       },
     ],
   },

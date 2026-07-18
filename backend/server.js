@@ -58,7 +58,15 @@ app.use(bodyParser.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:3001", "http://localhost:5172", "http://localhost:5173", "http://192.168.1.4:5172", "https://bksuniladmin.netlify.app", "https://bksunil.netlify.app"],
+    origin: [
+      "http://localhost:3001",
+      "http://localhost:5172",
+      "http://localhost:5173",
+      "http://192.168.1.4:5172",
+      "http://192.168.1.4:5173",
+      "https://bksuniladmin.netlify.app",
+      "https://bksunil.netlify.app",
+    ],
     credentials: true,
   }),
 );

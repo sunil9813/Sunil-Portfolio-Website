@@ -30,6 +30,8 @@ const initialState = {
 
 export const CreateUniversity = () => {
   const logoInputRef = useRef(null);
+  const groupIdRef = useRef(uuidv4());
+  const groupId = groupIdRef.current;
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -38,7 +40,6 @@ export const CreateUniversity = () => {
   const [logo, setLogo] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [description, setDescription] = useState("");
-  const [groupId] = useState(() => uuidv4());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { name, edate, location, website, type } = university;
@@ -385,7 +386,15 @@ export const CreateUniversity = () => {
           </div>
 
           <div className="min-h-[400px] rounded-2xl border border-gray-200/70 bg-gray-50/35 p-2 dark:border-white/[0.045] dark:bg-white/[0.014]">
-            <Editor customId={groupId} value={description} onChange={setDescription} folderName="university/description" folder="university" subfolder="description" />
+            <Editor
+              key={`university-create-${groupId}`}
+              customId={groupId}
+              value={description || ""}
+              onChange={setDescription}
+              folderName="university/description"
+              folder="university"
+              subfolder="description"
+            />
           </div>
         </div>
       </Wrapper>

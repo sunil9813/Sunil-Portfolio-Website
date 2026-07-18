@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import { BiWorld } from "react-icons/bi";
 import { CiCalendar } from "react-icons/ci";
@@ -69,6 +70,7 @@ const LoadingSkeleton = () => {
 
 export const UpdateUniversity = () => {
   const logoInputRef = useRef(null);
+  const fallbackGroupIdRef = useRef(uuidv4());
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -83,6 +85,8 @@ export const UpdateUniversity = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { name, edate, location, website, type, groupId } = university;
+
+  const editorGroupId = groupId && groupId !== "undefined" && groupId !== "null" ? groupId : fallbackGroupIdRef.current;
 
   useEffect(() => {
     const loadUniversity = async () => {
@@ -117,7 +121,7 @@ export const UpdateUniversity = () => {
       location: currentUniversity.location || "",
       website: currentUniversity.website || "",
       type: currentUniversity.type || "",
-      groupId: currentUniversity.groupId || "",
+      groupId: currentUniversity.groupId || fallbackGroupIdRef.current,
     });
 
     setDescription(currentUniversity.description || "");
@@ -228,6 +232,7 @@ export const UpdateUniversity = () => {
       formData.append("location", location.trim());
       formData.append("website", website.trim());
       formData.append("type", type);
+      formData.append("groupId", editorGroupId);
 
       if (logo) {
         formData.append("logo", logo);
@@ -471,7 +476,15 @@ export const UpdateUniversity = () => {
           </div>
 
           <div className="min-h-[400px] rounded-2xl border border-gray-200/70 bg-gray-50/35 p-2 dark:border-white/[0.045] dark:bg-white/[0.014]">
-            <Editor customId={groupId || currentUniversity?.groupId} value={description} onChange={setDescription} folderName="university/description" folder="university" subfolder="description" />
+            <Editor
+              key={`university-update-${editorGroupId}`}
+              customId={editorGroupId}
+              value={description || ""}
+              onChange={setDescription}
+              folderName="university/description"
+              folder="university"
+              subfolder="description"
+            />
           </div>
         </div>
       </Wrapper>

@@ -283,6 +283,7 @@ export const TypeDropdown = (props) => (
     options={[
       { value: "blog", label: "Blog" },
       { value: "project", label: "Project" },
+      { value: "course", label: "course" },
     ]}
   />
 );

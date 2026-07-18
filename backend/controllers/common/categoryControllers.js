@@ -6,7 +6,7 @@ const createCategory = asyncHandler(async (req, res) => {
   const { title, type } = req.body;
 
   // Ensure that type is one of the allowed values
-  if (!["blog", "project"].includes(type)) {
+  if (!["blog", "project", "course"].includes(type)) {
     res.status(400);
     throw new Error("Invalid category type.");
   }
@@ -71,7 +71,7 @@ const getCategoriesByType = asyncHandler(async (req, res) => {
   const { type } = req.params; // Get category type from URL parameter
 
   // Ensure that type is one of the allowed values (blog or project)
-  if (!["blog", "project"].includes(type)) {
+  if (!["blog", "project", "course"].includes(type)) {
     res.status(400);
     throw new Error("Invalid category type.");
   }

@@ -14,14 +14,14 @@ const CategorySchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["blog", "project"],
+      enum: ["blog", "project", "course"],
     },
     cover: {
       type: Object,
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 CategorySchema.index({ title: 1, type: 1 }, { unique: true });
 const CategoryModel = mongoose.model("Category", CategorySchema);

@@ -77,16 +77,34 @@ export const AuthLayout = ({
     <main className="mono-auth">
       <div className="mono-auth__background" aria-hidden="true">
         <span className="mono-auth__spotlight" />
+
+        <span className="mono-auth__nebula mono-auth__nebula--top" />
+        <span className="mono-auth__nebula mono-auth__nebula--left" />
+        <span className="mono-auth__nebula mono-auth__nebula--right" />
+
         <span className="mono-auth__aurora mono-auth__aurora--left" />
         <span className="mono-auth__aurora mono-auth__aurora--right" />
         <span className="mono-auth__aurora mono-auth__aurora--bottom" />
+
+        <span className="mono-auth__planet mono-auth__planet--one">
+          <span className="mono-auth__planet-ring" />
+        </span>
+
+        <span className="mono-auth__planet mono-auth__planet--two" />
+
+        <span className="mono-auth__comet mono-auth__comet--one" />
+        <span className="mono-auth__comet mono-auth__comet--two" />
+
+        <span className="mono-auth__glow-orb mono-auth__glow-orb--left" />
+        <span className="mono-auth__glow-orb mono-auth__glow-orb--right" />
+
         <span className="mono-auth__grid" />
         <span className="mono-auth__stars mono-auth__stars--one" />
         <span className="mono-auth__stars mono-auth__stars--two" />
+        <span className="mono-auth__dust" />
         <span className="mono-auth__noise" />
         <span className="mono-auth__vignette" />
       </div>
-
       <div className="mono-auth__layout">
         <div className={`mono-auth-shell ${shellClassName}`.trim()}>
           <span className="mono-auth-shell__top-light" aria-hidden="true" />

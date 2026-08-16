@@ -5,6 +5,7 @@ import { motion, useTransform, AnimatePresence, useMotionValue, useSpring } from
 
 export const AnimatedTooltip = ({ items }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const MotionDiv = motion.div;
   const springConfig = { stiffness: 100, damping: 5 };
   const x = useMotionValue(0); // going to set this value on mouse move
   // rotate the tooltip
@@ -22,7 +23,7 @@ export const AnimatedTooltip = ({ items }) => {
         <div className="group relative" key={item.name} onMouseEnter={() => setHoveredIndex(item.id)} onMouseLeave={() => setHoveredIndex(null)}>
           <AnimatePresence mode="popLayout">
             {hoveredIndex === item.id && (
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 0, y: 20, scale: 0.6 }}
                 animate={{
                   opacity: 1,
@@ -45,17 +46,32 @@ export const AnimatedTooltip = ({ items }) => {
                 <div className="absolute inset-x-10 -bottom-px z-30 h-px w-[20%] bg-gradient-to-r from-transparent via-emerald-500 to-transparent" />
                 <div className="absolute -bottom-px left-10 z-30 h-px w-[40%] bg-gradient-to-r from-transparent via-sky-500 to-transparent" />
                 <div className="text-sm text-white">{item.designation}</div>
-              </motion.div>
+              </MotionDiv>
             )}
           </AnimatePresence>
-          <img
-            onMouseMove={handleMouseMove}
-            height={100}
-            width={100}
-            src={item.image}
-            alt={item.name}
-            className="relative !m-0 h-9 w-9 rounded-full !mr-3 object-cover object-top !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105"
-          />
+          {item.iconOnly ? (
+            <a
+              href={item.url || "#"}
+              target={item.url ? "_blank" : undefined}
+              rel={item.url ? "noreferrer" : undefined}
+              onMouseMove={handleMouseMove}
+              aria-label={item.name}
+              className={`relative !m-0 !mr-3 flex h-9 w-9 items-center justify-center rounded-full border object-cover object-top !p-0 text-[17px] transition duration-500 group-hover:z-30 group-hover:scale-105 ${
+                item.iconClassName || "border-white/[0.08] bg-white/[0.035] text-white/50 hover:border-cyan-300/[0.2] hover:bg-cyan-300/[0.06] hover:text-cyan-100/80"
+              }`}
+            >
+              {item.icon}
+            </a>
+          ) : (
+            <img
+              onMouseMove={handleMouseMove}
+              height={100}
+              width={100}
+              src={item.image}
+              alt={item.name}
+              className="relative !m-0 h-9 w-9 rounded-full !mr-3 object-cover object-top !p-0 transition duration-500 group-hover:z-30 group-hover:scale-105"
+            />
+          )}
         </div>
       ))}
     </>

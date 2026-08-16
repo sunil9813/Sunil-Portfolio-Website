@@ -2,7 +2,7 @@ import { Wrapper } from "@/routes";
 import { FaComment, FaCrown, FaEye, FaHeart, FaTrophy } from "react-icons/fa";
 import { GiMedal } from "react-icons/gi";
 
-const topPosts = [
+const fallbackTopPosts = [
   {
     rank: 1,
     title: "10 React Tips Every Developer Should Know",
@@ -99,7 +99,9 @@ const formatNumber = (value) => {
   return new Intl.NumberFormat("en-AU").format(value);
 };
 
-export const BlogLeaderboard = () => {
+export const BlogLeaderboard = ({ posts }) => {
+  const topPosts = posts?.length ? posts : fallbackTopPosts;
+
   return (
     <Wrapper className="group relative overflow-hidden p-6">
       {/* Wrapper background remains unchanged */}
@@ -128,19 +130,19 @@ export const BlogLeaderboard = () => {
 
       {/* Leaderboard list */}
       <div className="relative z-10 space-y-2.5">
-        {topPosts.map((post) => (
+        {topPosts.map((post, index) => (
           <article
-            key={post.rank}
+            key={post._id || post.rank || post.slug || index}
             className="group/item relative flex min-h-[84px] items-center gap-3 overflow-hidden rounded-2xl border border-gray-200/70 bg-gray-50/50 p-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-rose-300/25 hover:bg-white/80 hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)] dark:border-white/[0.045] dark:bg-white/[0.018] dark:hover:border-rose-300/[0.10] dark:hover:bg-white/[0.03] dark:hover:shadow-[0_14px_30px_rgba(0,0,0,0.22)]"
           >
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.018),transparent_45%,transparent)]" />
 
             {/* Rank badge */}
             <div className="relative z-10 flex w-14 shrink-0 justify-center">
-              <div className={`relative flex size-11 items-center justify-center overflow-hidden rounded-full border ${getRankStyle(post.rank)}`}>
+              <div className={`relative flex size-11 items-center justify-center overflow-hidden rounded-full border ${getRankStyle(post.rank || index + 1)}`}>
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.12] to-transparent" />
 
-                <span className="relative z-10">{getRankIcon(post.rank)}</span>
+                <span className="relative z-10">{getRankIcon(post.rank || index + 1)}</span>
               </div>
             </div>
 
@@ -151,7 +153,7 @@ export const BlogLeaderboard = () => {
               </p>
 
               <p className="mt-1 text-[9px] text-gray-400 dark:text-white/25">
-                by <span className="font-medium text-gray-500 dark:text-white/38">{post.author}</span>
+                by <span className="font-medium text-gray-500 dark:text-white/38">{post.author || "Gorkcoder"}</span>
               </p>
 
               {/* Statistics */}
@@ -159,19 +161,19 @@ export const BlogLeaderboard = () => {
                 <span className="inline-flex items-center gap-1.5">
                   <FaEye className="text-blue-600 dark:text-blue-200/60" size={9} />
 
-                  <span className="tabular-nums">{formatNumber(post.views)}</span>
+                  <span className="tabular-nums">{formatNumber(post.views ?? post.numOfViews)}</span>
                 </span>
 
                 <span className="inline-flex items-center gap-1.5">
                   <FaHeart className="text-rose-600 dark:text-rose-200/60" size={9} />
 
-                  <span className="tabular-nums">{formatNumber(post.likes)}</span>
+                  <span className="tabular-nums">{formatNumber(Array.isArray(post.likes) ? post.likes.length : post.likes)}</span>
                 </span>
 
                 <span className="inline-flex items-center gap-1.5">
                   <FaComment className="text-emerald-600 dark:text-emerald-200/60" size={9} />
 
-                  <span className="tabular-nums">{formatNumber(post.comments)}</span>
+                  <span className="tabular-nums">{formatNumber(post.comments ?? post.analytics?.shares)}</span>
                 </span>
               </div>
             </div>

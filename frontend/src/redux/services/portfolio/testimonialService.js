@@ -5,9 +5,10 @@ export const API_URL = `${REACT_APP_BACKEND_URL}/portfolio/testimonial`;
 
 const getAllTestimonial = async () => {
   const response = await axios.get(API_URL + "/");
-  console.log("====================================");
-  console.log(response);
-  console.log("====================================");
+  return response.data;
+};
+const getMyTestimonials = async () => {
+  const response = await axios.get(API_URL + "/my");
   return response.data;
 };
 const getTestimonial = async (id) => {
@@ -29,6 +30,7 @@ const updateTestimonial = async (id, data) => {
 
 const testimonialService = {
   getAllTestimonial,
+  getMyTestimonials,
   getTestimonial,
   createTestimonial,
   deleteTestimonial,

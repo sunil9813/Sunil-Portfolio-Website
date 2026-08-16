@@ -19,10 +19,6 @@ import { Button } from "@material-tailwind/react";
 import { Wrapper } from "../customeUI/Wrapper";
 import { getFocusedEditor } from "@/textEditor/utils/EditorUtils";
 
-/* ==========================================================================
-   CUSTOM LIST ENTER BEHAVIOUR
-   ========================================================================== */
-
 const CustomListEnter = Extension.create({
   name: "customListEnter",
 
@@ -54,10 +50,6 @@ const CustomListEnter = Extension.create({
   },
 });
 
-/* ==========================================================================
-   TOOLBAR BUTTON
-   ========================================================================== */
-
 const ToolbarButton = ({ active = false, children, label, onClick }) => {
   return (
     <button
@@ -84,16 +76,20 @@ ToolbarButton.propTypes = {
   onClick: PropTypes.func.isRequired,
 };
 
-/* ==========================================================================
-   MENU BAR
-   ========================================================================== */
-
-const MenuBar = ({ editor, type }) => {
+const MenuBar = ({ editor, type, onSubmit, submitLabel = "Submit", disabled = false }) => {
   if (!editor) {
     return null;
   }
 
   const isDefault = type === "default";
+
+  const handleSubmit = () => {
+    if (disabled) return;
+
+    if (onSubmit) {
+      onSubmit(editor.getHTML());
+    }
+  };
 
   return (
     <div
@@ -130,43 +126,19 @@ const MenuBar = ({ editor, type }) => {
               <FaHighlighter size={14} />
             </ToolbarButton>
 
-            <ToolbarButton
-              label="Align left"
-              active={editor.isActive({
-                textAlign: "left",
-              })}
-              onClick={() => getFocusedEditor(editor).setTextAlign("left").run()}
-            >
+            <ToolbarButton label="Align left" active={editor.isActive({ textAlign: "left" })} onClick={() => getFocusedEditor(editor).setTextAlign("left").run()}>
               <MdFormatAlignLeft size={18} />
             </ToolbarButton>
 
-            <ToolbarButton
-              label="Align centre"
-              active={editor.isActive({
-                textAlign: "center",
-              })}
-              onClick={() => getFocusedEditor(editor).setTextAlign("center").run()}
-            >
+            <ToolbarButton label="Align centre" active={editor.isActive({ textAlign: "center" })} onClick={() => getFocusedEditor(editor).setTextAlign("center").run()}>
               <MdFormatAlignCenter size={18} />
             </ToolbarButton>
 
-            <ToolbarButton
-              label="Align right"
-              active={editor.isActive({
-                textAlign: "right",
-              })}
-              onClick={() => getFocusedEditor(editor).setTextAlign("right").run()}
-            >
+            <ToolbarButton label="Align right" active={editor.isActive({ textAlign: "right" })} onClick={() => getFocusedEditor(editor).setTextAlign("right").run()}>
               <MdFormatAlignRight size={18} />
             </ToolbarButton>
 
-            <ToolbarButton
-              label="Justify"
-              active={editor.isActive({
-                textAlign: "justify",
-              })}
-              onClick={() => getFocusedEditor(editor).setTextAlign("justify").run()}
-            >
+            <ToolbarButton label="Justify" active={editor.isActive({ textAlign: "justify" })} onClick={() => getFocusedEditor(editor).setTextAlign("justify").run()}>
               <MdFormatAlignJustify size={18} />
             </ToolbarButton>
           </>
@@ -175,11 +147,13 @@ const MenuBar = ({ editor, type }) => {
 
       {!isDefault && (
         <Button
-          type="submit"
+          type={onSubmit ? "button" : "submit"}
           color="teal"
+          disabled={disabled}
+          onClick={onSubmit ? handleSubmit : undefined}
           className="shrink-0 rounded-lg bg-teal-600 px-4 py-2 text-[10px] font-semibold normal-case shadow-none transition-all hover:bg-teal-500 hover:shadow-[0_7px_18px_rgba(20,184,166,0.18)]"
         >
-          Submit
+          {submitLabel}
         </Button>
       )}
     </div>
@@ -189,17 +163,18 @@ const MenuBar = ({ editor, type }) => {
 MenuBar.propTypes = {
   type: PropTypes.string,
   editor: PropTypes.object,
+  onSubmit: PropTypes.func,
+  submitLabel: PropTypes.string,
+  disabled: PropTypes.bool,
 };
 
-/* ==========================================================================
-   COMMENT EDITOR
-   ========================================================================== */
-
-export const CommentEditor = ({ value = "", onChange = () => {}, type, className = "" }) => {
+export const CommentEditor = ({ value = "", onChange = () => {}, onSubmit, submitLabel = "Submit", disabled = false, placeholder = "Type something here...", type, className = "" }) => {
   const isDefault = type === "default";
 
   const editor = useEditor({
     content: value || "",
+
+    editable: !disabled,
 
     onUpdate: ({ editor: currentEditor }) => {
       onChange(currentEditor.getHTML());
@@ -245,8 +220,7 @@ export const CommentEditor = ({ value = "", onChange = () => {}, type, className
       }),
 
       Placeholder.configure({
-        placeholder: "Type something here...",
-
+        placeholder,
         emptyEditorClass: "before:pointer-events-none before:float-left before:h-0 before:text-gray-400 before:content-[attr(data-placeholder)] dark:before:text-white/25",
       }),
 
@@ -260,6 +234,14 @@ export const CommentEditor = ({ value = "", onChange = () => {}, type, className
       },
     },
   });
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    editor.setEditable(!disabled);
+  }, [editor, disabled]);
 
   useEffect(() => {
     if (!editor) {
@@ -281,7 +263,7 @@ export const CommentEditor = ({ value = "", onChange = () => {}, type, className
       >
         <div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-teal-500/[0.025] blur-[50px]" />
 
-        <MenuBar editor={editor} type={type} />
+        <MenuBar editor={editor} type={type} onSubmit={onSubmit} submitLabel={submitLabel} disabled={disabled} />
 
         <EditorContent editor={editor} className="relative z-10 min-h-[150px] px-3 py-3" />
       </div>
@@ -291,8 +273,6 @@ export const CommentEditor = ({ value = "", onChange = () => {}, type, className
   return (
     <div className={`editor-default relative ${className}`}>
       <Wrapper className="group/editor relative overflow-hidden">
-        {/* Wrapper background remains unchanged */}
-
         <div className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-teal-500/[0.018] blur-[60px] transition-all duration-500 group-focus-within/editor:bg-teal-500/[0.03]" />
 
         <div className="pointer-events-none absolute -bottom-16 -left-16 size-40 rounded-full bg-cyan-500/[0.014] blur-[60px]" />
@@ -300,7 +280,7 @@ export const CommentEditor = ({ value = "", onChange = () => {}, type, className
         <div className="relative z-10">
           <EditorContent editor={editor} className="min-h-[170px] rounded-t-xl px-4 py-4" />
 
-          <MenuBar editor={editor} type={type} />
+          <MenuBar editor={editor} type={type} onSubmit={onSubmit} submitLabel={submitLabel} disabled={disabled} />
         </div>
       </Wrapper>
     </div>
@@ -312,4 +292,8 @@ CommentEditor.propTypes = {
   className: PropTypes.string,
   value: PropTypes.string,
   onChange: PropTypes.func,
+  onSubmit: PropTypes.func,
+  submitLabel: PropTypes.string,
+  disabled: PropTypes.bool,
+  placeholder: PropTypes.string,
 };

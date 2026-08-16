@@ -438,12 +438,15 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     res.status(200).json({
       _id: savedUser._id,
       name: savedUser.name,
+      email: savedUser.email,
       phone: savedUser.phone,
       bio: savedUser.bio,
       avatar: savedUser.avatar,
       address: savedUser.address,
+      cover: savedUser.cover,
       role: savedUser.role,
       isVerified: savedUser.isVerified,
+      paid: savedUser.paid,
       message: "Your profile has been successfully updated.",
     });
   } else {
@@ -855,8 +858,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
 });
 
 const deleteAccount = asyncHandler(async (req, res) => {
-  const { id } = req.body;
-  const user = await UserModel.findById(id);
+  const user = await UserModel.findById(req.user._id);
 
   if (!user) {
     return res.status(404).json({ message: "User not found." });

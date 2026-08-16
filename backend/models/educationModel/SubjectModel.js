@@ -1,6 +1,29 @@
 const { mongoose } = require("mongoose");
 
-// eg : TU (Uin) ==> Management (Fac) =>  BIT (Program) => C, C+, JAVA
+// eg : TU (Uin) ==> Management (Fac) => BIT (Program) => C, C+, JAVA
+
+const resourceFileSchema = new mongoose.Schema(
+  {
+    fileName: { type: String },
+    displayName: { type: String },
+    filePath: { type: String },
+    fileType: { type: String },
+    publicId: { type: String },
+    size: { type: Number, default: 0 },
+    order: { type: Number, default: 0 },
+    resourceType: {
+      type: String,
+      enum: ["pdf", "word", "excel", "ppt", "image", "other"],
+      default: "other",
+    },
+    cloudinaryResourceType: {
+      type: String,
+      enum: ["image", "raw", "video", "auto"],
+      default: "raw",
+    },
+  },
+  { _id: false },
+);
 
 const subjectSchema = new mongoose.Schema(
   {
@@ -16,9 +39,11 @@ const subjectSchema = new mongoose.Schema(
     description: { type: String, require: true },
     metaDescription: { type: String, required: true, trim: true, maxLength: 160 },
 
-    totalpage: { type: Number, default: 0 }, // count chapter
-    likesCount: { type: Number, default: 0 }, // count total like of all chapter
-    numOfViews: { type: Number, default: 0 }, // count total views of all chapter
+    totalpage: { type: Number, default: 0 },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    likesCount: { type: Number, default: 0 },
+    bookmarksCount: { type: Number, default: 0 },
+    numOfViews: { type: Number, default: 0 },
 
     visibility: { type: String, enum: ["public", "private", "scheduled"], default: "private" },
     scheduledPublish: {
@@ -27,13 +52,14 @@ const subjectSchema = new mongoose.Schema(
         return this.visibility === "scheduled";
       },
     },
+
     accessType: {
       type: String,
       enum: ["paid", "unpaid", "pro"],
       default: "unpaid",
     },
 
-    featured: { type: Boolean, default: false }, // showing in home page or not
+    featured: { type: Boolean, default: false },
     tags: [{ tag: { type: String, maxLength: 500, trim: true } }],
     highlights: [{ highlight: { type: String, trim: true } }],
 
@@ -42,10 +68,14 @@ const subjectSchema = new mongoose.Schema(
     discountDate: { type: Date, default: null },
     discountShow: { type: Boolean, default: false },
 
-    thumbnail: { type: Object }, //
-    resourceFile: { type: Object }, // access only pdf file
+    thumbnail: { type: Object },
+
+    resourceFiles: [resourceFileSchema],
+
+    // Old field kept for compatibility.
+    resourceFile: { type: Object },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const SubjectModel = mongoose.model("Subject", subjectSchema);

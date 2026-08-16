@@ -2,18 +2,288 @@ const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const cloudinary = require("cloudinary").v2;
 const Filter = require("bad-words");
+const axios = require("axios");
+const { mongoose } = require("mongoose");
+
+require("../../models/users/UserModel");
+
 const SubjectModel = require("../../models/educationModel/SubjectModel");
 const ChapterModel = require("../../models/educationModel/ChapterModel");
-const https = require("https");
-const axios = require("axios");
+const OrderModel = require("../../models/order/OrderModel");
+
+const MAX_RESOURCE_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_RESOURCE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "image/png",
+  "image/jpg",
+  "image/jpeg",
+  "image/webp",
+];
+
+const getResourceType = (mimeType = "") => {
+  if (mimeType === "application/pdf") return "pdf";
+
+  if (mimeType === "application/msword" || mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    return "word";
+  }
+
+  if (mimeType === "application/vnd.ms-excel" || mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+    return "excel";
+  }
+
+  if (mimeType === "application/vnd.ms-powerpoint" || mimeType === "application/vnd.openxmlformats-officedocument.presentationml.presentation") {
+    return "ppt";
+  }
+
+  if (mimeType.startsWith("image/")) {
+    return "image";
+  }
+
+  return "other";
+};
+
+const getCourseResourceFiles = (req) => {
+  const newFiles = req.files?.resourceFiles || [];
+  const oldFiles = req.files?.resourceFile || [];
+
+  return [...newFiles, ...oldFiles];
+};
+
+const parseResourceMetadata = (resourceMetadata) => {
+  if (!resourceMetadata) {
+    return [];
+  }
+
+  if (typeof resourceMetadata === "string") {
+    try {
+      return JSON.parse(resourceMetadata);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  return Array.isArray(resourceMetadata) ? resourceMetadata : [];
+};
+
+// helper for course resource upload
+const getFileExtension = (fileName = "") => {
+  const match = fileName.match(/\.[0-9a-z]+$/i);
+  return match ? match[0].toLowerCase() : "";
+};
+
+const sanitizePublicIdName = (fileName = "resource") => {
+  return fileName
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[^a-zA-Z0-9-_]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+};
+
+const isImageType = (mime = "") => mime.startsWith("image/");
+
+const uploadBufferToCloudinary = (fileBuffer, uploadOptions) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+
+    uploadStream.end(fileBuffer);
+  });
+};
+
+const uploadCourseResourceFile = async (resourceFile, metadata = {}, index = 0) => {
+  if (!resourceFile) {
+    throw new Error("Resource file is missing.");
+  }
+
+  if (!resourceFile.buffer && !resourceFile.path) {
+    throw new Error("Resource file data is missing. Please upload the file again.");
+  }
+
+  const extension = getFileExtension(resourceFile.originalname);
+  const displayName = metadata.displayName?.trim() || resourceFile.originalname.replace(/\.[^/.]+$/, "");
+  const safeBaseName = sanitizePublicIdName(displayName);
+  const uniqueId = `${Date.now()}-${index}`;
+
+  const uploadOptions = {
+    folder: "Sunil Portfolio/Courses/Resources",
+
+    // Only real images use Cloudinary image.
+    // PDF, Word, Excel, PPT must use raw.
+    resource_type: isImageType(resourceFile.mimetype) ? "image" : "raw",
+  };
+
+  // Keep extension for PDF, Word, Excel, PPT.
+  // This allows browser/Office preview to understand the real file type.
+  if (!isImageType(resourceFile.mimetype)) {
+    uploadOptions.public_id = `${safeBaseName}-${uniqueId}${extension}`;
+  }
+
+  const result = resourceFile.buffer ? await uploadBufferToCloudinary(resourceFile.buffer, uploadOptions) : await cloudinary.uploader.upload(resourceFile.path, uploadOptions);
+
+  return {
+    fileName: resourceFile.originalname,
+    displayName,
+    filePath: result.secure_url,
+    fileType: resourceFile.mimetype,
+    publicId: result.public_id,
+    size: resourceFile.size,
+    order: Number(metadata.order || index + 1),
+    resourceType: getResourceType(resourceFile.mimetype),
+    cloudinaryResourceType: result.resource_type || uploadOptions.resource_type,
+  };
+};
+
+const deleteCloudinaryResourceFiles = async (resourceFiles = []) => {
+  const uniqueFiles = [];
+  const seenPublicIds = new Set();
+
+  resourceFiles.forEach((file) => {
+    if (!file?.publicId || seenPublicIds.has(file.publicId)) {
+      return;
+    }
+
+    seenPublicIds.add(file.publicId);
+    uniqueFiles.push(file);
+  });
+
+  await Promise.all(
+    uniqueFiles.map((file) =>
+      cloudinary.uploader.destroy(file.publicId, {
+        resource_type: file.cloudinaryResourceType || (file.resourceType === "image" ? "image" : "raw"),
+      }),
+    ),
+  );
+};
+
+const findSubheadingById = (subheadings = [], subheadingId) => {
+  for (const subheading of subheadings) {
+    if (String(subheading?._id) === String(subheadingId)) {
+      return subheading;
+    }
+
+    const nestedSubheading = findSubheadingById(subheading?.children || [], subheadingId);
+
+    if (nestedSubheading) {
+      return nestedSubheading;
+    }
+  }
+
+  return null;
+};
+
+const getSubheadingFromChapter = async (chapterId, subheadingId) => {
+  if (!mongoose.Types.ObjectId.isValid(chapterId) || !mongoose.Types.ObjectId.isValid(subheadingId)) {
+    return { error: "Invalid chapter or subheading id.", status: 422 };
+  }
+
+  const chapter = await ChapterModel.findById(chapterId);
+
+  if (!chapter) {
+    return { error: "Chapter not found.", status: 404 };
+  }
+
+  const subheading = findSubheadingById(chapter.subheadings || [], subheadingId);
+
+  if (!subheading) {
+    return { error: "Subheading not found.", status: 404 };
+  }
+
+  return { chapter, subheading };
+};
+
+const isPremiumSubject = (subject = {}) => {
+  const normalizedAccessType = String(subject.accessType || "").toLowerCase();
+
+  return ["paid", "pro"].includes(normalizedAccessType) || Number(subject.price || 0) > 0;
+};
+
+const hasSubjectLessonAccess = async (subject, user) => {
+  if (!subject) return false;
+
+  const isPremium = isPremiumSubject(subject);
+
+  if (!isPremium) {
+    return Boolean(user?._id);
+  }
+
+  if (!user?._id) {
+    return false;
+  }
+
+  const order = await OrderModel.exists({
+    user: user._id,
+    status: "paid",
+    amount: { $gt: 0 },
+    expiresAt: { $gte: new Date() },
+    orderItems: {
+      $elemMatch: {
+        product: subject._id,
+        productModel: "Subject",
+        price: { $gt: 0 },
+      },
+    },
+  });
+
+  return Boolean(order);
+};
+
+const getLockedSubheadings = (subheadings = []) =>
+  subheadings.map((subheading) => {
+    const item = subheading?.toObject?.() || subheading || {};
+
+    return {
+      _id: item._id,
+      title: item.title,
+      metaTitle: item.metaTitle,
+      metaDescription: item.metaDescription,
+      slug: item.slug,
+      order: item.order,
+      likesCount: item.likesCount || item.likes?.length || 0,
+      bookmarksCount: item.bookmarksCount || item.bookmarks?.length || 0,
+      numOfViews: item.numOfViews || 0,
+      children: getLockedSubheadings(item.children || []),
+    };
+  });
+
+const getLockedChapter = (chapter) => {
+  const item = chapter?.toObject?.() || chapter || {};
+
+  return {
+    _id: item._id,
+    subject: item.subject,
+    title: item.title,
+    metaTitle: item.metaTitle,
+    metaDescription: item.metaDescription,
+    slug: item.slug,
+    order: item.order,
+    user: item.user,
+    likesCount: item.likesCount || item.likes?.length || 0,
+    bookmarksCount: item.bookmarksCount || item.bookmarks?.length || 0,
+    numOfViews: item.numOfViews || 0,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    subheadings: getLockedSubheadings(item.subheadings || []),
+  };
+};
 
 const createSubject = asyncHandler(async (req, res) => {
-  const { name, description, metaDescription, university, faculty, program, accessType, groupId, visibility, scheduledPublish, tags, highlights, price, discount, discountDate } = req.body;
+  const { name, description, metaDescription, university, faculty, program, accessType, groupId, visibility, scheduledPublish, tags, highlights, price, discount, discountDate, resourceMetadata } =
+    req.body;
   const userId = req.user.id;
 
-  // Profanity check
   const filter = new Filter();
   const fieldsToCheck = [name, metaDescription];
+
   for (const field of fieldsToCheck) {
     if (field && filter.isProfane(field)) {
       return res.status(400).json({
@@ -22,110 +292,120 @@ const createSubject = asyncHandler(async (req, res) => {
     }
   }
 
-  // Required fields validation
   if (!name) return res.status(400).json({ error: "Subject name is required." });
   if (!description) return res.status(400).json({ error: "Description is required." });
   if (!metaDescription) return res.status(400).json({ error: "Meta description is required." });
+
   if (metaDescription.length > 160) {
     return res.status(400).json({ error: "Meta description cannot exceed 160 characters." });
   }
 
-  // Validate scheduled publish
   if (visibility === "scheduled") {
     if (!scheduledPublish) {
       return res.status(400).json({ error: "Scheduled publish date is required when visibility is set to scheduled." });
     }
+
     if (new Date(scheduledPublish) <= new Date()) {
       return res.status(400).json({ error: "Scheduled publish date must be in the future." });
     }
   }
 
-  // Generate unique slug
   const originalSlug = slugify(name, { lower: true, remove: /[*+~.()'"!:@]/g, strict: true });
+
   let slug = originalSlug;
   let suffix = 1;
+
   while (await SubjectModel.findOne({ slug })) {
     slug = `${suffix}-${originalSlug}`;
     suffix++;
   }
 
-  // Handle thumbnail
-  if (!req.files || !req.files["thumbnail"] || !req.files["thumbnail"][0]) {
+  if (!req.files || !req.files.thumbnail || !req.files.thumbnail[0]) {
     return res.status(400).json({ error: "Thumbnail is required." });
   }
-  const thumbnailFile = req.files["thumbnail"][0];
+
+  const thumbnailFile = req.files.thumbnail[0];
   const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg"];
+
   if (!allowedImageTypes.includes(thumbnailFile.mimetype)) {
     return res.status(400).json({ error: "Invalid thumbnail format. Supported formats: JPEG, PNG, JPG." });
   }
+
   if (thumbnailFile.size > 10 * 1024 * 1024) {
     return res.status(400).json({ error: "Thumbnail size should not exceed 10 MB." });
   }
 
   let thumbnailData = {};
+
   try {
     await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream({ folder: "Sunil Portfolio/Courses/Thumbnails", resource_type: "image" }, (error, result) => {
-        if (error) return reject(new Error("Thumbnail upload failed."));
-        thumbnailData = {
-          fileName: thumbnailFile.originalname,
-          filePath: result.secure_url,
-          fileType: thumbnailFile.mimetype,
-          publicId: result.public_id,
-        };
-        resolve();
-      });
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "Sunil Portfolio/Courses/Thumbnails",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) return reject(new Error("Thumbnail upload failed."));
+
+          thumbnailData = {
+            fileName: thumbnailFile.originalname,
+            filePath: result.secure_url,
+            fileType: thumbnailFile.mimetype,
+            publicId: result.public_id,
+          };
+
+          resolve();
+        },
+      );
+
       uploadStream.end(thumbnailFile.buffer);
     });
   } catch (error) {
     return res.status(500).json({ error: "Thumbnail could not be uploaded." });
   }
 
-  // Handle resourceFile
-  let resourceFileData = {};
-  if (req.files && req.files["resourceFile"] && req.files["resourceFile"][0]) {
-    const resourceFile = req.files["resourceFile"][0];
-    if (resourceFile.mimetype !== "application/pdf") {
-      return res.status(400).json({ error: "Resource file must be a PDF." });
-    }
-    if (resourceFile.size > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: "Resource file size should not exceed 5 MB." });
-    }
+  let resourceFilesData = [];
+
+  const incomingResourceFiles = getCourseResourceFiles(req);
+  const parsedResourceMetadata = parseResourceMetadata(resourceMetadata);
+
+  if (incomingResourceFiles.length > 0) {
     try {
-      await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream({ folder: "Sunil Portfolio/Courses/Resources", resource_type: "raw", format: "pdf" }, (error, result) => {
-          if (error) return reject(new Error("Resource file upload failed."));
-          resourceFileData = {
-            type: "file",
-            file: {
-              fileName: resourceFile.originalname,
-              filePath: result.secure_url,
-              fileType: resourceFile.mimetype,
-              publicId: result.public_id,
-              size: resourceFile.size,
-            },
-          };
-          resolve();
-        });
-        uploadStream.end(resourceFile.buffer);
-      });
+      resourceFilesData = await Promise.all(incomingResourceFiles.map((resourceFile, index) => uploadCourseResourceFile(resourceFile, parsedResourceMetadata[index] || {}, index)));
+      resourceFilesData = resourceFilesData.sort((a, b) => a.order - b.order);
     } catch (error) {
-      // Clean up thumbnail if resource file upload fails
       if (thumbnailData.publicId) {
         await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
       }
-      return res.status(500).json({ error: "Resource file could not be uploaded." });
+
+      return res.status(400).json({
+        error: error.message || "Resource files could not be uploaded.",
+      });
     }
   }
 
-  // Handle tags
+  const legacyResourceFileData = resourceFilesData[0]
+    ? {
+        type: "file",
+        file: resourceFilesData[0],
+      }
+    : {};
+
   let tagsArray = [];
+
   if (tags) {
     let parsedTags = [];
+
     if (typeof tags === "string") {
       try {
-        parsedTags = JSON.parse(tags); // Expecting [{ tag: 'css' }, { tag: 'js' }]
+        parsedTags = JSON.parse(tags);
       } catch (error) {
+        await deleteCloudinaryResourceFiles(resourceFilesData);
+
+        if (thumbnailData.publicId) {
+          await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+        }
+
         return res.status(400).json({ error: "Invalid tags format. Tags must be a valid JSON array of objects." });
       }
     } else if (Array.isArray(tags)) {
@@ -133,34 +413,51 @@ const createSubject = asyncHandler(async (req, res) => {
     } else {
       return res.status(400).json({ error: "Tags must be an array of objects." });
     }
+
     try {
       tagsArray = parsedTags.map((tagObj) => {
         if (typeof tagObj.tag !== "string" || tagObj.tag.trim() === "") {
           throw new Error("Each tag must be a valid non-empty string inside an object.");
         }
+
         if (tagObj.tag.length > 50) {
           throw new Error("Each tag cannot exceed 50 characters.");
         }
+
         return { tag: tagObj.tag.trim() };
       });
-      // Check for duplicates
-      const tagValues = tagsArray.map((t) => t.tag);
+
+      const tagValues = tagsArray.map((item) => item.tag);
+
       if (new Set(tagValues).size !== tagValues.length) {
         throw new Error("Duplicate tags are not allowed.");
       }
     } catch (error) {
+      await deleteCloudinaryResourceFiles(resourceFilesData);
+
+      if (thumbnailData.publicId) {
+        await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+      }
+
       return res.status(400).json({ error: error.message });
     }
   }
 
-  // Handle highlights
   let highlightsArray = [];
+
   if (highlights) {
     let parsedHighlights = [];
+
     if (typeof highlights === "string") {
       try {
-        parsedHighlights = JSON.parse(highlights); // Expecting [{ highlight: 'feature1' }, { highlight: 'feature2' }]
+        parsedHighlights = JSON.parse(highlights);
       } catch (error) {
+        await deleteCloudinaryResourceFiles(resourceFilesData);
+
+        if (thumbnailData.publicId) {
+          await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+        }
+
         return res.status(400).json({ error: "Invalid highlights format. Highlights must be a valid JSON array of objects." });
       }
     } else if (Array.isArray(highlights)) {
@@ -168,27 +465,36 @@ const createSubject = asyncHandler(async (req, res) => {
     } else {
       return res.status(400).json({ error: "Highlights must be an array of objects." });
     }
+
     try {
       highlightsArray = parsedHighlights.map((highlightObj) => {
         if (typeof highlightObj.highlight !== "string" || highlightObj.highlight.trim() === "") {
           throw new Error("Each highlight must be a valid non-empty string inside an object.");
         }
+
         if (highlightObj.highlight.length > 100) {
           throw new Error("Each highlight cannot exceed 100 characters.");
         }
+
         return { highlight: highlightObj.highlight.trim() };
       });
-      // Check for duplicates
-      const highlightValues = highlightsArray.map((h) => h.highlight);
+
+      const highlightValues = highlightsArray.map((item) => item.highlight);
+
       if (new Set(highlightValues).size !== highlightValues.length) {
         throw new Error("Duplicate highlights are not allowed.");
       }
     } catch (error) {
+      await deleteCloudinaryResourceFiles(resourceFilesData);
+
+      if (thumbnailData.publicId) {
+        await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+      }
+
       return res.status(400).json({ error: error.message });
     }
   }
 
-  // Handle price and discount
   let finalPrice = price ? parseFloat(price) : 0;
   let finalDiscount = discount ? parseFloat(discount) : 0;
   let finalDiscountDate = discountDate ? new Date(discountDate) : null;
@@ -198,12 +504,15 @@ const createSubject = asyncHandler(async (req, res) => {
     if (!discountDate) {
       return res.status(400).json({ error: "Discount date is required when a discount is provided." });
     }
+
     if (isNaN(finalDiscountDate) || finalDiscountDate <= new Date()) {
       return res.status(400).json({ error: "Discount date must be a valid future date." });
     }
+
     if (finalDiscount >= finalPrice) {
       return res.status(400).json({ error: "Discount cannot be greater than or equal to the price." });
     }
+
     finalDiscountShow = true;
   } else {
     finalDiscount = 0;
@@ -211,14 +520,12 @@ const createSubject = asyncHandler(async (req, res) => {
     finalDiscountShow = false;
   }
 
-  // Check if discountDate is in the past
   if (finalDiscountDate && finalDiscountDate <= new Date()) {
     finalDiscount = 0;
     finalDiscountDate = null;
     finalDiscountShow = false;
   }
 
-  // Create the subject
   try {
     const data = await SubjectModel.create({
       user: userId,
@@ -240,7 +547,8 @@ const createSubject = asyncHandler(async (req, res) => {
       discountDate: finalDiscountDate,
       discountShow: finalDiscountShow,
       thumbnail: thumbnailData,
-      resourceFile: resourceFileData,
+      resourceFiles: resourceFilesData,
+      resourceFile: legacyResourceFileData,
     });
 
     res.status(201).json({
@@ -249,13 +557,12 @@ const createSubject = asyncHandler(async (req, res) => {
       data,
     });
   } catch (error) {
-    // Clean up Cloudinary uploads
     if (thumbnailData.publicId) {
       await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
     }
-    if (resourceFileData.file?.publicId) {
-      await cloudinary.uploader.destroy(resourceFileData.file.publicId, { resource_type: "raw" });
-    }
+
+    await deleteCloudinaryResourceFiles(resourceFilesData);
+
     res.status(500).json({
       error: "Failed to create subject",
       details: process.env.NODE_ENV === "development" ? error.message : undefined,
@@ -282,7 +589,7 @@ const getAllSubject = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     res.status(err.statusCode || 500);
-    throw new Error(err.message || "Failed to fetch chapters.");
+    throw new Error(err.message || "Failed to fetch subjects.");
   }
 });
 
@@ -342,13 +649,12 @@ const getSubject = asyncHandler(async (req, res) => {
     throw new Error("Subject not found");
   }
 
-  // Get all chapters for this subject
-  const chapters = await ChapterModel.find({ subject: subject._id }).sort("createdAt");
+  const chapters = await ChapterModel.find({ subject: subject._id }).sort({ order: 1, createdAt: 1 });
 
   res.status(200).json({
     ...subject.toObject(),
-    chapters, // Add chapters array to the response
-    chapterCount: chapters.length, // Total number of chapters
+    chapters,
+    chapterCount: chapters.length,
   });
 });
 
@@ -361,40 +667,42 @@ const deleteSubject = asyncHandler(async (req, res) => {
     subjectId = req.params.id;
   }
 
-  const userId = req.user.id; // Authenticated user ID
+  const userId = req.user.id;
 
   if (!subjectId) {
     res.status(400);
     throw new Error("Subject ID is required in the request.");
   }
 
-  // Find the subject
   const subject = await SubjectModel.findOne({ _id: subjectId });
+
   if (!subject) {
     return res.status(404).json({ error: "Subject not found." });
   }
 
-  // Check if the user is authorized to delete the subject
   if (subject.user.toString() !== userId) {
     return res.status(403).json({ error: "You are not authorized to delete this subject." });
   }
 
-  // Prepare to delete Cloudinary assets
   const cloudinaryDeletions = [];
 
-  // Delete thumbnail from Cloudinary
   if (subject.thumbnail?.publicId) {
     cloudinaryDeletions.push(cloudinary.uploader.destroy(subject.thumbnail.publicId, { resource_type: "image" }));
   }
 
-  // Delete resource file from Cloudinary (if it exists and is a file type)
-  if (subject.resourceFile?.file?.publicId) {
-    cloudinaryDeletions.push(cloudinary.uploader.destroy(subject.resourceFile.file.publicId, { resource_type: "raw" }));
+  const resourceFilesToDelete = [];
+
+  if (Array.isArray(subject.resourceFiles)) {
+    resourceFilesToDelete.push(...subject.resourceFiles);
   }
 
-  // Execute Cloudinary deletions
+  if (subject.resourceFile?.file) {
+    resourceFilesToDelete.push(subject.resourceFile.file);
+  }
+
   try {
     await Promise.all(cloudinaryDeletions);
+    await deleteCloudinaryResourceFiles(resourceFilesToDelete);
   } catch (error) {
     return res.status(500).json({
       error: "Failed to delete associated files from Cloudinary.",
@@ -402,9 +710,9 @@ const deleteSubject = asyncHandler(async (req, res) => {
     });
   }
 
-  // Delete the subject from the database
   try {
     await SubjectModel.findByIdAndDelete(subjectId);
+
     res.status(200).json({
       success: true,
       message: "Subject deleted successfully",
@@ -427,7 +735,7 @@ const getChaptersBySubjectSlug = asyncHandler(async (req, res) => {
     throw new Error("Subject not found");
   }
 
-  const resourceFile = subject?.resourceFile?.file?.filePath ? subject.resourceFile : null;
+  const resourceFiles = Array.isArray(subject.resourceFiles) ? subject.resourceFiles.sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
 
   const subjectData = {
     _id: subject._id,
@@ -437,30 +745,244 @@ const getChaptersBySubjectSlug = asyncHandler(async (req, res) => {
     metaDescription: subject.metaDescription,
     logo: subject?.thumbnail,
     thumbnail: subject?.thumbnail,
-    resourceFile,
+    accessType: subject.accessType || "unpaid",
+    price: subject.price || 0,
+    discount: subject.discount || 0,
+    discountDate: subject.discountDate || null,
+    discountShow: Boolean(subject.discountShow),
+    visibility: subject.visibility,
+    likes: subject.likes || [],
+    likesCount: subject.likesCount || subject.likes?.length || 0,
+    bookmarksCount: subject.bookmarksCount || 0,
+    numOfViews: subject.numOfViews || 0,
+    resourceFile: subject.resourceFile || null,
+    resourceFiles,
   };
 
-  if (resourceFile) {
-    return res.status(200).json({
-      success: true,
-      total: 1,
-      isPdfCourse: true,
-      subject: subjectData,
-      chapters: [],
-    });
-  }
-
-  const chapters = await ChapterModel.find({ subject: subject._id }).sort({ createdAt: 1 }).populate({
+  const chapters = await ChapterModel.find({ subject: subject._id }).sort({ order: 1, createdAt: 1 }).populate({
     path: "user",
     select: "avatar name email",
   });
+
+  const requiresPayment = isPremiumSubject(subject);
+  const canAccessChapters = await hasSubjectLessonAccess(subject, req.user);
+  const responseChapters = canAccessChapters ? chapters : chapters.map(getLockedChapter);
 
   res.status(200).json({
     success: true,
     total: chapters.length,
     isPdfCourse: false,
+    hasResources: resourceFiles.length > 0 || Boolean(subject.resourceFile?.file?.filePath || subject.resourceFile?.url),
+    requiresPayment,
+    canAccessChapters,
     subject: subjectData,
-    chapters,
+    chapters: responseChapters,
+  });
+});
+
+const trackSubjectView = asyncHandler(async (req, res) => {
+  const subject = await SubjectModel.findOneAndUpdate({ slug: req.params.slug }, { $inc: { numOfViews: 1 } }, { new: true }).select("numOfViews likes likesCount bookmarksCount");
+
+  if (!subject) {
+    return res.status(404).json({ success: false, error: "Subject not found." });
+  }
+
+  res.status(200).json({
+    success: true,
+    numOfViews: subject.numOfViews || 0,
+    likesCount: subject.likesCount || subject.likes?.length || 0,
+    bookmarksCount: subject.bookmarksCount || 0,
+  });
+});
+
+const trackChapterView = asyncHandler(async (req, res) => {
+  const chapter = await ChapterModel.findByIdAndUpdate(req.params.chapterId, { $inc: { numOfViews: 1 } }, { new: true }).select("numOfViews likes likesCount");
+
+  if (!chapter) {
+    return res.status(404).json({ success: false, error: "Chapter not found." });
+  }
+
+  res.status(200).json({
+    success: true,
+    numOfViews: chapter.numOfViews || 0,
+    likesCount: chapter.likesCount || chapter.likes?.length || 0,
+  });
+});
+
+const trackSubheadingView = asyncHandler(async (req, res) => {
+  const { chapter, subheading, error, status } = await getSubheadingFromChapter(req.params.chapterId, req.params.subheadingId);
+
+  if (error) {
+    return res.status(status).json({ success: false, error });
+  }
+
+  subheading.numOfViews = Number(subheading.numOfViews || 0) + 1;
+  await chapter.save();
+
+  res.status(200).json({
+    success: true,
+    subheadingId: subheading._id,
+    numOfViews: subheading.numOfViews || 0,
+    likesCount: subheading.likesCount || subheading.likes?.length || 0,
+    bookmarksCount: subheading.bookmarksCount || subheading.bookmarks?.length || 0,
+  });
+});
+
+const toggleSubheadingLike = asyncHandler(async (req, res) => {
+  const { chapter, subheading, error, status } = await getSubheadingFromChapter(req.params.chapterId, req.params.subheadingId);
+
+  if (error) {
+    return res.status(status).json({ success: false, error });
+  }
+
+  const userId = req.user._id;
+  const likes = Array.isArray(subheading.likes) ? subheading.likes : [];
+  const hasLiked = likes.some((likedUserId) => String(likedUserId) === String(userId));
+
+  if (hasLiked) {
+    subheading.likes = likes.filter((likedUserId) => String(likedUserId) !== String(userId));
+  } else {
+    subheading.likes = [...likes, userId];
+  }
+
+  subheading.likesCount = subheading.likes.length;
+  await chapter.save();
+
+  res.status(200).json({
+    success: true,
+    status: hasLiked ? "removed" : "added",
+    subheadingId: subheading._id,
+    likesCount: subheading.likesCount,
+  });
+});
+
+const toggleSubheadingBookmark = asyncHandler(async (req, res) => {
+  const { chapter, subheading, error, status } = await getSubheadingFromChapter(req.params.chapterId, req.params.subheadingId);
+
+  if (error) {
+    return res.status(status).json({ success: false, error });
+  }
+
+  const userId = req.user._id;
+  const bookmarks = Array.isArray(subheading.bookmarks) ? subheading.bookmarks : [];
+  const hasBookmarked = bookmarks.some((bookmarkedUserId) => String(bookmarkedUserId) === String(userId));
+
+  if (hasBookmarked) {
+    subheading.bookmarks = bookmarks.filter((bookmarkedUserId) => String(bookmarkedUserId) !== String(userId));
+  } else {
+    subheading.bookmarks = [...bookmarks, userId];
+  }
+
+  subheading.bookmarksCount = subheading.bookmarks.length;
+  await chapter.save();
+
+  res.status(200).json({
+    success: true,
+    status: hasBookmarked ? "removed" : "added",
+    subheadingId: subheading._id,
+    bookmarksCount: subheading.bookmarksCount,
+  });
+});
+
+const getSubjectResourceSummary = (subject = {}) => {
+  const resourceFiles = Array.isArray(subject.resourceFiles) ? subject.resourceFiles.filter((resource) => resource?.filePath || resource?.url) : [];
+  const hasLegacyResource = Boolean(subject.resourceFile?.file?.filePath || subject.resourceFile?.url);
+
+  return {
+    hasResources: resourceFiles.length > 0 || hasLegacyResource,
+    resourceCount: resourceFiles.length + (hasLegacyResource ? 1 : 0),
+  };
+};
+
+const getSubjectsWithChapterData = async (subjects = []) => {
+  if (!subjects.length) {
+    return [];
+  }
+
+  const subjectIds = subjects.map((subject) => subject._id);
+
+  const chapters = await ChapterModel.find({ subject: { $in: subjectIds } })
+    .sort({ order: 1, createdAt: 1 })
+    .populate({
+      path: "user",
+      select: "avatar name email",
+    })
+    .populate({
+      path: "subject",
+      select: "_id",
+    })
+    .lean();
+
+  const chaptersBySubject = {};
+
+  chapters.forEach((chapter) => {
+    const subjectId = chapter.subject?._id?.toString() || chapter.subject?.toString();
+
+    if (!subjectId) return;
+
+    if (!chaptersBySubject[subjectId]) {
+      chaptersBySubject[subjectId] = [];
+    }
+
+    chaptersBySubject[subjectId].push(chapter);
+  });
+
+  return subjects.map((subject) => {
+    const subjectChapters = chaptersBySubject[subject._id.toString()] || [];
+    const resourceSummary = getSubjectResourceSummary(subject);
+
+    return {
+      ...subject,
+      chapters: subjectChapters,
+      chapterCount: subjectChapters.length,
+      ...resourceSummary,
+    };
+  });
+};
+
+const getCourseSubjects = asyncHandler(async (req, res) => {
+  const subjects = await SubjectModel.find()
+    .sort("-createdAt")
+    .populate({
+      path: "user",
+      select: "avatar name email",
+    })
+    .lean();
+
+  const courseSubjects = subjects.filter((subject) => !getSubjectResourceSummary(subject).hasResources);
+  const data = await getSubjectsWithChapterData(courseSubjects);
+
+  res.status(200).json({
+    success: true,
+    total: data.length,
+    totalSubjects: data.length,
+    data,
+  });
+});
+
+const getNoteSubjects = asyncHandler(async (req, res) => {
+  const subjects = await SubjectModel.find()
+    .sort("-createdAt")
+    .populate({
+      path: "user",
+      select: "avatar name email",
+    })
+    .lean();
+
+  const noteSubjects = subjects
+    .filter((subject) => getSubjectResourceSummary(subject).hasResources)
+    .map((subject) => ({
+      ...subject,
+      chapters: [],
+      chapterCount: 0,
+      ...getSubjectResourceSummary(subject),
+    }));
+
+  res.status(200).json({
+    success: true,
+    total: noteSubjects.length,
+    totalSubjects: noteSubjects.length,
+    data: noteSubjects,
   });
 });
 
@@ -475,40 +997,14 @@ const getAllSubjectsWithChapters = asyncHandler(async (req, res) => {
       .lean();
 
     if (!subjects.length) {
-      res.status(404);
-      throw new Error("No subjects found.");
+      return res.status(200).json({
+        success: true,
+        totalSubjects: 0,
+        data: [],
+      });
     }
 
-    // Fetch all chapters at once
-    const chapters = await ChapterModel.find()
-      .sort("createdAt")
-      .populate({
-        path: "user",
-        select: "avatar name email",
-      })
-      .populate({
-        path: "subject",
-        select: "_id",
-      })
-      .lean();
-
-    // Group chapters by subject id
-    const chaptersBySubject = {};
-    chapters.forEach((chapter) => {
-      const subjectId = chapter.subject?._id?.toString();
-      if (!subjectId) return;
-
-      if (!chaptersBySubject[subjectId]) {
-        chaptersBySubject[subjectId] = [];
-      }
-      chaptersBySubject[subjectId].push(chapter);
-    });
-
-    // Attach chapters to each subject
-    const result = subjects.map((subject) => ({
-      ...subject,
-      chapters: chaptersBySubject[subject._id.toString()] || [],
-    }));
+    const result = await getSubjectsWithChapterData(subjects);
 
     res.status(200).json({
       success: true,
@@ -521,26 +1017,25 @@ const getAllSubjectsWithChapters = asyncHandler(async (req, res) => {
   }
 });
 
-// remain to test
 const updateSubject = asyncHandler(async (req, res) => {
-  const { id } = req.params; // Subject ID from URL
-  const { name, description, metaDescription, university, faculty, program, accessType, groupId, visibility, scheduledPublish, tags, highlights, price, discount, discountDate } = req.body;
-  const userId = req.user.id; // Authenticated user ID
+  const { id, slug: slugParam } = req.params;
+  const { name, description, metaDescription, university, faculty, program, accessType, groupId, visibility, scheduledPublish, tags, highlights, price, discount, discountDate, resourceMetadata } =
+    req.body;
+  const userId = req.user.id;
 
-  // Find the subject
-  const subject = await SubjectModel.findById(id);
+  const subject = id ? await SubjectModel.findById(id) : await SubjectModel.findOne({ slug: slugParam });
+
   if (!subject) {
     return res.status(404).json({ error: "Subject not found." });
   }
 
-  // Check if the user is authorized to update the subject
   if (subject.user.toString() !== userId) {
     return res.status(403).json({ error: "You are not authorized to update this subject." });
   }
 
-  // Profanity check for updated text fields
   const filter = new Filter();
   const fieldsToCheck = [name, description, metaDescription].filter(Boolean);
+
   for (const field of fieldsToCheck) {
     if (field && filter.isProfane(field)) {
       return res.status(400).json({
@@ -549,215 +1044,69 @@ const updateSubject = asyncHandler(async (req, res) => {
     }
   }
 
-  // Required fields validation (only if provided)
-  if (name && !name.trim()) {
-    return res.status(400).json({ error: "Subject name cannot be empty." });
-  }
-  if (description && !description.trim()) {
-    return res.status(400).json({ error: "Description cannot be empty." });
-  }
-  if (metaDescription && !metaDescription.trim()) {
-    return res.status(400).json({ error: "Meta description cannot be empty." });
-  }
-  if (metaDescription && metaDescription.length > 160) {
-    return res.status(400).json({ error: "Meta description cannot exceed 160 characters." });
-  }
+  let nextSlug = subject.slug;
 
-  // Validate scheduled publish if visibility is updated to "scheduled"
-  if (visibility === "scheduled") {
-    if (!scheduledPublish) {
-      return res.status(400).json({ error: "Scheduled publish date is required when visibility is set to scheduled." });
-    }
-    if (new Date(scheduledPublish) <= new Date()) {
-      return res.status(400).json({ error: "Scheduled publish date must be in the future." });
-    }
-  }
-
-  // Generate unique slug if name is updated
-  let slug = subject.slug;
   if (name && name !== subject.name) {
     const originalSlug = slugify(name, { lower: true, remove: /[*+~.()'"!:@]/g, strict: true });
-    slug = originalSlug;
+
+    nextSlug = originalSlug;
+
     let suffix = 1;
-    while (await SubjectModel.findOne({ slug, _id: { $ne: id } })) {
-      slug = `${suffix}-${originalSlug}`;
+
+    while (await SubjectModel.findOne({ slug: nextSlug, _id: { $ne: subject._id } })) {
+      nextSlug = `${suffix}-${originalSlug}`;
       suffix++;
     }
   }
 
-  // Handle thumbnail update
-  let thumbnailData = subject.thumbnail;
-  let oldThumbnailPublicId = subject.thumbnail?.publicId;
-  if (req.files && req.files["thumbnail"] && req.files["thumbnail"][0]) {
-    const thumbnailFile = req.files["thumbnail"][0];
-    const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg"];
-    if (!allowedImageTypes.includes(thumbnailFile.mimetype)) {
-      return res.status(400).json({ error: "Invalid thumbnail format. Supported formats: JPEG, PNG, JPG." });
-    }
-    if (thumbnailFile.size > 10 * 1024 * 1024) {
-      return res.status(400).json({ error: "Thumbnail size should not exceed 10 MB." });
-    }
-    try {
-      await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream({ folder: "Sunil Portfolio/Courses/Thumbnails", resource_type: "image" }, (error, result) => {
+  let thumbnailData = subject.thumbnail || {};
+  const oldThumbnailPublicId = subject.thumbnail?.publicId;
+
+  if (req.files?.thumbnail?.[0]) {
+    const thumbnailFile = req.files.thumbnail[0];
+
+    thumbnailData = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "Sunil Portfolio/Courses/Thumbnails",
+          resource_type: "image",
+        },
+        (error, result) => {
           if (error) return reject(new Error("Thumbnail upload failed."));
-          thumbnailData = {
+
+          resolve({
             fileName: thumbnailFile.originalname,
             filePath: result.secure_url,
             fileType: thumbnailFile.mimetype,
             publicId: result.public_id,
-          };
-          resolve();
-        });
-        uploadStream.end(thumbnailFile.buffer);
-      });
-    } catch (error) {
-      return res.status(500).json({ error: "Thumbnail could not be uploaded." });
-    }
+          });
+        },
+      );
+
+      uploadStream.end(thumbnailFile.buffer);
+    });
   }
 
-  // Handle resourceFile update
-  let resourceFileData = subject.resourceFile;
-  let oldResourceFilePublicId = subject.resourceFile?.file?.publicId;
-  if (req.files && req.files["resourceFile"] && req.files["resourceFile"][0]) {
-    const resourceFile = req.files["resourceFile"][0];
-    if (resourceFile.mimetype !== "application/pdf") {
-      return res.status(400).json({ error: "Resource file must be a PDF." });
-    }
-    if (resourceFile.size > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: "Resource file size should not exceed 5 MB." });
-    }
-    try {
-      await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream({ folder: "Sunil Portfolio/Subjects/Resources", resource_type: "raw", format: "pdf" }, (error, result) => {
-          if (error) return reject(new Error("Resource file upload failed."));
-          resourceFileData = {
-            type: "file",
-            file: {
-              fileName: resourceFile.originalname,
-              filePath: result.secure_url,
-              fileType: resourceFile.mimetype,
-              publicId: result.public_id,
-              size: resourceFile.size,
-            },
-          };
-          resolve();
-        });
-        uploadStream.end(resourceFile.buffer);
-      });
-    } catch (error) {
-      // Clean up new thumbnail if resource file upload fails
-      if (thumbnailData.publicId && thumbnailData.publicId !== oldThumbnailPublicId) {
-        await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+  let resourceFilesData = Array.isArray(subject.resourceFiles) ? [...subject.resourceFiles] : [];
+  const incomingResourceFiles = getCourseResourceFiles(req);
+  const parsedResourceMetadata = parseResourceMetadata(resourceMetadata);
+
+  if (incomingResourceFiles.length > 0) {
+    const uploadedResources = await Promise.all(incomingResourceFiles.map((resourceFile, index) => uploadCourseResourceFile(resourceFile, parsedResourceMetadata[index] || {}, index)));
+
+    resourceFilesData = [...resourceFilesData, ...uploadedResources].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }
+
+  const legacyResourceFileData = resourceFilesData[0]
+    ? {
+        type: "file",
+        file: resourceFilesData[0],
       }
-      return res.status(500).json({ error: "Resource file could not be uploaded." });
-    }
-  }
+    : {};
 
-  // Handle tags
-  let tagsArray = subject.tags;
-  if (tags) {
-    let parsedTags = [];
-    if (typeof tags === "string") {
-      try {
-        parsedTags = JSON.parse(tags); // Expecting [{ tag: 'java' }, { tag: 'programming' }]
-      } catch (error) {
-        return res.status(400).json({ error: "Invalid tags format. Tags must be a valid JSON array of objects." });
-      }
-    } else if (Array.isArray(tags)) {
-      parsedTags = tags;
-    } else {
-      return res.status(400).json({ error: "Tags must be an array of objects." });
-    }
-    try {
-      tagsArray = parsedTags.map((tagObj) => {
-        if (typeof tagObj.tag !== "string" || tagObj.tag.trim() === "") {
-          throw new Error("Each tag must be a valid non-empty string inside an object.");
-        }
-        if (tagObj.tag.length > 50) {
-          throw new Error("Each tag cannot exceed 50 characters.");
-        }
-        return { tag: tagObj.tag.trim() };
-      });
-      // Check for duplicates
-      const tagValues = tagsArray.map((t) => t.tag);
-      if (new Set(tagValues).size !== tagValues.length) {
-        throw new Error("Duplicate tags are not allowed.");
-      }
-    } catch (error) {
-      return res.status(400).json({ error: error.message });
-    }
-  }
-
-  // Handle highlights
-  let highlightsArray = subject.highlights;
-  if (highlights) {
-    let parsedHighlights = [];
-    if (typeof highlights === "string") {
-      try {
-        parsedHighlights = JSON.parse(highlights); // Expecting [{ highlight: 'Learn OOP' }, { highlight: 'Build projects' }]
-      } catch (error) {
-        return res.status(400).json({ error: "Invalid highlights format. Highlights must be a valid JSON array of objects." });
-      }
-    } else if (Array.isArray(highlights)) {
-      parsedHighlights = highlights;
-    } else {
-      return res.status(400).json({ error: "Highlights must be an array of objects." });
-    }
-    try {
-      highlightsArray = parsedHighlights.map((highlightObj) => {
-        if (typeof highlightObj.highlight !== "string" || highlightObj.highlight.trim() === "") {
-          throw new Error("Each highlight must be a valid non-empty string inside an object.");
-        }
-        if (highlightObj.highlight.length > 100) {
-          throw new Error("Each highlight cannot exceed 100 characters.");
-        }
-        return { highlight: highlightObj.highlight.trim() };
-      });
-      // Check for duplicates
-      const highlightValues = highlightsArray.map((h) => h.highlight);
-      if (new Set(highlightValues).size !== highlightValues.length) {
-        throw new Error("Duplicate highlights are not allowed.");
-      }
-    } catch (error) {
-      return res.status(400).json({ error: error.message });
-    }
-  }
-
-  // Handle price and discount
-  let finalPrice = price !== undefined ? parseFloat(price) : subject.price;
-  let finalDiscount = discount !== undefined ? parseFloat(discount) : subject.discount;
-  let finalDiscountDate = discountDate ? new Date(discountDate) : subject.discountDate;
-  let finalDiscountShow = subject.discountShow;
-
-  if (finalDiscount > 0) {
-    if (!discountDate) {
-      return res.status(400).json({ error: "Discount date is required when a discount is provided." });
-    }
-    if (isNaN(finalDiscountDate) || finalDiscountDate <= new Date()) {
-      return res.status(400).json({ error: "Discount date must be a valid future date." });
-    }
-    if (finalDiscount >= finalPrice) {
-      return res.status(400).json({ error: "Discount cannot be greater than or equal to the price." });
-    }
-    finalDiscountShow = true;
-  } else {
-    finalDiscount = 0;
-    finalDiscountDate = null;
-    finalDiscountShow = false;
-  }
-
-  // Check if discountDate is in the past
-  if (finalDiscountDate && finalDiscountDate <= new Date()) {
-    finalDiscount = 0;
-    finalDiscountDate = null;
-    finalDiscountShow = false;
-  }
-
-  // Prepare update object
   const updateData = {
     name: name || subject.name,
-    slug,
+    slug: nextSlug,
     description: description || subject.description,
     metaDescription: metaDescription || subject.metaDescription,
     university: university !== undefined ? university : subject.university,
@@ -767,54 +1116,30 @@ const updateSubject = asyncHandler(async (req, res) => {
     groupId: groupId !== undefined ? groupId : subject.groupId,
     visibility: visibility || subject.visibility,
     scheduledPublish: visibility === "scheduled" ? new Date(scheduledPublish) : subject.scheduledPublish,
-    tags: tagsArray,
-    highlights: highlightsArray,
-    price: finalPrice,
-    discount: finalDiscount,
-    discountDate: finalDiscountDate,
-    discountShow: finalDiscountShow,
+    tags: tags ? JSON.parse(tags) : subject.tags,
+    highlights: highlights ? JSON.parse(highlights) : subject.highlights,
+    price: price !== undefined ? parseFloat(price) : subject.price,
+    discount: discount !== undefined ? parseFloat(discount) : subject.discount,
+    discountDate: discountDate ? new Date(discountDate) : subject.discountDate,
     thumbnail: thumbnailData,
-    resourceFile: resourceFileData,
+    resourceFiles: resourceFilesData,
+    resourceFile: legacyResourceFileData,
   };
 
-  // Update the subject
-  try {
-    const updatedSubject = await SubjectModel.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+  const updatedSubject = await SubjectModel.findByIdAndUpdate(subject._id, updateData, {
+    new: true,
+    runValidators: true,
+  });
 
-    // Delete old Cloudinary assets if they were replaced
-    const cloudinaryDeletions = [];
-    if (oldThumbnailPublicId && thumbnailData.publicId !== oldThumbnailPublicId) {
-      cloudinaryDeletions.push(cloudinary.uploader.destroy(oldThumbnailPublicId, { resource_type: "image" }));
-    }
-    if (oldResourceFilePublicId && resourceFileData.file?.publicId !== oldResourceFilePublicId) {
-      cloudinaryDeletions.push(cloudinary.uploader.destroy(oldResourceFilePublicId, { resource_type: "raw" }));
-    }
-    await Promise.all(cloudinaryDeletions);
-
-    res.status(200).json({
-      success: true,
-      message: "Subject updated successfully",
-      data: updatedSubject,
-    });
-  } catch (error) {
-    // Clean up new Cloudinary uploads if update fails
-    const cleanupDeletions = [];
-    if (thumbnailData.publicId && thumbnailData.publicId !== oldThumbnailPublicId) {
-      cleanupDeletions.push(cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" }));
-    }
-    if (resourceFileData.file?.publicId && resourceFileData.file.publicId !== oldResourceFilePublicId) {
-      cleanupDeletions.push(cloudinary.uploader.destroy(resourceFileData.file.publicId, { resource_type: "raw" }));
-    }
-    await Promise.all(cleanupDeletions);
-
-    res.status(500).json({
-      error: "Failed to update subject",
-      details: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+  if (oldThumbnailPublicId && thumbnailData.publicId !== oldThumbnailPublicId) {
+    await cloudinary.uploader.destroy(oldThumbnailPublicId, { resource_type: "image" });
   }
+
+  res.status(200).json({
+    success: true,
+    message: "Subject updated successfully",
+    data: updatedSubject,
+  });
 });
 
 const getSubjectPdf = asyncHandler(async (req, res) => {
@@ -826,7 +1151,9 @@ const getSubjectPdf = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Subject not found." });
   }
 
-  const pdfFile = subject?.resourceFile?.file;
+  const pdfFromNewResources = Array.isArray(subject.resourceFiles) ? subject.resourceFiles.find((file) => file.resourceType === "pdf" || file.fileType === "application/pdf") : null;
+
+  const pdfFile = pdfFromNewResources || subject?.resourceFile?.file;
 
   if (!pdfFile?.filePath) {
     return res.status(404).json({ message: "PDF resource file not found." });
@@ -834,99 +1161,132 @@ const getSubjectPdf = asyncHandler(async (req, res) => {
 
   const fileName = pdfFile.fileName || "course-resource.pdf";
   const safeFileName = fileName.replace(/["]/g, "");
-  const publicId = pdfFile.publicId || "";
-  const hasPdfExtension = publicId.toLowerCase().endsWith(".pdf");
-  const publicIdWithoutPdf = hasPdfExtension ? publicId.slice(0, -4) : publicId;
 
-  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 10;
+  try {
+    const pdfResponse = await axios.get(pdfFile.filePath, {
+      responseType: "stream",
+      maxRedirects: 5,
+      validateStatus: (status) => status >= 200 && status < 300,
+      headers: {
+        Accept: "application/pdf,application/octet-stream,*/*",
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
 
-  const possibleUrls = [];
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${safeFileName}"`);
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
 
-  if (pdfFile.filePath) {
-    possibleUrls.push(pdfFile.filePath);
+    return pdfResponse.data.pipe(res);
+  } catch (error) {
+    return res.status(502).json({
+      message: "PDF file could not be loaded from storage.",
+      error: error?.response?.status ? `Cloudinary returned ${error.response.status}` : error?.message,
+    });
+  }
+});
+
+const getSortedSubjectResourceFiles = (subject) => {
+  const resources = Array.isArray(subject?.resourceFiles) ? [...subject.resourceFiles] : [];
+
+  if (subject?.resourceFile?.file?.filePath) {
+    const legacyFile = subject.resourceFile.file;
+    const alreadyExists = resources.some((resource) => resource?.publicId && resource.publicId === legacyFile.publicId);
+
+    if (!alreadyExists) {
+      resources.push({
+        ...legacyFile,
+        order: legacyFile.order || resources.length + 1,
+      });
+    }
   }
 
-  if (publicId) {
-    possibleUrls.push(
-      cloudinary.url(publicId, {
-        resource_type: "raw",
-        type: "upload",
-        secure: true,
-      }),
-    );
+  return resources.filter((resource) => resource?.filePath).sort((a, b) => Number(a?.order || 0) - Number(b?.order || 0));
+};
 
-    possibleUrls.push(
-      cloudinary.url(publicId, {
-        resource_type: "raw",
-        type: "upload",
-        secure: true,
-        sign_url: true,
-      }),
-    );
+const encodeFileName = (fileName = "course-resource") => {
+  return encodeURIComponent(fileName).replace(/['()]/g, escape).replace(/\*/g, "%2A");
+};
 
-    possibleUrls.push(
-      cloudinary.url(publicIdWithoutPdf, {
-        resource_type: "raw",
-        type: "upload",
-        secure: true,
-        format: "pdf",
-        sign_url: true,
-      }),
-    );
-
-    possibleUrls.push(
-      cloudinary.utils.private_download_url(publicIdWithoutPdf, "pdf", {
-        resource_type: "raw",
-        type: "upload",
-        expires_at: expiresAt,
-        attachment: false,
-      }),
-    );
-
-    possibleUrls.push(
-      cloudinary.utils.private_download_url(publicId, "pdf", {
-        resource_type: "raw",
-        type: "upload",
-        expires_at: expiresAt,
-        attachment: false,
-      }),
-    );
+const getCloudinarySignedResourceUrl = (resource) => {
+  if (!resource?.publicId) {
+    return resource?.filePath;
   }
+
+  const resourceType = resource.cloudinaryResourceType || (resource.resourceType === "image" ? "image" : "raw");
+
+  return cloudinary.url(resource.publicId, {
+    resource_type: resourceType,
+    type: "upload",
+    secure: true,
+    sign_url: true,
+  });
+};
+
+const getSubjectResource = asyncHandler(async (req, res) => {
+  const { slug, index } = req.params;
+
+  const subject = await SubjectModel.findOne({ slug });
+
+  if (!subject) {
+    return res.status(404).json({ message: "Subject not found." });
+  }
+
+  const resourceIndex = Number.parseInt(index, 10);
+
+  if (Number.isNaN(resourceIndex) || resourceIndex < 0) {
+    return res.status(400).json({ message: "Invalid resource index." });
+  }
+
+  const resources = getSortedSubjectResourceFiles(subject);
+  const selectedResource = resources[resourceIndex];
+
+  if (!selectedResource?.filePath) {
+    return res.status(404).json({ message: "Resource file not found." });
+  }
+
+  const fileName = selectedResource.fileName || selectedResource.displayName || `course-resource-${resourceIndex + 1}`;
+  const safeFileName = fileName.replace(/[\r\n"]/g, "");
+  const contentType = selectedResource.fileType || "application/octet-stream";
+
+  const signedUrl = getCloudinarySignedResourceUrl(selectedResource);
+  const urlsToTry = [...new Set([signedUrl, selectedResource.filePath].filter(Boolean))];
 
   let lastError = null;
 
-  for (const url of possibleUrls.filter(Boolean)) {
+  for (const fileUrl of urlsToTry) {
     try {
-      const pdfResponse = await axios.get(url, {
+      const resourceResponse = await axios.get(fileUrl, {
         responseType: "stream",
         maxRedirects: 5,
         validateStatus: (status) => status >= 200 && status < 300,
         headers: {
-          Accept: "application/pdf,application/octet-stream,*/*",
+          Accept: `${contentType},application/octet-stream,*/*`,
           "User-Agent": "Mozilla/5.0",
         },
       });
 
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `inline; filename="${safeFileName}"`);
-      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `inline; filename="${safeFileName}"; filename*=UTF-8''${encodeFileName(safeFileName)}`);
+      res.setHeader("Cache-Control", "public, max-age=3600");
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
       res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
 
-      if (pdfResponse.headers["content-length"]) {
-        res.setHeader("Content-Length", pdfResponse.headers["content-length"]);
-      }
-
-      return pdfResponse.data.pipe(res);
+      return resourceResponse.data.pipe(res);
     } catch (error) {
       lastError = error;
     }
   }
 
   return res.status(502).json({
-    message: "PDF file could not be loaded from storage.",
-    error: lastError?.response?.status ? `Cloudinary returned ${lastError.response.status}` : lastError?.message,
-    fix: "Enable PDF/ZIP delivery in Cloudinary security settings, then re-upload the PDF.",
+    message: "Resource file could not be loaded from storage.",
+    error: lastError?.response?.status ? `Storage returned ${lastError.response.status}` : lastError?.message,
+    resourceType: selectedResource.resourceType,
+    cloudinaryResourceType: selectedResource.cloudinaryResourceType,
+    publicId: selectedResource.publicId,
+    filePath: selectedResource.filePath,
   });
 });
 module.exports = {
@@ -937,5 +1297,14 @@ module.exports = {
   getUserSubjects,
   getChaptersBySubjectSlug,
   getAllSubjectsWithChapters,
+  updateSubject,
   getSubjectPdf,
+  getSubjectResource,
+  getCourseSubjects,
+  getNoteSubjects,
+  trackSubjectView,
+  trackChapterView,
+  trackSubheadingView,
+  toggleSubheadingLike,
+  toggleSubheadingBookmark,
 };

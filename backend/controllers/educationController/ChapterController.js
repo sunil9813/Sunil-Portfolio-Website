@@ -2,11 +2,146 @@ const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const cloudinary = require("cloudinary").v2;
 const Filter = require("bad-words");
+
+require("../../models/users/UserModel");
+
 const ChapterModel = require("../../models/educationModel/ChapterModel");
 const SubjectModel = require("../../models/educationModel/SubjectModel");
 
+const createSlug = (value = "") => slugify(value, { lower: true, remove: /[*+~.()'"!:@]/g, strict: true });
+
+const parseTags = (tags) => {
+  if (!tags) return [];
+
+  let parsedTags = [];
+
+  if (typeof tags === "string") {
+    parsedTags = JSON.parse(tags);
+  } else if (Array.isArray(tags)) {
+    parsedTags = tags;
+  } else {
+    throw new Error("Tags must be an array of objects.");
+  }
+
+  const tagsArray = parsedTags.map((tagObj) => {
+    if (typeof tagObj.tag !== "string" || tagObj.tag.trim() === "") {
+      throw new Error("Each tag must be a valid non-empty string inside an object.");
+    }
+
+    if (tagObj.tag.length > 50) {
+      throw new Error("Each tag cannot exceed 50 characters.");
+    }
+
+    return { tag: tagObj.tag.trim() };
+  });
+
+  const tagValues = tagsArray.map((tag) => tag.tag.toLowerCase());
+
+  if (new Set(tagValues).size !== tagValues.length) {
+    throw new Error("Duplicate tags are not allowed.");
+  }
+
+  return tagsArray;
+};
+
+const uploadChapterThumbnail = async (thumbnailFile) => {
+  if (!thumbnailFile) return {};
+
+  const allowedImageTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+
+  if (!allowedImageTypes.includes(thumbnailFile.mimetype)) {
+    throw new Error("Invalid thumbnail format. Supported formats: JPEG, PNG, JPG, WEBP.");
+  }
+
+  if (thumbnailFile.size > 10 * 1024 * 1024) {
+    throw new Error("Thumbnail size should not exceed 10 MB.");
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream({ folder: "Sunil Portfolio/Chapter/Thumbnails", resource_type: "image" }, (error, result) => {
+      if (error) return reject(new Error("Thumbnail upload failed."));
+
+      resolve({
+        fileName: thumbnailFile.originalname,
+        filePath: result.secure_url,
+        fileType: thumbnailFile.mimetype,
+        publicId: result.public_id,
+      });
+    });
+
+    uploadStream.end(thumbnailFile.buffer);
+  });
+};
+
+const uploadChapterVideo = async (videoFile) => {
+  if (!videoFile) return {};
+
+  const allowedVideoTypes = ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska", "video/webm"];
+
+  if (!allowedVideoTypes.includes(videoFile.mimetype)) {
+    throw new Error("Invalid video format. Supported formats: MP4, MOV, AVI, MKV, WEBM.");
+  }
+
+  if (videoFile.size > 10 * 1024 * 1024 * 1024) {
+    throw new Error("Video size should not exceed 10 GB.");
+  }
+
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "Sunil Portfolio/Chapter/Videos",
+        resource_type: "video",
+        chunk_size: 6000000,
+        eager: [
+          { width: 300, height: 300, crop: "pad", audio_codec: "none" },
+          { width: 160, height: 100, crop: "crop", gravity: "south", audio_codec: "none" },
+        ],
+        eager_async: true,
+      },
+      (error, result) => {
+        if (error) return reject(new Error("Video upload failed."));
+
+        resolve({
+          fileName: videoFile.originalname,
+          filePath: result.secure_url,
+          fileType: videoFile.mimetype,
+          publicId: result.public_id,
+          duration: result.duration,
+          resolution: `${result.width}x${result.height}`,
+          size: result.bytes,
+        });
+      },
+    );
+
+    uploadStream.end(videoFile.buffer);
+  });
+};
+
+const buildSubheadingItem = (item, index = 0) => {
+  const headingTitle = typeof item === "string" ? item : item?.title;
+
+  if (!headingTitle || typeof headingTitle !== "string" || headingTitle.trim() === "") {
+    return null;
+  }
+
+  const trimmedTitle = headingTitle.trim();
+
+  return {
+    title: trimmedTitle,
+    metaTitle: item?.metaTitle || trimmedTitle,
+    metaDescription: item?.metaDescription || "",
+    description: item?.description || "",
+    slug: item?.slug || createSlug(trimmedTitle),
+    order: Number.isFinite(Number(item?.order)) ? Number(item.order) : index + 1,
+    tags: Array.isArray(item?.tags) ? item.tags : [],
+    thumbnail: item?.thumbnail || {},
+    video: item?.video || {},
+    children: Array.isArray(item?.children) ? item.children.map((child, childIndex) => buildSubheadingItem(child, childIndex)).filter(Boolean) : [],
+  };
+};
+
 const createChapter = asyncHandler(async (req, res) => {
-  const { title, metaTitle, description, metaDescription, subject, groupId, tags } = req.body;
+  const { title, metaTitle, description, metaDescription, subject, groupId, tags, subheadings, order } = req.body;
   const userId = req.user.id;
 
   // Profanity check
@@ -36,7 +171,10 @@ const createChapter = asyncHandler(async (req, res) => {
       error: "You can only create chapters for subjects you created or the subject doesn't exist",
     });
   }
-  if (existingSubject?.resourceFile?.file?.filePath) {
+  const hasCourseResourceFiles = Array.isArray(existingSubject?.resourceFiles) && existingSubject.resourceFiles.some((resourceFile) => resourceFile?.filePath || resourceFile?.url);
+  const hasLegacyCourseResource = Boolean(existingSubject?.resourceFile?.file?.filePath || existingSubject?.resourceFile?.url);
+
+  if (hasCourseResourceFiles || hasLegacyCourseResource) {
     return res.status(400).json({
       error: "This course has a PDF resource file, so chapters cannot be created for it.",
     });
@@ -176,6 +314,24 @@ const createChapter = asyncHandler(async (req, res) => {
     }
   }
 
+  let subheadingsArray = [];
+  if (subheadings) {
+    let parsedSubheadings = [];
+    if (typeof subheadings === "string") {
+      try {
+        parsedSubheadings = JSON.parse(subheadings);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid subheadings format. Subheadings must be a valid JSON array." });
+      }
+    } else if (Array.isArray(subheadings)) {
+      parsedSubheadings = subheadings;
+    } else {
+      return res.status(400).json({ error: "Subheadings must be an array." });
+    }
+
+    subheadingsArray = parsedSubheadings.map((item, index) => buildSubheadingItem(item, index)).filter(Boolean);
+  }
+
   // Create the chapter
   try {
     const data = await ChapterModel.create({
@@ -184,10 +340,12 @@ const createChapter = asyncHandler(async (req, res) => {
       title,
       metaTitle,
       slug,
+      order: Number.isFinite(Number(order)) ? Number(order) : 0,
       description,
       metaDescription,
       groupId,
       tags: tagsArray,
+      subheadings: subheadingsArray,
       thumbnail: thumbnailData,
       video: videoData,
     });
@@ -278,6 +436,112 @@ const getChapter = asyncHandler(async (req, res) => {
   res.status(200).json(chapter);
 });
 
+const createSubheading = asyncHandler(async (req, res) => {
+  const { chapterId } = req.params;
+  const { title, metaTitle, metaDescription, description, tags, order, parentSubheadingId } = req.body;
+  const userId = req.user.id;
+
+  if (!chapterId) return res.status(400).json({ error: "Chapter ID is required." });
+  if (!title?.trim()) return res.status(400).json({ error: "Subheading title is required." });
+  if (!description?.trim()) return res.status(400).json({ error: "Subheading content is required." });
+
+  if (title.length > 120) {
+    return res.status(400).json({ error: "Subheading title cannot exceed 120 characters." });
+  }
+
+  if (metaTitle && metaTitle.length > 250) {
+    return res.status(400).json({ error: "Meta title cannot exceed 250 characters." });
+  }
+
+  if (metaDescription && metaDescription.length > 160) {
+    return res.status(400).json({ error: "Meta description cannot exceed 160 characters." });
+  }
+
+  const chapter = await ChapterModel.findById(chapterId).populate("subject", "user name resourceFile resourceFiles");
+
+  if (!chapter) {
+    return res.status(404).json({ error: "Chapter not found." });
+  }
+
+  const isChapterOwner = String(chapter.user) === String(userId);
+  const isCourseOwner = String(chapter.subject?.user) === String(userId);
+
+  if (!isChapterOwner && !isCourseOwner && req.user?.role !== "admin") {
+    return res.status(403).json({ error: "You are not allowed to add subheadings to this chapter." });
+  }
+
+  let tagsArray = [];
+
+  try {
+    tagsArray = parseTags(tags);
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  const normalizedTitle = title.trim();
+  const subheadingSlug = createSlug(normalizedTitle);
+  const parentSubheading = parentSubheadingId ? chapter.subheadings?.id(parentSubheadingId) : null;
+
+  if (parentSubheadingId && !parentSubheading) {
+    return res.status(404).json({ error: "Parent subheading not found in the selected chapter." });
+  }
+
+  const siblingSubheadings = parentSubheading ? parentSubheading.children || [] : chapter.subheadings || [];
+  const hasDuplicate = siblingSubheadings.some((subheading) => subheading?.slug === subheadingSlug || subheading?.title?.trim().toLowerCase() === normalizedTitle.toLowerCase());
+
+  if (hasDuplicate) {
+    return res.status(400).json({ error: "This subheading already exists in the selected level." });
+  }
+
+  let thumbnailData = {};
+  let videoData = {};
+
+  try {
+    thumbnailData = await uploadChapterThumbnail(req.files?.thumbnail?.[0]);
+    videoData = await uploadChapterVideo(req.files?.video?.[0]);
+  } catch (error) {
+    if (thumbnailData.publicId) {
+      await cloudinary.uploader.destroy(thumbnailData.publicId, { resource_type: "image" });
+    }
+
+    return res.status(400).json({ error: error.message || "Subheading assets could not be uploaded." });
+  }
+
+  const nextOrder = Number.isFinite(Number(order)) ? Number(order) : siblingSubheadings.length + 1;
+  const subheading = {
+    title: normalizedTitle,
+    metaTitle: metaTitle?.trim() || normalizedTitle,
+    metaDescription: metaDescription?.trim() || "",
+    description: description.trim(),
+    slug: subheadingSlug,
+    order: nextOrder,
+    tags: tagsArray,
+    thumbnail: thumbnailData,
+    video: videoData,
+    children: [],
+  };
+
+  if (parentSubheading) {
+    parentSubheading.children.push(subheading);
+    parentSubheading.children.sort((firstSubheading, secondSubheading) => Number(firstSubheading?.order || 0) - Number(secondSubheading?.order || 0));
+  } else {
+    chapter.subheadings.push(subheading);
+    chapter.subheadings.sort((firstSubheading, secondSubheading) => Number(firstSubheading?.order || 0) - Number(secondSubheading?.order || 0));
+  }
+
+  await chapter.save();
+
+  const savedSubheading = parentSubheading ? parentSubheading.children.find((item) => item.slug === subheadingSlug) : chapter.subheadings.find((item) => item.slug === subheadingSlug);
+
+  res.status(201).json({
+    success: true,
+    message: "Subheading created successfully",
+    data: savedSubheading,
+    parentSubheadingId: parentSubheading?._id || null,
+    chapter,
+  });
+});
+
 const deleteChapter = asyncHandler(async (req, res) => {
   let chapterId;
 
@@ -332,6 +596,7 @@ const deleteChapter = asyncHandler(async (req, res) => {
 
 module.exports = {
   createChapter,
+  createSubheading,
   getAllChapter,
   getChapter,
   deleteChapter,

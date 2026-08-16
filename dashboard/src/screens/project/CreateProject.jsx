@@ -78,6 +78,24 @@ export const CreateProject = () => {
   const [resourcePreview, setResourcePreview] = useState("");
 
   const [description, setDescription] = useState("");
+  const [version, setVersion] = useState("v1.0");
+  const [supportEmail, setSupportEmail] = useState("");
+  const [previewVideoUrl, setPreviewVideoUrl] = useState("");
+  const [maxDownloadsPerUser, setMaxDownloadsPerUser] = useState(20);
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [ogImage, setOgImage] = useState("");
+  const [license, setLicense] = useState("Use this project for learning, portfolio practice, and personal/client implementation. Do not resell, redistribute, or repackage the original files as your own template.");
+  const [refundPolicy, setRefundPolicy] = useState("Refund requests are reviewed when files are inaccessible, incorrect, duplicated, or the delivered project is not as described.");
+  const [notifyBuyersOnUpdate, setNotifyBuyersOnUpdate] = useState(false);
+  const [includedFilesText, setIncludedFilesText] = useState("Frontend source\nBackend/API source\nSetup instructions");
+  const [demoAdminEmail, setDemoAdminEmail] = useState("");
+  const [demoAdminPassword, setDemoAdminPassword] = useState("");
+  const [demoUserEmail, setDemoUserEmail] = useState("");
+  const [demoUserPassword, setDemoUserPassword] = useState("");
+  const [showDemoCredentials, setShowDemoCredentials] = useState(false);
+  const [changelogText, setChangelogText] = useState("Initial release - Project files and preview added");
   const [groupId] = useState(() => uuidv4());
   const [discountEnabled, setDiscountEnabled] = useState(false);
 
@@ -529,6 +547,50 @@ export const CreateProject = () => {
     formData.append("urllink", urllink);
     formData.append("price", price || 0);
     formData.append("discount", discountEnabled ? discount || 0 : 0);
+    formData.append("version", version || "v1.0");
+    formData.append("supportEmail", supportEmail || "");
+    formData.append("previewVideoUrl", previewVideoUrl || "");
+    formData.append("maxDownloadsPerUser", maxDownloadsPerUser || 20);
+    formData.append("seoTitle", seoTitle || "");
+    formData.append("seoDescription", seoDescription || "");
+    formData.append("canonicalUrl", canonicalUrl || "");
+    formData.append("ogImage", ogImage || "");
+    formData.append("license", license || "");
+    formData.append("refundPolicy", refundPolicy || "");
+    formData.append("notifyBuyersOnUpdate", notifyBuyersOnUpdate);
+    formData.append(
+      "includedFiles",
+      JSON.stringify(
+        includedFilesText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((item) => ({ title: item, text: "Included in the project package." })),
+      ),
+    );
+    formData.append(
+      "demoCredentials",
+      JSON.stringify({
+        adminEmail: demoAdminEmail,
+        adminPassword: demoAdminPassword,
+        userEmail: demoUserEmail,
+        userPassword: demoUserPassword,
+      }),
+    );
+    formData.append("showDemoCredentials", showDemoCredentials);
+    formData.append(
+      "changelog",
+      JSON.stringify(
+        changelogText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((item) => {
+            const [title, text] = item.split(" - ");
+            return { version: version || "v1.0", title: title || item, text: text || item, date: new Date().toISOString() };
+          }),
+      ),
+    );
 
     if (discountEnabled && discount && project.discountDate) {
       formData.append("discountDate", project.discountDate);
@@ -602,6 +664,13 @@ export const CreateProject = () => {
         setHighlights([""]);
         setHighlightErrors([""]);
         setDiscountEnabled(false);
+        setSeoTitle("");
+        setSeoDescription("");
+        setCanonicalUrl("");
+        setOgImage("");
+        setPreviewVideoUrl("");
+        setMaxDownloadsPerUser(20);
+        setNotifyBuyersOnUpdate(false);
 
         toast.success(publishType === "draft" ? "Draft saved successfully." : "Project published successfully.");
 
@@ -1133,6 +1202,111 @@ export const CreateProject = () => {
               <InputLabel className="mb-2">Live demo URL</InputLabel>
 
               <Input type="text" name="urllink" placeholder="https://your-project-demo.com" value={urllink} handleChange={handleInputChange} />
+            </div>
+          </Wrapper>
+
+          {/* Project delivery */}
+          <Wrapper className="group relative my-3 overflow-hidden p-5">
+            <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-teal-500/[0.012] blur-[80px]" />
+
+            <div className="relative z-10 space-y-4">
+              <div className="border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
+                <InputTitle className="mb-1">Project Delivery Info</InputTitle>
+                <p className="text-[9px] text-gray-400 dark:text-white/25">These values show on the frontend project detail page.</p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <InputLabel className="mb-2">Version</InputLabel>
+                  <Input type="text" name="version" placeholder="v1.0" value={version} handleChange={(event) => setVersion(event.target.value)} />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Support email</InputLabel>
+                  <Input type="email" name="supportEmail" placeholder="support@gorkcoder.com" value={supportEmail} handleChange={(event) => setSupportEmail(event.target.value)} />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Preview video URL</InputLabel>
+                  <Input type="text" name="previewVideoUrl" placeholder="https://youtube.com/watch?v=..." value={previewVideoUrl} handleChange={(event) => setPreviewVideoUrl(event.target.value)} />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Downloads per user</InputLabel>
+                  <Input type="number" name="maxDownloadsPerUser" placeholder="20" value={maxDownloadsPerUser} handleChange={(event) => setMaxDownloadsPerUser(event.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <InputLabel className="mb-2">Included files</InputLabel>
+                <textarea className={`${inputClassName} min-h-28 w-full !rounded-2xl p-4`} value={includedFilesText} onChange={(event) => setIncludedFilesText(event.target.value)} placeholder="One included item per line" />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200/70 bg-gray-50/55 p-4 dark:border-white/[0.055] dark:bg-white/[0.018] md:col-span-2">
+                  <span>
+                    <span className="block text-xs font-semibold text-gray-700 dark:text-white/70">Show demo credentials publicly</span>
+                    <span className="mt-1 block text-[10px] text-gray-400 dark:text-white/30">Keep this off unless the demo account is safe to share.</span>
+                  </span>
+                  <input type="checkbox" checked={showDemoCredentials} onChange={(event) => setShowDemoCredentials(event.target.checked)} className="size-4 accent-teal-500" />
+                </label>
+                <div>
+                  <InputLabel className="mb-2">Demo admin email</InputLabel>
+                  <Input type="text" name="demoAdminEmail" value={demoAdminEmail} handleChange={(event) => setDemoAdminEmail(event.target.value)} placeholder="admin@example.com" />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Demo admin password</InputLabel>
+                  <Input type="text" name="demoAdminPassword" value={demoAdminPassword} handleChange={(event) => setDemoAdminPassword(event.target.value)} placeholder="Admin@123" />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Demo user email</InputLabel>
+                  <Input type="text" name="demoUserEmail" value={demoUserEmail} handleChange={(event) => setDemoUserEmail(event.target.value)} placeholder="user@example.com" />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Demo user password</InputLabel>
+                  <Input type="text" name="demoUserPassword" value={demoUserPassword} handleChange={(event) => setDemoUserPassword(event.target.value)} placeholder="User@123" />
+                </div>
+              </div>
+
+              <div>
+                <InputLabel className="mb-2">Changelog</InputLabel>
+                <textarea className={`${inputClassName} min-h-28 w-full !rounded-2xl p-4`} value={changelogText} onChange={(event) => setChangelogText(event.target.value)} placeholder="One changelog per line. Example: Initial release - Files added" />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <InputLabel className="mb-2">SEO title</InputLabel>
+                  <Input type="text" name="seoTitle" placeholder="Best MERN portfolio project source code" value={seoTitle} handleChange={(event) => setSeoTitle(event.target.value)} />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Canonical URL</InputLabel>
+                  <Input type="text" name="canonicalUrl" placeholder="https://gorkcoder.com/project-details/project-slug" value={canonicalUrl} handleChange={(event) => setCanonicalUrl(event.target.value)} />
+                </div>
+                <div className="md:col-span-2">
+                  <InputLabel className="mb-2">SEO description</InputLabel>
+                  <textarea className={`${inputClassName} min-h-24 w-full !rounded-2xl p-4`} value={seoDescription} onChange={(event) => setSeoDescription(event.target.value)} placeholder="Short search description for this project page." />
+                </div>
+                <div className="md:col-span-2">
+                  <InputLabel className="mb-2">Open graph image URL</InputLabel>
+                  <Input type="text" name="ogImage" placeholder="https://..." value={ogImage} handleChange={(event) => setOgImage(event.target.value)} />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <InputLabel className="mb-2">License</InputLabel>
+                  <textarea className={`${inputClassName} min-h-28 w-full !rounded-2xl p-4`} value={license} onChange={(event) => setLicense(event.target.value)} placeholder="Write license terms for buyers." />
+                </div>
+                <div>
+                  <InputLabel className="mb-2">Refund notice</InputLabel>
+                  <textarea className={`${inputClassName} min-h-28 w-full !rounded-2xl p-4`} value={refundPolicy} onChange={(event) => setRefundPolicy(event.target.value)} placeholder="Write refund eligibility notice." />
+                </div>
+              </div>
+
+              <label className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200/70 bg-gray-50/55 p-4 dark:border-white/[0.055] dark:bg-white/[0.018]">
+                <span>
+                  <span className="block text-xs font-semibold text-gray-700 dark:text-white/70">Notify buyers when version changes</span>
+                  <span className="mt-1 block text-[10px] text-gray-400 dark:text-white/30">When enabled, paid buyers receive an in-app notification after a future version update.</span>
+                </span>
+                <input type="checkbox" checked={notifyBuyersOnUpdate} onChange={(event) => setNotifyBuyersOnUpdate(event.target.checked)} className="size-4 accent-teal-500" />
+              </label>
             </div>
           </Wrapper>
 

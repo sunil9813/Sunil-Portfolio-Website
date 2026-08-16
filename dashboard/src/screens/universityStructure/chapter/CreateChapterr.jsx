@@ -16,6 +16,7 @@ import Editor from "@/textEditor/Editor";
 import { inputClassName } from "@/utils";
 import { GhostButton, HeadingTwo, Input, InputLabel, InputTitle, StickyHeader, TertiaryButton, Wrapper } from "@/routes";
 import { CourseDropDown } from "../StructureAcademicDropDown";
+import { REACT_APP_BACKEND_URL } from "@/utils/Api";
 
 const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 10 * 1024 * 1024 * 1024;
@@ -67,8 +68,12 @@ export const CreateChapterr = () => {
 
   const [chapter, setChapter] = useState(initialState);
   const [description, setDescription] = useState("");
+  const [subheadings, setSubheadings] = useState([""]);
 
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [courseNavigator, setCourseNavigator] = useState({ chapters: [], total: 0 });
+  const [isNavigatorLoading, setIsNavigatorLoading] = useState(false);
+  const [navigatorError, setNavigatorError] = useState("");
 
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
@@ -80,10 +85,13 @@ export const CreateChapterr = () => {
   const [metaTitleError, setMetaTitleError] = useState("");
   const [metaDescError, setMetaDescError] = useState("");
   const [tagError, setTagError] = useState("");
+  const [subheadingError, setSubheadingError] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { title, metaTitle, metaDescription, tags } = chapter;
+  const existingChapters = courseNavigator.chapters || [];
+  const nextChapterOrder = existingChapters.length + 1;
 
   useEffect(() => {
     return () => {
@@ -91,6 +99,43 @@ export const CreateChapterr = () => {
       revokeObjectUrl(videoPreview);
     };
   }, [thumbnailPreview, videoPreview]);
+
+  useEffect(() => {
+    const fetchCourseNavigator = async () => {
+      if (!selectedSubject?.slug) {
+        setCourseNavigator({ chapters: [], total: 0 });
+        setNavigatorError("");
+        return;
+      }
+
+      try {
+        setIsNavigatorLoading(true);
+        setNavigatorError("");
+
+        const response = await fetch(`${REACT_APP_BACKEND_URL}/subject/${selectedSubject.slug}/chapters`, {
+          credentials: "include",
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload?.message || payload?.error || "Course navigator could not be loaded.");
+        }
+
+        setCourseNavigator({
+          chapters: Array.isArray(payload?.chapters) ? payload.chapters : [],
+          total: payload?.total || 0,
+        });
+      } catch (error) {
+        setCourseNavigator({ chapters: [], total: 0 });
+        setNavigatorError(error.message || "Course navigator could not be loaded.");
+      } finally {
+        setIsNavigatorLoading(false);
+      }
+    };
+
+    fetchCourseNavigator();
+  }, [selectedSubject?.slug]);
 
   const processThumbnail = useCallback((selectedFile) => {
     if (!selectedFile) {
@@ -275,13 +320,69 @@ export const CreateChapterr = () => {
     }));
   };
 
+  const handleSubheadingChange = (index, value) => {
+    setSubheadings((previousSubheadings) => previousSubheadings.map((subheading, subheadingIndex) => (subheadingIndex === index ? value : subheading)));
+    setSubheadingError("");
+  };
+
+  const handleAddSubheading = () => {
+    setSubheadings((previousSubheadings) => [...previousSubheadings, ""]);
+  };
+
+  const handleRemoveSubheading = (index) => {
+    setSubheadings((previousSubheadings) => {
+      if (previousSubheadings.length === 1) {
+        return [""];
+      }
+
+      return previousSubheadings.filter((_, subheadingIndex) => subheadingIndex !== index);
+    });
+
+    setSubheadingError("");
+  };
+
+  const getCleanSubheadings = () => {
+    const cleanedSubheadings = subheadings.map((subheading) => subheading.trim()).filter(Boolean);
+    const normalizedSubheadings = cleanedSubheadings.map((subheading) => subheading.toLowerCase());
+    const hasDuplicate = normalizedSubheadings.some((subheading, index) => normalizedSubheadings.indexOf(subheading) !== index);
+
+    if (hasDuplicate) {
+      return {
+        data: null,
+        error: "Subheadings cannot be duplicates.",
+      };
+    }
+
+    const isTooLong = cleanedSubheadings.some((subheading) => subheading.length > 120);
+
+    if (isTooLong) {
+      return {
+        data: null,
+        error: "Each subheading must be 120 characters or less.",
+      };
+    }
+
+    setSubheadingError("");
+
+    return {
+      data: cleanedSubheadings.map((subheading, index) => ({
+        title: subheading,
+        order: index + 1,
+      })),
+      error: "",
+    };
+  };
+
   const resetForm = () => {
     revokeObjectUrl(thumbnailPreview);
     revokeObjectUrl(videoPreview);
 
     setChapter(initialState);
     setDescription("");
+    setSubheadings([""]);
     setSelectedSubject(null);
+    setCourseNavigator({ chapters: [], total: 0 });
+    setNavigatorError("");
 
     setThumbnail(null);
     setThumbnailPreview("");
@@ -293,6 +394,7 @@ export const CreateChapterr = () => {
     setMetaTitleError("");
     setMetaDescError("");
     setTagError("");
+    setSubheadingError("");
   };
 
   const handleCreate = async () => {
@@ -343,6 +445,14 @@ export const CreateChapterr = () => {
       return;
     }
 
+    const { data: cleanSubheadings, error: cleanSubheadingError } = getCleanSubheadings();
+
+    if (cleanSubheadingError) {
+      setSubheadingError(cleanSubheadingError);
+      toast.error(cleanSubheadingError);
+      return;
+    }
+
     const formData = new FormData();
 
     formData.append("title", title.trim());
@@ -351,6 +461,11 @@ export const CreateChapterr = () => {
     formData.append("metaDescription", metaDescription.trim());
     formData.append("groupId", groupId);
     formData.append("subject", selectedSubject._id);
+    formData.append("order", String(nextChapterOrder));
+
+    if (cleanSubheadings.length > 0) {
+      formData.append("subheadings", JSON.stringify(cleanSubheadings));
+    }
 
     if (tags.length > 0) {
       formData.append("tags", JSON.stringify(tags.map((tag) => ({ tag }))));
@@ -575,6 +690,127 @@ export const CreateChapterr = () => {
                 </div>
 
                 {tagError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{tagError}</p>}
+              </div>
+
+              {/* Dynamic course navigator */}
+              <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <InputLabel>Course navigator preview</InputLabel>
+
+                    <span className="rounded-full border border-indigo-300/20 bg-indigo-500/[0.05] px-2 py-0.5 text-[7px] font-semibold uppercase tracking-[0.08em] text-indigo-700 dark:border-indigo-300/[0.08] dark:bg-indigo-300/[0.03] dark:text-indigo-200/60">
+                      API data
+                    </span>
+                  </div>
+
+                  <div className="min-h-56 rounded-2xl border border-gray-200/80 bg-gray-50/55 p-3 dark:border-white/[0.055] dark:bg-white/[0.018]">
+                    {!selectedSubject?._id ? (
+                      <div className="flex min-h-48 flex-col items-center justify-center px-4 text-center">
+                        <p className="text-[10px] font-semibold text-gray-500 dark:text-white/35">Select a course first.</p>
+                        <p className="mt-1 text-[8px] leading-4 text-gray-400 dark:text-white/20">After selection, this box fetches existing chapters and subheadings from the backend.</p>
+                      </div>
+                    ) : isNavigatorLoading ? (
+                      <div className="flex min-h-48 items-center justify-center">
+                        <span className="size-5 animate-spin rounded-full border-2 border-indigo-300/20 border-t-indigo-400" />
+                        <span className="ml-2 text-[10px] font-medium text-gray-400 dark:text-white/25">Loading navigator...</span>
+                      </div>
+                    ) : navigatorError ? (
+                      <div className="flex min-h-48 flex-col items-center justify-center px-4 text-center">
+                        <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-200/75">{navigatorError}</p>
+                      </div>
+                    ) : existingChapters.length > 0 ? (
+                      <div className="max-h-72 space-y-2 overflow-y-auto pr-1 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/[0.12]">
+                        {existingChapters.map((existingChapter, chapterIndex) => {
+                          const existingSubheadings = Array.isArray(existingChapter?.subheadings) ? existingChapter.subheadings : [];
+
+                          return (
+                            <div key={existingChapter?._id || chapterIndex} className="rounded-2xl border border-white/[0.045] bg-white/[0.018] p-3">
+                              <div className="flex items-start gap-3">
+                                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-indigo-300/15 bg-indigo-500/[0.07] text-[9px] font-bold text-indigo-200/70">
+                                  {String(existingChapter?.order || chapterIndex + 1).padStart(2, "0")}
+                                </span>
+
+                                <div className="min-w-0 flex-1">
+                                  <p className="line-clamp-2 text-[10px] font-semibold leading-4 text-white/65">{existingChapter?.title || `Chapter ${chapterIndex + 1}`}</p>
+                                  <p className="mt-1 text-[7px] font-semibold uppercase tracking-[0.1em] text-white/20">Chapter {existingChapter?.order || chapterIndex + 1}</p>
+
+                                  {existingSubheadings.length > 0 && (
+                                    <div className="mt-2 space-y-1 border-l border-white/[0.07] pl-3">
+                                      {existingSubheadings.map((subheading, subheadingIndex) => (
+                                        <p key={subheading?._id || subheading?.slug || subheadingIndex} className="line-clamp-1 text-[9px] font-medium leading-4 text-white/38">
+                                          {subheading?.title || `Subheading ${subheadingIndex + 1}`}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex min-h-48 flex-col items-center justify-center px-4 text-center">
+                        <p className="text-[10px] font-semibold text-gray-500 dark:text-white/35">No chapters yet.</p>
+                        <p className="mt-1 text-[8px] leading-4 text-gray-400 dark:text-white/20">This new chapter will become Chapter 1.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <InputLabel>Subheadings for this chapter</InputLabel>
+
+                    <span className="rounded-full border border-cyan-300/20 bg-cyan-500/[0.05] px-2 py-0.5 text-[7px] font-semibold uppercase tracking-[0.08em] text-cyan-700 dark:border-cyan-300/[0.08] dark:bg-cyan-300/[0.03] dark:text-cyan-200/60">
+                      Chapter {nextChapterOrder}
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl border border-gray-200/80 bg-gray-50/55 p-3 dark:border-white/[0.055] dark:bg-white/[0.018]">
+                    <div className="space-y-2">
+                      {subheadings.map((subheading, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-cyan-300/15 bg-cyan-500/[0.06] text-[9px] font-bold text-cyan-700 dark:text-cyan-200/65">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+
+                          <input
+                            type="text"
+                            value={subheading}
+                            onChange={(event) => handleSubheadingChange(index, event.target.value)}
+                            disabled={isSubmitting}
+                            maxLength={120}
+                            placeholder="Example: Cost Benefit Evaluation techniques"
+                            className={`${inputClassName} !h-11 flex-1 !rounded-xl px-3 text-[11px] outline-none transition-all placeholder:text-gray-400 focus:border-cyan-400/40 focus:ring-4 focus:ring-cyan-500/[0.04] disabled:cursor-not-allowed disabled:opacity-50 dark:!border-white/[0.055] dark:!bg-white/[0.018] dark:text-white/65 dark:placeholder:text-white/20 dark:focus:border-cyan-300/[0.13]`}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSubheading(index)}
+                            disabled={isSubmitting}
+                            title="Remove subheading"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/[0.06] text-rose-600 transition-all hover:bg-rose-500/[0.11] disabled:cursor-not-allowed disabled:opacity-45 dark:border-rose-300/[0.08] dark:text-rose-200/70"
+                          >
+                            <MdClose size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {subheadingError && <p className="mt-2 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{subheadingError}</p>}
+
+                    <button
+                      type="button"
+                      onClick={handleAddSubheading}
+                      disabled={isSubmitting}
+                      className="mt-3 inline-flex h-10 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-500/[0.055] px-3 text-[9px] font-semibold text-cyan-700 transition-all hover:-translate-y-0.5 hover:bg-cyan-500/[0.09] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 dark:border-cyan-300/[0.08] dark:bg-cyan-300/[0.035] dark:text-cyan-200/65"
+                    >
+                      <span className="text-sm leading-none">+</span>
+                      Add subheading
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </Wrapper>

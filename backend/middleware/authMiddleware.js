@@ -4,7 +4,10 @@ const UserModel = require("../models/users/UserModel");
 
 const protect = asyncHandler(async (req, res, next) => {
   try {
-    const token = req.cookies.token;
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : "";
+    const token = req.cookies.token || bearerToken;
+
     if (!token) {
       res.status(401);
       throw new Error("You are not authorized to access this resource. Please log in to continue.");
@@ -21,6 +24,29 @@ const protect = asyncHandler(async (req, res, next) => {
   } catch (error) {
     res.status(401);
     throw new Error("You are not authorized to access this resource. Please log in to continue.");
+  }
+});
+
+const optionalProtect = asyncHandler(async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : "";
+    const token = req.cookies.token || bearerToken;
+
+    if (!token) {
+      return next();
+    }
+
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await UserModel.findById(verified.id).select("-password");
+
+    if (user) {
+      req.user = user;
+    }
+
+    next();
+  } catch (error) {
+    next();
   }
 });
 
@@ -59,4 +85,4 @@ const authorAndAuthor = asyncHandler(async (req, res, next) => {
     throw new Error("You must be an author or admin to access this resource. Please log in with the appropriate credentials.");
   }
 });
-module.exports = { protect, admin, author, verified };
+module.exports = { protect, optionalProtect, admin, author, verified };

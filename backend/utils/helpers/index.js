@@ -17,6 +17,22 @@ const generateChecksum = (data, secretKey) => {
 
   return hash;
 };
+
+const generateEsewaSignature = (message, secretKey) => {
+  return crypto.createHmac("sha256", secretKey).update(message).digest("base64");
+};
+
+const safeCompare = (firstValue = "", secondValue = "") => {
+  const firstBuffer = Buffer.from(firstValue);
+  const secondBuffer = Buffer.from(secondValue);
+
+  if (firstBuffer.length !== secondBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(firstBuffer, secondBuffer);
+};
+
 const formatUser = (userInfo) => {
   return {
     id: userInfo._id,
@@ -36,4 +52,6 @@ module.exports = {
   hashToken,
   formatUser,
   generateChecksum,
+  generateEsewaSignature,
+  safeCompare,
 };

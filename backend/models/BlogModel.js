@@ -31,6 +31,30 @@ const blogSchema = new mongoose.Schema(
       trim: true,
       maxLength: 160, // Recommended length for SEO
     },
+    seo: {
+      title: {
+        type: String,
+        trim: true,
+        maxLength: 250,
+        default: "",
+      },
+      canonicalUrl: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      keywords: [
+        {
+          type: String,
+          trim: true,
+        },
+      ],
+      ogImage: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+    },
     tags: [
       {
         tag: {
@@ -72,10 +96,32 @@ const blogSchema = new mongoose.Schema(
         ref: "Blog",
       },
     ],
+    analytics: {
+      shares: {
+        type: Number,
+        default: 0,
+      },
+      helpfulYes: {
+        type: Number,
+        default: 0,
+      },
+      helpfulNo: {
+        type: Number,
+        default: 0,
+      },
+      reports: {
+        type: Number,
+        default: 0,
+      },
+      reads: {
+        type: Number,
+        default: 0,
+      },
+    },
   },
   {
     timestamps: true,
   }
 );
 
-module.exports = mongoose.model("Blog", blogSchema);
+module.exports = mongoose.models.Blog || mongoose.model("Blog", blogSchema);

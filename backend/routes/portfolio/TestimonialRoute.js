@@ -1,6 +1,6 @@
 const express = require("express");
-const { protect, admin } = require("../../middleware/authMiddleware");
-const { createTestimonial, updateTestimonial, deleteTestimonial, getAllTestimonialsByAdmin, getTestimonialsByAdmin, getAllTestimonials } = require("../../controllers/portfolio/testimonialCtr");
+const { protect, optionalProtect, admin } = require("../../middleware/authMiddleware");
+const { createTestimonial, updateTestimonial, deleteTestimonial, getAllTestimonialsByAdmin, getTestimonialsByAdmin, getAllTestimonials, getMyTestimonials } = require("../../controllers/portfolio/testimonialCtr");
 const { getuploadAvatarandProjectDoc } = require("../../utils/uploadImg");
 
 const uploadAssetsandAvatar = async (req, res, next) => {
@@ -21,7 +21,7 @@ const conditionalProtect = (req, res, next) => {
 
   // Skip protection for contact type
   if (type === "contact") {
-    return next();
+    return optionalProtect(req, res, next);
   }
 
   // Apply protection for feedback and inquiry
@@ -36,6 +36,7 @@ router.post(
 );
 
 router.get("/admin", protect, admin, getAllTestimonialsByAdmin);
+router.get("/my", protect, getMyTestimonials);
 router.get("/", getAllTestimonials);
 router.get("/admin/:id", protect, admin, getTestimonialsByAdmin);
 router.delete("/", protect, admin, deleteTestimonial);

@@ -8,6 +8,7 @@ import blogReducer from "./slices/blogSlice";
 // import imageReducer from "./slices/imageSlice";
 import likeReducer from "./slices/common/likeSlice";
 import favoriteReducer from "./slices/common/favoriteSlice";
+import commentReducer from "./slices/common/commentSlice";
 import projectReducer from "./slices/projectSlice";
 // import assetLimitReducer from "./slices/settings/AssestLimitSlice";
 // import universityReducer from "./slices/universityStructure/universitySlice";
@@ -31,6 +32,7 @@ export const store = configureStore({
     // image: imageReducer,
     like: likeReducer,
     favorite: favoriteReducer,
+    comment: commentReducer,
     project: projectReducer,
     // assetlimit: assetLimitReducer,
     // university: universityReducer,

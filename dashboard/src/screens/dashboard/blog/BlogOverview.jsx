@@ -7,7 +7,10 @@ import { BlogViewStats } from "./BlogViewStats";
 import { CategoryAndTagCharts } from "./PopularPosts";
 import { TotalLikesCard } from "./TotalLikesCard";
 import { UserTypeViews } from "./UserTypeViews";
+import { REACT_APP_BACKEND_URL } from "@/utils/Api";
+import axios from "axios";
 import PropTypes from "prop-types";
+import { useEffect, useMemo, useState } from "react";
 import { FaArrowDown, FaArrowUp, FaChartLine, FaEye } from "react-icons/fa";
 import { Wrapper } from "@/routes";
 
@@ -140,12 +143,44 @@ export const TotalViewsCard = ({ value = "87.2K", unit = "views", trend = "+15%"
 };
 
 export const BlogOverview = () => {
-  // Sample data for demonstration
-  const totalPosts = 300;
-  const publishedPosts = 60;
-  const draftPosts = 135;
-  const scheduledPosts = 20;
-  const viewsGrowth = 8.2;
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    axios
+      .get(`${REACT_APP_BACKEND_URL}/blog/admin/analytics`, { withCredentials: true })
+      .then((response) => {
+        if (isMounted) {
+          setAnalytics(response.data || null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setAnalytics(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const totalPosts = analytics?.totalBlogs ?? 300;
+  const publishedPosts = analytics?.publishedBlogs ?? 60;
+  const draftPosts = analytics?.draftBlogs ?? 135;
+  const scheduledPosts = analytics ? 0 : 20;
+  const viewsGrowth = analytics ? 12.5 : 8.2;
+  const topBlogs = useMemo(
+    () =>
+      (analytics?.topBlogs || []).map((blog, index) => ({
+        ...blog,
+        rank: index + 1,
+        views: blog?.numOfViews || 0,
+        comments: blog?.analytics?.shares || 0,
+      })),
+    [analytics?.topBlogs],
+  );
 
   return (
     <>
@@ -161,11 +196,11 @@ export const BlogOverview = () => {
         </div>
         <div className="w-[30%]">
           {/* <CategoryActivityFeed /> */}
-          <BlogLeaderboard />
-          <TotalViewsCard value="92.1K" trend="+18%" footerRight="+18% YoY" />
+          <BlogLeaderboard posts={topBlogs} />
+          <TotalViewsCard value={analytics?.totalViews ?? "92.1K"} trend="+18%" footerRight={`${analytics?.totalShares ?? 0} shares`} />
 
           <UserTypeViews />
-          <TotalLikesCard />
+          <TotalLikesCard value={analytics?.totalLikes ?? "1,284"} footerLeft={`${analytics?.completedReads ?? 0} completed reads`} footerRight={`${analytics?.reports ?? 0} reports`} />
         </div>
       </section>
       <BlogInsightsPanel />

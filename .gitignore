@@ -1,3 +1,4 @@
 # Reference folder (explicitly ignored)
 **/refrence/
 refrence/  # Also works if it's in root
+.codex-run-logs/

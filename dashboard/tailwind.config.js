@@ -279,9 +279,6 @@ export default withMT({
   theme: {
     extend: {
       colors: {
-        // Include all Tailwind colors
-        ...colors,
-
         // Your custom colors
         dark: {
           surface1: "#101010",

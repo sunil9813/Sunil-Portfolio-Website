@@ -9,7 +9,7 @@ import { Switch, Tooltip } from "@material-tailwind/react";
 
 import { CiCircleQuestion, CiDiscount1, CiDollar } from "react-icons/ci";
 import { FaFolder } from "react-icons/fa";
-import { FiMinus, FiPlus } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiMinus, FiPlus } from "react-icons/fi";
 import { IoIosCheckmarkCircle } from "react-icons/io";
 import { IoCameraSharp } from "react-icons/io5";
 import { MdClose } from "react-icons/md";
@@ -27,9 +27,25 @@ import "react-tagsinput/react-tagsinput.css";
 import "react-datepicker/dist/react-datepicker.css";
 
 const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024;
-const MAX_RESOURCE_SIZE = 5 * 1024 * 1024;
+const MAX_RESOURCE_SIZE = 10 * 1024 * 1024;
 
 const ALLOWED_IMAGE_FORMATS = ["image/png", "image/jpeg", "image/jpg"];
+
+const ALLOWED_RESOURCE_FORMATS = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "image/png",
+  "image/jpg",
+  "image/jpeg",
+  "image/webp",
+];
+
+const ALLOWED_RESOURCE_EXTENSIONS = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".png", ".jpg", ".jpeg", ".webp"];
 
 const initialState = {
   name: "",
@@ -61,6 +77,41 @@ const getErrorMessage = (error, fallbackMessage) => {
   return error?.message || fallbackMessage;
 };
 
+const formatFileSize = (size = 0) => {
+  const sizeInMb = size / (1024 * 1024);
+
+  return `${sizeInMb.toFixed(2)} MB`;
+};
+
+const getFileKey = (file) => {
+  return `${file.name}-${file.size}-${file.lastModified}`;
+};
+
+const getFileExtension = (fileName = "") => {
+  const parts = fileName.split(".");
+
+  return parts.length > 1 ? `.${parts.pop()}` : "";
+};
+
+const getFileNameWithoutExtension = (fileName = "") => {
+  const extension = getFileExtension(fileName);
+
+  return extension ? fileName.slice(0, -extension.length) : fileName;
+};
+
+const getResourceTypeLabel = (file) => {
+  const fileName = file?.name?.toLowerCase() || "";
+  const mimeType = file?.type || "";
+
+  if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) return "PDF";
+  if (mimeType.includes("word") || fileName.endsWith(".doc") || fileName.endsWith(".docx")) return "WORD";
+  if (mimeType.includes("excel") || fileName.endsWith(".xls") || fileName.endsWith(".xlsx")) return "EXCEL";
+  if (mimeType.includes("powerpoint") || fileName.endsWith(".ppt") || fileName.endsWith(".pptx")) return "PPT";
+  if (mimeType.startsWith("image/") || [".png", ".jpg", ".jpeg", ".webp"].some((extension) => fileName.endsWith(extension))) return "IMAGE";
+
+  return "FILE";
+};
+
 export const CreateCourse = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -76,8 +127,7 @@ export const CreateCourse = () => {
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
 
-  const [resourceFile, setResourceFile] = useState(null);
-  const [resourcePreview, setResourcePreview] = useState("");
+  const [resourceFiles, setResourceFiles] = useState([]);
 
   const [selectedUniversity, setSelectedUniversity] = useState(null);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
@@ -98,16 +148,18 @@ export const CreateCourse = () => {
   useEffect(() => {
     return () => {
       revokeObjectUrl(thumbnailPreview);
-      revokeObjectUrl(resourcePreview);
     };
-  }, [thumbnailPreview, resourcePreview]);
+  }, [thumbnailPreview]);
 
   const isImageValid = useCallback((file) => {
     return ALLOWED_IMAGE_FORMATS.includes(file?.type);
   }, []);
 
   const isResourceFileValid = useCallback((file) => {
-    return file?.type === "application/pdf";
+    const fileName = file?.name?.toLowerCase() || "";
+    const hasAllowedExtension = ALLOWED_RESOURCE_EXTENSIONS.some((extension) => fileName.endsWith(extension));
+
+    return ALLOWED_RESOURCE_FORMATS.includes(file?.type) || hasAllowedExtension;
   }, []);
 
   const validateDiscount = (currentPrice, currentDiscount) => {
@@ -198,57 +250,132 @@ export const CreateCourse = () => {
     setThumbnailPreview("");
   };
 
-  const processResourceFile = useCallback(
-    (selectedFile) => {
-      if (!selectedFile) {
+  const processResourceFiles = useCallback(
+    (selectedFiles) => {
+      const files = Array.from(selectedFiles || []);
+
+      if (!files.length) {
         return;
       }
 
-      if (!isResourceFileValid(selectedFile)) {
-        const message = "Resource file must be a PDF.";
+      const validFiles = [];
+      let errorMessage = "";
 
-        toast.error(message);
-        setResourceFileError(message);
-        return;
-      }
+      files.forEach((file) => {
+        if (!isResourceFileValid(file)) {
+          errorMessage = "Resource files must be PDF, Word, Excel, PPT, PNG, JPG, JPEG, or WEBP.";
+          return;
+        }
 
-      if (selectedFile.size > MAX_RESOURCE_SIZE) {
-        const message = "Resource file size exceeds the 5MB limit.";
+        if (file.size > MAX_RESOURCE_SIZE) {
+          errorMessage = `Resource file ${file.name} exceeds the 5MB limit.`;
+          return;
+        }
 
-        toast.error(message);
-        setResourceFileError(message);
-        return;
-      }
-
-      setResourcePreview((currentPreview) => {
-        revokeObjectUrl(currentPreview);
-        return URL.createObjectURL(selectedFile);
+        validFiles.push(file);
       });
 
-      setResourceFile(selectedFile);
+      if (errorMessage) {
+        toast.error(errorMessage);
+        setResourceFileError(errorMessage);
+      }
+
+      if (!validFiles.length) {
+        return;
+      }
+
+      setResourceFiles((previousFiles) => {
+        const existingKeys = new Set(previousFiles.map((item) => getFileKey(item.file)));
+
+        const uniqueFiles = validFiles
+          .filter((file) => !existingKeys.has(getFileKey(file)))
+          .map((file, index) => ({
+            id: uuidv4(),
+            file,
+            displayName: getFileNameWithoutExtension(file.name),
+            order: previousFiles.length + index + 1,
+          }));
+
+        if (uniqueFiles.length !== validFiles.length) {
+          toast.info("Duplicate resource files were skipped.");
+        }
+
+        return [...previousFiles, ...uniqueFiles].map((item, index) => ({
+          ...item,
+          order: index + 1,
+        }));
+      });
+
       setResourceFileError("");
     },
     [isResourceFileValid],
   );
 
   const handleResourceFileChange = (event) => {
-    const selectedFile = event.target.files?.[0];
-
-    if (selectedFile) {
-      processResourceFile(selectedFile);
-    }
+    processResourceFiles(event.target.files);
 
     event.target.value = "";
   };
 
-  const handleRemoveResource = (event) => {
+  const handleDropResource = useCallback(
+    (event) => {
+      event.preventDefault();
+
+      processResourceFiles(event.dataTransfer.files);
+    },
+    [processResourceFiles],
+  );
+
+  const handleResourceNameChange = (id, value) => {
+    setResourceFiles((previousFiles) =>
+      previousFiles.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              displayName: value,
+            }
+          : item,
+      ),
+    );
+  };
+
+  const handleMoveResource = (event, currentIndex, direction) => {
     event.preventDefault();
     event.stopPropagation();
 
-    revokeObjectUrl(resourcePreview);
+    setResourceFiles((previousFiles) => {
+      const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
 
-    setResourceFile(null);
-    setResourcePreview("");
+      if (nextIndex < 0 || nextIndex >= previousFiles.length) {
+        return previousFiles;
+      }
+
+      const updatedFiles = [...previousFiles];
+      const currentItem = updatedFiles[currentIndex];
+
+      updatedFiles[currentIndex] = updatedFiles[nextIndex];
+      updatedFiles[nextIndex] = currentItem;
+
+      return updatedFiles.map((item, index) => ({
+        ...item,
+        order: index + 1,
+      }));
+    });
+  };
+
+  const handleRemoveResource = (event, fileId) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    setResourceFiles((previousFiles) =>
+      previousFiles
+        .filter((item) => item.id !== fileId)
+        .map((item, index) => ({
+          ...item,
+          order: index + 1,
+        })),
+    );
+
     setResourceFileError("");
   };
 
@@ -263,19 +390,6 @@ export const CreateCourse = () => {
       }
     },
     [processThumbnail],
-  );
-
-  const handleDropResource = useCallback(
-    (event) => {
-      event.preventDefault();
-
-      const selectedFile = event.dataTransfer.files?.[0];
-
-      if (selectedFile) {
-        processResourceFile(selectedFile);
-      }
-    },
-    [processResourceFile],
   );
 
   const handleTagChange = (newTags) => {
@@ -406,7 +520,6 @@ export const CreateCourse = () => {
 
   const resetForm = () => {
     revokeObjectUrl(thumbnailPreview);
-    revokeObjectUrl(resourcePreview);
 
     setSubject(initialState);
     setDescription("");
@@ -414,8 +527,7 @@ export const CreateCourse = () => {
     setThumbnail(null);
     setThumbnailPreview("");
 
-    setResourceFile(null);
-    setResourcePreview("");
+    setResourceFiles([]);
 
     setSelectedUniversity(null);
     setSelectedFaculty(null);
@@ -548,9 +660,20 @@ export const CreateCourse = () => {
 
     formData.append("thumbnail", thumbnail);
 
-    if (resourceFile) {
-      formData.append("resourceFile", resourceFile);
+    const resourceMetadata = resourceFiles.map((item, index) => ({
+      clientId: item.id,
+      originalName: item.file.name,
+      displayName: item.displayName?.trim() || getFileNameWithoutExtension(item.file.name),
+      order: index + 1,
+    }));
+
+    if (resourceMetadata.length > 0) {
+      formData.append("resourceMetadata", JSON.stringify(resourceMetadata));
     }
+
+    resourceFiles.forEach((item) => {
+      formData.append("resourceFiles", item.file);
+    });
 
     try {
       setIsSubmitting(true);
@@ -562,7 +685,7 @@ export const CreateCourse = () => {
 
       toast.success(publishType === "draft" ? "Course draft saved successfully." : "Course published successfully.");
 
-      navigate("/all-subjects");
+      navigate("/all-courses");
     } catch (error) {
       const errorMessage = isError?.message?.includes("validation failed")
         ? "Invalid input data. Please check all fields and try again."
@@ -591,12 +714,9 @@ export const CreateCourse = () => {
       </StickyHeader>
 
       <section className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(330px,1fr)]">
-        {/* Main column */}
         <div className="min-w-0">
-          {/* Course details */}
           <Wrapper className="group relative overflow-hidden p-5 sm:p-6">
             <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-indigo-500/[0.014] blur-[90px] transition-all duration-700 group-hover:bg-indigo-500/[0.024]" />
-
             <div className="pointer-events-none absolute -bottom-24 -left-24 size-64 rounded-full bg-cyan-500/[0.011] blur-[90px]" />
 
             <div className="relative z-10">
@@ -608,7 +728,6 @@ export const CreateCourse = () => {
 
                   <div>
                     <InputTitle className="mb-1">Course details</InputTitle>
-
                     <p className="text-[9px] text-gray-400 dark:text-white/25">Add the primary course information.</p>
                   </div>
                 </div>
@@ -682,11 +801,9 @@ export const CreateCourse = () => {
             </div>
           </Wrapper>
 
-          {/* Academic structure */}
           <Wrapper className="relative z-30 my-3 !overflow-visible p-5 sm:p-6">
             <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
               <div className="absolute -right-24 -top-24 size-64 rounded-full bg-cyan-500/[0.013] blur-[90px]" />
-
               <div className="absolute -bottom-24 -left-24 size-64 rounded-full bg-violet-500/[0.011] blur-[90px]" />
             </div>
 
@@ -698,7 +815,6 @@ export const CreateCourse = () => {
 
                 <div>
                   <InputTitle className="mb-1">Academic structure</InputTitle>
-
                   <p className="text-[9px] text-gray-400 dark:text-white/25">Connect the course with its academic hierarchy.</p>
                 </div>
               </div>
@@ -706,14 +822,12 @@ export const CreateCourse = () => {
               <div className="relative z-50 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="relative z-[54]">
                   <InputLabel className="mb-2">University</InputLabel>
-
                   <UniversityDropDown value={selectedUniversity} onChange={handleUniversityChange} placeholder="Select University" disabled={isSubmitting} />
                 </div>
 
                 <div className="relative z-[53]">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <InputLabel>Faculty</InputLabel>
-
                     {!selectedUniversity && <span className="text-[8px] text-gray-400 dark:text-white/20">Select university first</span>}
                   </div>
 
@@ -729,7 +843,6 @@ export const CreateCourse = () => {
                 <div className="relative z-[52]">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <InputLabel>Program</InputLabel>
-
                     {!selectedFaculty && <span className="text-[8px] text-gray-400 dark:text-white/20">Select faculty first</span>}
                   </div>
 
@@ -744,7 +857,6 @@ export const CreateCourse = () => {
 
                 <div className="relative z-[51]">
                   <InputLabel className="mb-2">Access type</InputLabel>
-
                   <AccessTypeDropdown value={subject.accessType} onChange={handleInputChange} name="accessType" />
                 </div>
               </div>
@@ -752,7 +864,6 @@ export const CreateCourse = () => {
               <div className="relative z-10 mt-5">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <InputLabel>Tags</InputLabel>
-
                   <span className="text-[9px] text-gray-400 dark:text-white/25">{subject.tags.join("").length}/500</span>
                 </div>
 
@@ -772,14 +883,12 @@ export const CreateCourse = () => {
             </div>
           </Wrapper>
 
-          {/* Highlights */}
           <Wrapper className="group relative my-3 overflow-hidden p-5 sm:p-6">
             <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-emerald-500/[0.012] blur-[80px]" />
 
             <div className="relative z-10">
               <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
                 <InputTitle className="mb-1">Key highlights</InputTitle>
-
                 <p className="text-[9px] text-gray-400 dark:text-white/25">Add the main learning features and outcomes.</p>
               </div>
 
@@ -830,7 +939,6 @@ export const CreateCourse = () => {
 
                     <div className="mt-1 flex items-center justify-between gap-3 px-2">
                       {highlightErrors[index] ? <p className="text-[9px] font-medium text-rose-600 dark:text-rose-200/75">{highlightErrors[index]}</p> : <span />}
-
                       <span className="text-[8px] tabular-nums text-gray-400 dark:text-white/20">{highlight.length}/100</span>
                     </div>
                   </div>
@@ -839,14 +947,12 @@ export const CreateCourse = () => {
             </div>
           </Wrapper>
 
-          {/* Editor */}
           <Wrapper className="group relative mb-5 overflow-hidden p-5 sm:p-6">
             <div className="pointer-events-none absolute -bottom-24 -right-24 size-72 rounded-full bg-indigo-500/[0.013] blur-[95px]" />
 
             <div className="relative z-10">
               <div className="mb-5 border-b border-gray-200/70 pb-4 dark:border-white/[0.05]">
                 <InputTitle className="mb-1">Course description</InputTitle>
-
                 <p className="text-[9px] text-gray-400 dark:text-white/25">Write the complete course overview and learning content.</p>
               </div>
 
@@ -857,9 +963,7 @@ export const CreateCourse = () => {
           </Wrapper>
         </div>
 
-        {/* Side column */}
         <aside className="min-w-0">
-          {/* Thumbnail */}
           <Wrapper className="group relative overflow-hidden p-5">
             <div className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-violet-500/[0.014] blur-[80px]" />
 
@@ -867,7 +971,6 @@ export const CreateCourse = () => {
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <InputTitle className="mb-1">Thumbnail image</InputTitle>
-
                   <p className="text-[9px] text-gray-400 dark:text-white/25">Course cover image</p>
                 </div>
 
@@ -894,7 +997,6 @@ export const CreateCourse = () => {
                 {thumbnailPreview ? (
                   <>
                     <img src={thumbnailPreview} alt="Course thumbnail preview" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.015]" />
-
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
 
                     <span className="absolute bottom-3 left-3 rounded-lg border border-white/[0.12] bg-black/45 px-2.5 py-1.5 text-[9px] font-medium text-white/90 backdrop-blur-xl">
@@ -918,7 +1020,6 @@ export const CreateCourse = () => {
                     </span>
 
                     <p className="mt-4 text-[11px] font-medium text-gray-600 dark:text-white/50">Drag and drop an image</p>
-
                     <p className="mt-1.5 text-[9px] text-gray-400 dark:text-white/25">or click to browse PNG, JPG or JPEG</p>
                   </div>
                 )}
@@ -928,27 +1029,25 @@ export const CreateCourse = () => {
             </div>
           </Wrapper>
 
-          {/* Resource PDF */}
           <Wrapper className="group relative my-3 overflow-hidden p-5">
             <div className="pointer-events-none absolute -bottom-20 -left-20 size-56 rounded-full bg-amber-500/[0.011] blur-[80px]" />
 
             <div className="relative z-10">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <InputTitle className="mb-1">Course resource</InputTitle>
-
-                  <p className="text-[9px] text-gray-400 dark:text-white/25">Optional PDF document</p>
+                  <InputTitle className="mb-1">Course resources</InputTitle>
+                  <p className="text-[9px] text-gray-400 dark:text-white/25">PDF, Word, Excel, PPT or image files with custom order</p>
                 </div>
 
                 <span className="rounded-full border border-gray-200/70 bg-gray-50/60 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[0.08em] text-gray-500 dark:border-white/[0.05] dark:bg-white/[0.02] dark:text-white/30">
-                  Max 5MB
+                  {resourceFiles.length}/20
                 </span>
               </div>
 
               <div
                 role="button"
                 tabIndex={0}
-                aria-label="Upload course resource PDF"
+                aria-label="Upload course resource files"
                 onClick={() => resourceInputRef.current?.click()}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
@@ -958,48 +1057,111 @@ export const CreateCourse = () => {
                 }}
                 onDrop={handleDropResource}
                 onDragOver={(event) => event.preventDefault()}
-                className="relative flex h-52 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-gray-300/80 bg-gray-50/60 p-4 text-center transition-all duration-300 hover:border-amber-400/40 hover:bg-amber-500/[0.025] focus:outline-none focus:ring-4 focus:ring-amber-500/[0.05] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-amber-300/[0.15] dark:hover:bg-amber-300/[0.025]"
+                className="relative flex min-h-52 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border border-dashed border-gray-300/80 bg-gray-50/60 p-4 text-center transition-all duration-300 hover:border-amber-400/40 hover:bg-amber-500/[0.025] focus:outline-none focus:ring-4 focus:ring-amber-500/[0.05] dark:border-white/[0.08] dark:bg-white/[0.018] dark:hover:border-amber-300/[0.15] dark:hover:bg-amber-300/[0.025]"
               >
-                {resourcePreview ? (
-                  <>
-                    <span className="flex size-12 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-500/[0.08] text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70">
-                      <FaFolder size={21} />
-                    </span>
+                {resourceFiles.length > 0 ? (
+                  <div className="w-full space-y-2">
+                    <div className="mb-3 flex items-center justify-center">
+                      <span className="flex size-12 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-500/[0.08] text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70">
+                        <FaFolder size={21} />
+                      </span>
+                    </div>
 
-                    <p className="mt-3 max-w-[240px] truncate text-[11px] font-semibold text-gray-700 dark:text-white/65">{resourceFile?.name}</p>
+                    {resourceFiles.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="rounded-2xl border border-gray-200/70 bg-white/55 p-2.5 text-left dark:border-white/[0.055] dark:bg-white/[0.025]"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="flex size-7 shrink-0 items-center justify-center rounded-xl border border-amber-300/20 bg-amber-500/[0.08] text-[8px] font-bold text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70">
+                              {index + 1}
+                            </span>
 
-                    <p className="mt-1 text-[9px] text-gray-400 dark:text-white/25">{((resourceFile?.size || 0) / (1024 * 1024)).toFixed(2)} MB</p>
+                            <div className="min-w-0">
+                              <p className="truncate text-[9px] font-semibold text-gray-700 dark:text-white/65">{item.file.name}</p>
 
-                    <button
-                      type="button"
-                      onClick={handleRemoveResource}
-                      title="Remove resource"
-                      aria-label="Remove resource PDF"
-                      className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/85 text-white shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
-                    >
-                      <MdClose size={15} />
-                    </button>
-                  </>
+                              <p className="mt-0.5 text-[8px] text-gray-400 dark:text-white/25">
+                                {getResourceTypeLabel(item.file)} - {formatFileSize(item.file.size)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(event) => handleRemoveResource(event, item.id)}
+                            title="Remove resource"
+                            aria-label="Remove resource"
+                            className="flex size-7 shrink-0 items-center justify-center rounded-xl border border-rose-300/20 bg-rose-500/85 text-white shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-rose-500"
+                          >
+                            <MdClose size={14} />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={item.displayName}
+                            onChange={(event) => handleResourceNameChange(item.id, event.target.value)}
+                            placeholder="Resource display name"
+                            className={`${inputClassName} h-9 min-w-0 flex-1 !rounded-xl !border-gray-200/70 !bg-gray-50/60 !px-3 !text-[10px] dark:!border-white/[0.055] dark:!bg-white/[0.02] dark:!text-white/65`}
+                          />
+
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={(event) => handleMoveResource(event, index, "up")}
+                            title="Move up"
+                            aria-label="Move resource up"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-gray-200/70 bg-gray-50/60 text-gray-500 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-35 dark:border-white/[0.055] dark:bg-white/[0.02] dark:text-white/45 dark:hover:bg-white/[0.04]"
+                          >
+                            <FiChevronUp size={15} />
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={index === resourceFiles.length - 1}
+                            onClick={(event) => handleMoveResource(event, index, "down")}
+                            title="Move down"
+                            aria-label="Move resource down"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-gray-200/70 bg-gray-50/60 text-gray-500 transition-all hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-35 dark:border-white/[0.055] dark:bg-white/[0.02] dark:text-white/45 dark:hover:bg-white/[0.04]"
+                          >
+                            <FiChevronDown size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <p className="pt-2 text-[8px] text-gray-400 dark:text-white/25">Click or drop more files to add resources</p>
+                  </div>
                 ) : (
                   <>
                     <span className="flex size-12 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-500/[0.08] text-amber-700 dark:border-amber-300/[0.09] dark:bg-amber-300/[0.04] dark:text-amber-200/70">
                       <FaFolder size={21} />
                     </span>
 
-                    <p className="mt-3 text-[10px] font-medium text-gray-600 dark:text-white/50">Drag and drop a PDF</p>
-
-                    <p className="mt-1 text-[9px] text-gray-400 dark:text-white/25">or click to browse</p>
+                    <p className="mt-3 text-[10px] font-medium text-gray-600 dark:text-white/50">Drag and drop resources</p>
+                    <p className="mt-1 text-[9px] text-gray-400 dark:text-white/25">PDF, Word, Excel, PPT or image</p>
                   </>
                 )}
 
-                <input ref={resourceInputRef} id="resourceFile" type="file" name="resourceFile" className="hidden" onChange={handleResourceFileChange} accept="application/pdf" />
+                <input
+                  ref={resourceInputRef}
+                  id="resourceFiles"
+                  type="file"
+                  name="resourceFiles"
+                  className="hidden"
+                  multiple
+                  onChange={handleResourceFileChange}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/png,image/jpg,image/jpeg,image/webp"
+                />
               </div>
 
               {resourceFileError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{resourceFileError}</p>}
             </div>
           </Wrapper>
 
-          {/* Pricing */}
           {subject.accessType === "paid" && (
             <Wrapper className="group relative overflow-hidden p-5">
               <div className="pointer-events-none absolute -right-20 -bottom-20 size-56 rounded-full bg-emerald-500/[0.012] blur-[80px]" />

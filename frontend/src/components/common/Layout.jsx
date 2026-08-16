@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Header } from "../../router";
+import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ScrollRestoration } from "react-router";
 

@@ -28,11 +28,14 @@ import {
   UpdateCategory,
   BlogList,
   BlogDetails,
+  BlogNewsletterSubscribers,
+  BlogReports,
   CreateBlog,
   UpdateBlog,
   CreateProject,
   ProjectList,
   ProjectDetails,
+  ProjectReports,
   UpdateProject,
   UserCreateProjectList,
   CreateUniversity,
@@ -52,6 +55,7 @@ import {
   UpdateCourse,
   CoursesWiseAllChapter,
   CreateChapterr,
+  CreateSubheading,
   ChapterOverview,
   ChapterDetails,
   UpdateChapter,
@@ -72,6 +76,11 @@ import {
   Favorite,
   FilterPage,
   AssetConfigure,
+  OrderManagement,
+  CouponManagement,
+  BusinessOverview,
+  ReviewSupportManagement,
+  PlanBundleManagement,
   ErrorPage,
 } from "./index";
 
@@ -227,6 +236,24 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: "/blog-subscribers",
+        element: (
+          <Layout title="Newsletter Subscribers">
+            <BlogNewsletterSubscribers />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/blog-reports",
+        element: (
+          <Layout title="Blog Reports">
+            <BlogReports />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
         path: "/create-blog",
         element: (
           <DashboardLayoutWithOutHeader>
@@ -277,6 +304,15 @@ export const router = createBrowserRouter([
         element: (
           <Layout>
             <ProjectDetails />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/project-reports",
+        element: (
+          <Layout title="Project Reports">
+            <ProjectReports />
           </Layout>
         ),
         errorElement: <ErrorPage />,
@@ -503,6 +539,15 @@ export const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
+        path: "/create-subheading",
+        element: (
+          <DashboardLayoutWithOutHeader>
+            <CreateSubheading />
+          </DashboardLayoutWithOutHeader>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
         path: "/update-chapter/:slug",
         element: (
           <DashboardLayoutWithOutHeader>
@@ -674,6 +719,51 @@ export const router = createBrowserRouter([
         element: (
           <Layout>
             <FilterPage />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/orders",
+        element: (
+          <Layout title="Order Management">
+            <OrderManagement />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/coupons",
+        element: (
+          <Layout title="Coupon Management">
+            <CouponManagement />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/business-overview",
+        element: (
+          <Layout title="Business Overview">
+            <BusinessOverview />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/reviews-support",
+        element: (
+          <Layout title="Reviews & Support">
+            <ReviewSupportManagement />
+          </Layout>
+        ),
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/plans-bundles",
+        element: (
+          <Layout title="Plans & Bundles">
+            <PlanBundleManagement />
           </Layout>
         ),
         errorElement: <ErrorPage />,

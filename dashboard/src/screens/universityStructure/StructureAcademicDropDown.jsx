@@ -398,7 +398,10 @@ export const CourseDropDown = ({ value, onChange, disabled, placeholder, classNa
   }, [dispatch]);
 
   const hasCoursePdf = (course) => {
-    return Boolean(course?.resourceFile?.file?.filePath);
+    const hasResourceFiles = Array.isArray(course?.resourceFiles) && course.resourceFiles.some((resourceFile) => resourceFile?.filePath || resourceFile?.url);
+    const hasLegacyResource = Boolean(course?.resourceFile?.file?.filePath || course?.resourceFile?.url);
+
+    return hasResourceFiles || hasLegacyResource;
   };
 
   const filteredCourses = subjects.filter((course) => !hasCoursePdf(course));

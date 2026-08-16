@@ -4,7 +4,7 @@ import blogService from "../services/blogService";
 
 const initialState = {
   blog: null,
-  blogs: [],
+  blogs: { BlogList: [], total: 0 },
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -40,7 +40,7 @@ const blogSlice = createSlice({
   reducers: {
     BLOG_RESET(state) {
       state.blog = false;
-      state.blogs = null;
+      state.blogs = { BlogList: [], total: 0 };
       state.isError = false;
       state.isSuccess = false;
       state.isLoading = false;
@@ -72,7 +72,7 @@ const blogSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.blogs = null;
+        state.blogs = { BlogList: [], total: 0 };
         toast.error(action.payload);
       })
       .addCase(getBlog.pending, (state) => {
@@ -98,13 +98,18 @@ const blogSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.blogs = action.payload.BlogList; // Store the BlogList array from the response
+        const blogList = action.payload?.BlogList || [];
+        state.blogs = {
+          ...action.payload,
+          BlogList: blogList,
+          total: action.payload?.total ?? blogList.length,
+        };
       })
       .addCase(getBlogsByCategoryAndTag.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.blogs = [];
+        state.blogs = { BlogList: [], total: 0 };
         toast.error(action.payload);
       });
   },

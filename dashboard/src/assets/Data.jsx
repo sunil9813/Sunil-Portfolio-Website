@@ -17,9 +17,11 @@ import {
   Heart,
   Info,
   KeyRound,
+  ReceiptText,
   LayoutDashboard,
   LibraryBig,
   List,
+  Mail,
   MessageSquareQuote,
   Newspaper,
   PenLine,
@@ -31,6 +33,8 @@ import {
   UserRound,
   Users,
   Wrench,
+  BadgePercent,
+  Flag,
 } from "lucide-react";
 
 /* ==========================================================================
@@ -117,6 +121,16 @@ export const menu = [
         icon: <FileText {...childIconProps} />,
       },
       {
+        title: "Subscribers",
+        path: "/blog-subscribers",
+        icon: <Mail {...childIconProps} />,
+      },
+      {
+        title: "Reports",
+        path: "/blog-reports",
+        icon: <Flag {...childIconProps} />,
+      },
+      {
         title: "Your Creations",
         path: "/loginuser-blog",
         icon: <PenLine {...childIconProps} />,
@@ -147,6 +161,12 @@ export const menu = [
         title: "Your Creations",
         path: "/users-create-project",
         icon: <BriefcaseBusiness {...childIconProps} />,
+      },
+      {
+        title: "Reports",
+        path: "/project-reports",
+        icon: <Flag {...childIconProps} />,
+        badge: "Audit",
       },
       {
         title: "Create Project",
@@ -226,6 +246,11 @@ export const menu = [
         path: "/create-chapter",
         icon: <FilePlus2 {...childIconProps} />,
       },
+      {
+        title: "Create Subheading",
+        path: "/create-subheading",
+        icon: <BookPlus {...childIconProps} />,
+      },
     ],
   },
 
@@ -259,6 +284,31 @@ export const menu = [
     title: "Settings",
     icon: <Settings {...parentIconProps} />,
     childrens: [
+      {
+        title: "Orders",
+        path: "/orders",
+        icon: <ReceiptText {...childIconProps} />,
+      },
+      {
+        title: "Coupons",
+        path: "/coupons",
+        icon: <BadgePercent {...childIconProps} />,
+      },
+      {
+        title: "Business Overview",
+        path: "/business-overview",
+        icon: <BarChart3 {...childIconProps} />,
+      },
+      {
+        title: "Reviews & Support",
+        path: "/reviews-support",
+        icon: <MessageSquareQuote {...childIconProps} />,
+      },
+      {
+        title: "Plans & Bundles",
+        path: "/plans-bundles",
+        icon: <BriefcaseBusiness {...childIconProps} />,
+      },
       {
         title: "Assets Limit",
         path: "/assets-limit",
@@ -332,6 +382,16 @@ export const menus = [
         title: "Profile",
         path: "/profile",
         icon: <UserRound {...childIconProps} />,
+      },
+      {
+        title: "Business Overview",
+        path: "/business-overview",
+        icon: <BarChart3 {...childIconProps} />,
+      },
+      {
+        title: "Plans & Bundles",
+        path: "/plans-bundles",
+        icon: <BriefcaseBusiness {...childIconProps} />,
       },
       {
         title: "Assets Limit",

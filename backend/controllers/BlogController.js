@@ -3,12 +3,50 @@ const cloudinary = require("cloudinary").v2;
 const Filter = require("bad-words");
 const slugify = require("slugify");
 const BlogModel = require("../models/BlogModel");
+const BlogEngagementModel = require("../models/BlogEngagementModel");
+const NewsletterSubscriberModel = require("../models/NewsletterSubscriberModel");
 const { default: ImageModel } = require("../models/ImageModel");
 const CategoryModel = require("../models/common/CategoryModel");
 const { updateResourceField } = require("../utils/updateResourceField");
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const findBlogBySlug = async (slug) => {
+  if (!slug) {
+    const error = new Error("Blog slug is required in the request.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const blog = await BlogModel.findOne({ slug });
+
+  if (!blog) {
+    const error = new Error("Blog not found. Please check the provided slug.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return blog;
+};
+
+const parseJsonArray = (value, fallback = []) => {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : fallback;
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  return fallback;
+};
+
 const createBlog = asyncHandler(async (req, res) => {
-  const { title, description, tags, category, metaDescription, visibility, groupId } = req.body;
+  const { title, description, tags, category, metaDescription, visibility, groupId, seoTitle, canonicalUrl, keywords, ogImage, relatedPosts } = req.body;
   const userId = req.user.id;
 
   const filter = new Filter();
@@ -73,7 +111,9 @@ const createBlog = asyncHandler(async (req, res) => {
 
   // Parse tags if they are sent as a JSON string
   let parsedTags = [];
-  if (typeof tags === "string") {
+  if (tags === undefined || tags === null || tags === "") {
+    parsedTags = [];
+  } else if (typeof tags === "string") {
     try {
       parsedTags = JSON.parse(tags);
     } catch (error) {
@@ -104,6 +144,13 @@ const createBlog = asyncHandler(async (req, res) => {
     cover: fileData,
     tags: formattedTags,
     visibility: visibility,
+    seo: {
+      title: String(seoTitle || "").trim(),
+      canonicalUrl: String(canonicalUrl || "").trim(),
+      keywords: parseJsonArray(keywords).map((keyword) => String(keyword).trim()).filter(Boolean),
+      ogImage: String(ogImage || "").trim(),
+    },
+    relatedPosts: parseJsonArray(relatedPosts).filter(Boolean),
   });
 
   res.status(201).json({ message: "Blog post created successfully", data });
@@ -138,10 +185,23 @@ const getBlog = asyncHandler(async (req, res) => {
   }
 
   // Find the blog by slug
-  const Blog = await BlogModel.findOne({ slug }).populate({
-    path: "user",
-    select: "avatar name email",
-  });
+  const Blog = await BlogModel.findOne({ slug })
+    .populate({
+      path: "user",
+      select: "avatar name email",
+    })
+    .populate({
+      path: "category",
+      select: "type title",
+    })
+    .populate({
+      path: "relatedPosts",
+      select: "title slug metaDescription cover category tags createdAt",
+      populate: {
+        path: "category",
+        select: "title type",
+      },
+    });
 
   if (!Blog) {
     res.status(404);
@@ -175,6 +235,14 @@ const getBlogPrivate = asyncHandler(async (req, res) => {
     .populate({
       path: "category",
       select: "type title",
+    })
+    .populate({
+      path: "relatedPosts",
+      select: "title slug metaDescription cover category tags createdAt",
+      populate: {
+        path: "category",
+        select: "title type",
+      },
     });
 
   if (!blog) {
@@ -183,7 +251,8 @@ const getBlogPrivate = asyncHandler(async (req, res) => {
   }
 
   // Check if the logged-in user is the creator or an admin
-  if (blog.user.toString() !== loggedInUser._id.toString() && loggedInUser.role !== "admin" && loggedInUser.role !== "super admin") {
+  const blogOwnerId = blog.user?._id || blog.user;
+  if (blogOwnerId.toString() !== loggedInUser._id.toString() && loggedInUser.role !== "admin" && loggedInUser.role !== "super admin") {
     res.status(403);
     throw new Error("You are not authorized to access this blog.");
   }
@@ -436,6 +505,281 @@ const getBlogsByCategoryAndTag = asyncHandler(async (req, res) => {
   res.status(200).json({ total: Blogs.length, BlogList: Blogs });
 });
 
+const subscribeNewsletter = asyncHandler(async (req, res) => {
+  const { email, name = "", source = "blog-detail" } = req.body || {};
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+
+  if (!emailRegex.test(normalizedEmail)) {
+    res.status(400);
+    throw new Error("Please enter a valid email address.");
+  }
+
+  const subscriber = await NewsletterSubscriberModel.findOneAndUpdate(
+    { email: normalizedEmail },
+    {
+      $set: {
+        name: String(name || "").trim(),
+        source: String(source || "blog-detail").trim(),
+        isActive: true,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  res.status(200).json({
+    message: "You are subscribed successfully.",
+    subscriber: {
+      email: subscriber.email,
+      name: subscriber.name,
+      source: subscriber.source,
+    },
+  });
+});
+
+const submitHelpfulFeedback = asyncHandler(async (req, res) => {
+  const blog = await findBlogBySlug(req.params.slug);
+  const rawValue = String(req.body?.value || "").trim();
+  const isHelpful = ["yes", "helpful", "true"].includes(rawValue.toLowerCase());
+
+  await BlogEngagementModel.create({
+    blog: blog._id,
+    user: req.user?._id || null,
+    eventType: "helpful",
+    value: rawValue || (isHelpful ? "Yes" : "Not yet"),
+  });
+
+  const analyticsPath = isHelpful ? "analytics.helpfulYes" : "analytics.helpfulNo";
+  const updatedBlog = await BlogModel.findByIdAndUpdate(blog._id, { $inc: { [analyticsPath]: 1 } }, { new: true }).select("analytics");
+
+  res.status(200).json({
+    message: "Thanks for your feedback.",
+    analytics: updatedBlog?.analytics || {},
+  });
+});
+
+const trackBlogShare = asyncHandler(async (req, res) => {
+  const blog = await findBlogBySlug(req.params.slug);
+  const platform = String(req.body?.platform || "copy").trim().slice(0, 40);
+
+  await BlogEngagementModel.create({
+    blog: blog._id,
+    user: req.user?._id || null,
+    eventType: "share",
+    platform,
+    value: platform,
+  });
+
+  const updatedBlog = await BlogModel.findByIdAndUpdate(blog._id, { $inc: { "analytics.shares": 1 } }, { new: true }).select("analytics");
+
+  res.status(200).json({
+    message: "Share tracked.",
+    analytics: updatedBlog?.analytics || {},
+  });
+});
+
+const submitBlogIssue = asyncHandler(async (req, res) => {
+  const blog = await findBlogBySlug(req.params.slug);
+  const message = String(req.body?.message || "").trim();
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const name = String(req.body?.name || "").trim();
+
+  if (message.length < 8) {
+    res.status(400);
+    throw new Error("Please write a little more detail about the issue.");
+  }
+
+  if (email && !emailRegex.test(email)) {
+    res.status(400);
+    throw new Error("Please enter a valid email address.");
+  }
+
+  await BlogEngagementModel.create({
+    blog: blog._id,
+    user: req.user?._id || null,
+    eventType: "report",
+    value: "suggest-edit",
+    message,
+    email,
+    name,
+  });
+
+  await BlogModel.findByIdAndUpdate(blog._id, { $inc: { "analytics.reports": 1 } });
+
+  res.status(201).json({
+    message: "Thanks, your suggestion was sent.",
+  });
+});
+
+const trackReadingHistory = asyncHandler(async (req, res) => {
+  const blog = await findBlogBySlug(req.params.slug);
+  const progress = Math.max(0, Math.min(100, Number(req.body?.progress || 0)));
+
+  if (!req.user?._id) {
+    return res.status(200).json({ message: "Reading progress noted." });
+  }
+
+  const existingRead = await BlogEngagementModel.findOne({
+    blog: blog._id,
+    user: req.user._id,
+    eventType: "read",
+  });
+
+  const shouldCountCompletedRead = (!existingRead || Number(existingRead.progress || 0) < 80) && progress >= 80;
+
+  await BlogEngagementModel.findOneAndUpdate(
+    {
+      blog: blog._id,
+      user: req.user._id,
+      eventType: "read",
+    },
+    {
+      $set: {
+        value: "reading-history",
+      },
+      $max: {
+        progress,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  if (shouldCountCompletedRead) {
+    await BlogModel.findByIdAndUpdate(blog._id, { $inc: { "analytics.reads": 1 } });
+  }
+
+  res.status(200).json({
+    message: "Reading history updated.",
+    progress,
+  });
+});
+
+const getBlogEngagementAnalytics = asyncHandler(async (req, res) => {
+  const [eventCounts, subscribersCount, totalBlogs, publishedBlogs, totalViewsResult, topBlogs, recentReports] = await Promise.all([
+    BlogEngagementModel.aggregate([
+      {
+        $group: {
+          _id: "$eventType",
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+    NewsletterSubscriberModel.countDocuments({ isActive: true }),
+    BlogModel.countDocuments(),
+    BlogModel.countDocuments({ visibility: "public" }),
+    BlogModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalViews: { $sum: "$numOfViews" },
+          totalShares: { $sum: "$analytics.shares" },
+          helpfulYes: { $sum: "$analytics.helpfulYes" },
+          helpfulNo: { $sum: "$analytics.helpfulNo" },
+          reports: { $sum: "$analytics.reports" },
+          completedReads: { $sum: "$analytics.reads" },
+          totalLikes: { $sum: { $size: { $ifNull: ["$likes", []] } } },
+        },
+      },
+    ]),
+    BlogModel.find()
+      .sort({ numOfViews: -1, "analytics.shares": -1, createdAt: -1 })
+      .limit(8)
+      .select("title slug cover numOfViews likes analytics createdAt")
+      .lean(),
+    BlogEngagementModel.find({ eventType: "report" })
+      .sort("-createdAt")
+      .limit(8)
+      .populate({ path: "blog", select: "title slug" })
+      .populate({ path: "user", select: "name email" })
+      .lean(),
+  ]);
+
+  const counts = eventCounts.reduce((acc, item) => ({ ...acc, [item._id]: item.count }), {});
+  const totals = totalViewsResult?.[0] || {};
+
+  res.status(200).json({
+    totalBlogs,
+    publishedBlogs,
+    draftBlogs: Math.max(totalBlogs - publishedBlogs, 0),
+    subscribersCount,
+    totalViews: totals.totalViews || 0,
+    totalShares: totals.totalShares || counts.share || 0,
+    helpfulYes: totals.helpfulYes || 0,
+    helpfulNo: totals.helpfulNo || 0,
+    helpfulVotes: (totals.helpfulYes || 0) + (totals.helpfulNo || 0),
+    totalLikes: totals.totalLikes || 0,
+    reports: totals.reports || counts.report || 0,
+    completedReads: totals.completedReads || counts.read || 0,
+    eventCounts: counts,
+    topBlogs,
+    recentReports,
+  });
+});
+
+const getNewsletterSubscribers = asyncHandler(async (req, res) => {
+  const subscribers = await NewsletterSubscriberModel.find().sort("-createdAt").lean();
+
+  res.status(200).json({
+    total: subscribers.length,
+    subscribers,
+  });
+});
+
+const getBlogReports = asyncHandler(async (req, res) => {
+  const reports = await BlogEngagementModel.find({ eventType: "report" })
+    .sort("-createdAt")
+    .populate({ path: "blog", select: "title slug cover" })
+    .populate({ path: "user", select: "name email avatar" })
+    .lean();
+
+  res.status(200).json({
+    total: reports.length,
+    reports,
+  });
+});
+
+const updateBlogReportStatus = asyncHandler(async (req, res) => {
+  const { status } = req.body || {};
+  const allowedStatuses = ["new", "reviewing", "fixed", "ignored"];
+
+  if (!allowedStatuses.includes(status)) {
+    res.status(400);
+    throw new Error("Invalid report status.");
+  }
+
+  const report = await BlogEngagementModel.findOneAndUpdate({ _id: req.params.id, eventType: "report" }, { status }, { new: true })
+    .populate({ path: "blog", select: "title slug" })
+    .populate({ path: "user", select: "name email" });
+
+  if (!report) {
+    res.status(404);
+    throw new Error("Report not found.");
+  }
+
+  res.status(200).json({
+    message: "Report status updated.",
+    report,
+  });
+});
+
+const getMyBlogReadingHistory = asyncHandler(async (req, res) => {
+  const history = await BlogEngagementModel.find({ user: req.user._id, eventType: "read" })
+    .sort("-updatedAt")
+    .populate({
+      path: "blog",
+      select: "title slug cover metaDescription category createdAt",
+      populate: {
+        path: "category",
+        select: "title type",
+      },
+    })
+    .lean();
+
+  res.status(200).json({
+    total: history.length,
+    history,
+  });
+});
+
 // from here to do
 const updateBlog = asyncHandler(async (req, res) => {
   // Normalize req.body keys by trimming whitespace
@@ -443,7 +787,7 @@ const updateBlog = asyncHandler(async (req, res) => {
   for (const key in req.body) {
     normalizedBody[key.trim()] = req.body[key];
   }
-  const { title, description, tags, category, metaDescription } = normalizedBody;
+  const { title, description, tags, category, metaDescription, seoTitle, canonicalUrl, keywords, ogImage, relatedPosts } = normalizedBody;
   const blogSlug = req.params.slug;
   const userId = req.user.id;
 
@@ -452,9 +796,11 @@ const updateBlog = asyncHandler(async (req, res) => {
   if (!blog) {
     return res.status(404).json({ error: "Blog post not found." });
   }
+  blog.seo = blog.seo || {};
 
   // Check authorization (user is the creator or admin)
-  if (blog.user.toString() !== userId && req.user.role !== "admin") {
+  const blogOwnerId = blog.user?._id || blog.user;
+  if (blogOwnerId.toString() !== userId && req.user.role !== "admin" && req.user.role !== "super admin") {
     return res.status(403).json({ error: "You are not authorized to update this blog." });
   }
 
@@ -558,6 +904,11 @@ const updateBlog = asyncHandler(async (req, res) => {
   if (description !== undefined) blog.description = description;
   if (metaDescription !== undefined) blog.metaDescription = metaDescription;
   if (category !== undefined) blog.category = category;
+  if (seoTitle !== undefined) blog.seo.title = String(seoTitle || "").trim();
+  if (canonicalUrl !== undefined) blog.seo.canonicalUrl = String(canonicalUrl || "").trim();
+  if (keywords !== undefined) blog.seo.keywords = parseJsonArray(keywords).map((keyword) => String(keyword).trim()).filter(Boolean);
+  if (ogImage !== undefined) blog.seo.ogImage = String(ogImage || "").trim();
+  if (relatedPosts !== undefined) blog.relatedPosts = parseJsonArray(relatedPosts).filter(Boolean);
 
   // Validate fields against schema constraints
   if (blog.title.length > 250) {
@@ -575,6 +926,8 @@ const updateBlog = asyncHandler(async (req, res) => {
   blog.markModified("tags");
   blog.markModified("cover");
   blog.markModified("slug");
+  blog.markModified("seo");
+  blog.markModified("relatedPosts");
 
   // Save the updated blog
   const updatedBlog = await blog.save();
@@ -591,4 +944,14 @@ module.exports = {
   updateFeaturedStatus,
   updateVisibility,
   getBlogsByCategoryAndTag,
+  subscribeNewsletter,
+  submitHelpfulFeedback,
+  trackBlogShare,
+  submitBlogIssue,
+  trackReadingHistory,
+  getBlogEngagementAnalytics,
+  getNewsletterSubscribers,
+  getBlogReports,
+  updateBlogReportStatus,
+  getMyBlogReadingHistory,
 };

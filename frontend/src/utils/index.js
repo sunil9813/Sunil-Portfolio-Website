@@ -218,7 +218,7 @@ export const generateItemColor = (itemName, theme = "dark") => {
     return `rgb(${adjustForLight(r)}, ${adjustForLight(g)}, ${adjustForLight(b)})`;
   }
 };
-export const getRandomGradient = () => {
+export const getRandomGradient = (index = 0) => {
   const colors = [
     ["rgb(40, 11, 152)", "rgb(59, 150, 215)"],
     ["rgb(40, 11, 152)", "rgb(215, 59, 145)"],
@@ -232,8 +232,9 @@ export const getRandomGradient = () => {
     ["rgb(233, 109, 44)", "rgb(239, 77, 77)"],
   ];
 
-  const randomIndex = Math.floor(Math.random() * colors.length);
-  return `linear-gradient(180deg, ${colors[randomIndex][0]} 0%, ${colors[randomIndex][1]} 100%)`;
+  const selected = colors[index % colors.length];
+
+  return `linear-gradient(180deg, ${selected[0]} 0%, ${selected[1]} 100%)`;
 };
 
 export const generateGradientBackground = (itemName, theme = "dark") => {

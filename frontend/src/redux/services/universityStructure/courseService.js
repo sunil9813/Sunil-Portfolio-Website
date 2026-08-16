@@ -17,6 +17,14 @@ const getAllCourseWithChapters = async () => {
   const response = await axios.get(`${API_URL}subject-with-chapter`);
   return response.data;
 };
+const getCoursePageSubjects = async () => {
+  const response = await axios.get(`${API_URL}courses`);
+  return response.data;
+};
+const getNotePageSubjects = async () => {
+  const response = await axios.get(`${API_URL}notes`);
+  return response.data;
+};
 const getUserCourses = async () => {
   const response = await axios.get(`${API_URL}my-subjects`);
   return response.data;
@@ -52,6 +60,8 @@ const courseService = {
   getUserCourses,
   getChaptersBySubjectSlug,
   getAllCourseWithChapters,
+  getCoursePageSubjects,
+  getNotePageSubjects,
 };
 
 export default courseService;

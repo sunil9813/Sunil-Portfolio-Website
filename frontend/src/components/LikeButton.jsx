@@ -5,7 +5,7 @@ import { useEffect, useCallback } from "react";
 import { setInitialLikes, toggleLike, updateLikeLocally } from "@/redux/slices/common/likeSlice";
 import { TertiaryButton } from "./customeUI/Button";
 
-export const LikeButton = ({ resourceType, contentId, initialLikes = [], showtrue }) => {
+export const LikeButton = ({ resourceType, contentId, initialLikes = [], showtrue, showCount = false, className = "" }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const userId = user?._id;
@@ -38,10 +38,25 @@ export const LikeButton = ({ resourceType, contentId, initialLikes = [], showtru
       });
   }, [dispatch, resourceType, contentId, userId, isLiked, currentLikeCount]);
 
+  const likeContent = (
+    <span className="inline-flex items-center justify-center gap-1.5">
+      <span className="blog-action-icon">{isLiked ? <AiFillLike size={18} /> : <AiOutlineLike size={18} />}</span>
+      {showCount && <span>{currentLikeCount} likes</span>}
+    </span>
+  );
+
   return (
     <>
-      {showtrue && <TertiaryButton onClick={handleLikeToggle}>{isLiked ? <AiFillLike size={18} /> : <AiOutlineLike size={18} />}</TertiaryButton>}
-      {!showtrue && <TertiaryButton onClick={handleLikeToggle}>{isLiked ? <AiFillLike size={18} /> : <AiOutlineLike size={18} />}</TertiaryButton>}
+      {showtrue && (
+        <TertiaryButton onClick={handleLikeToggle} className={className}>
+          {likeContent}
+        </TertiaryButton>
+      )}
+      {!showtrue && (
+        <TertiaryButton onClick={handleLikeToggle} className={className}>
+          {likeContent}
+        </TertiaryButton>
+      )}
     </>
   );
 };
@@ -51,4 +66,6 @@ LikeButton.propTypes = {
   contentId: PropTypes.string.isRequired,
   initialLikes: PropTypes.array,
   showtrue: PropTypes.any,
+  showCount: PropTypes.bool,
+  className: PropTypes.string,
 };

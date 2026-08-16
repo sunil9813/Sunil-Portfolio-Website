@@ -11,31 +11,50 @@ if (!fs.existsSync(profileUploadDirectory)) {
   });
 }
 
-// Use memory storage for Cloudinary uploads
-const storage = multer.memoryStorage(); // for multiple filed image upload
+const storage = multer.memoryStorage();
 
-// File filter to enforce file type and size limits based on field name
+const imageMimeTypes = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
+
+const courseResourceMimeTypes = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "image/png",
+  "image/jpg",
+  "image/jpeg",
+  "image/webp",
+];
+
 function fileFilter(req, file, cb) {
-  const imageMimeTypes = ["image/png", "image/jpg", "image/jpeg"];
   if (file.fieldname === "image" || file.fieldname === "thumbnail" || file.fieldname === "avatar" || file.fieldname === "assets" || file.fieldname === "resourceFileUpload") {
-    if (!imageMimeTypes.includes(file.mimetype)) {
+    if (!["image/png", "image/jpg", "image/jpeg"].includes(file.mimetype)) {
       return cb(new Error("Invalid file type for thumbnail. Supported types are jpg, png, and jpeg."), false);
     }
-    if (file.size > 10 * 1024 * 1024) {
-      return cb(new Error(`File ${file.originalname} exceeds 10MB limit for thumbnail.`), false);
-    }
-    cb(null, true);
-  } else if (file.fieldname === "resourceFile" || file.fieldname === "cv" || file.fieldname === "projectDoc") {
-    if (file.mimetype !== "application/pdf") {
-      return cb(new Error("Resource file must be a PDF."), false);
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      return cb(new Error(`File ${file.originalname} exceeds 5MB limit for resourceFile.`), false);
-    }
-    cb(null, true);
-  } else {
-    cb(new Error(`Unexpected field: ${file.fieldname}`), false);
+
+    return cb(null, true);
   }
+
+  if (file.fieldname === "resourceFiles" || file.fieldname === "resourceFile") {
+    if (!courseResourceMimeTypes.includes(file.mimetype)) {
+      return cb(new Error("Resource file must be PDF, Word, Excel, PPT, PNG, JPG, JPEG, or WEBP."), false);
+    }
+
+    return cb(null, true);
+  }
+
+  if (file.fieldname === "cv" || file.fieldname === "projectDoc") {
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("File must be a PDF."), false);
+    }
+
+    return cb(null, true);
+  }
+
+  cb(new Error(`Unexpected field: ${file.fieldname}`), false);
 }
 
 const storageSingleFile = multer.diskStorage({
@@ -43,7 +62,7 @@ const storageSingleFile = multer.diskStorage({
     cb(null, "uploads");
   },
   filename: function (req, file, cb) {
-    cb(null, new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname); // 23/08/2022
+    cb(null, new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname);
   },
 });
 
@@ -54,21 +73,20 @@ function fileFilterSingleFile(req, file, cb) {
     cb(new Error("Invalid file type. Supported types are jpg, png, and jpeg."), false);
   }
 }
+
 const upload = multer({ storageSingleFile, fileFilterSingleFile });
 
-// General upload middleware for any file type (100MB limit)
 const uploadFile = multer({
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+  limits: { fileSize: 100 * 1024 * 1024 },
 });
 
 /* ---------------- Project ---------------- */
 const getUploadAssetsandThumbnail = async () => {
   try {
     const assetLimitConfig = await AssetLimitConfigModel.findOne();
-    const maxAssets = assetLimitConfig ? assetLimitConfig.assetLimit : 5; // Fallback to 5
+    const maxAssets = assetLimitConfig ? assetLimitConfig.assetLimit : 5;
 
-    // Single Multer instance for all project-related uploads
     const uploadProject = multer({
       storage,
       fileFilter,
@@ -77,7 +95,7 @@ const getUploadAssetsandThumbnail = async () => {
     return uploadProject.fields([
       { name: "assets", maxCount: maxAssets },
       { name: "thumbnail", maxCount: 1 },
-      { name: "resourceFileUpload", maxCount: 1 }, // Changed from resourceFile
+      { name: "resourceFileUpload", maxCount: 1 },
     ]);
   } catch (error) {
     throw new Error("Failed to fetch asset limit configuration: " + error.message);
@@ -91,11 +109,15 @@ const getUploadFileandThumbnail = async () => {
     const uploadCourse = multer({
       storage,
       fileFilter,
+      limits: {
+        fileSize: 10 * 1024 * 1024,
+      },
     });
 
     return uploadCourse.fields([
       { name: "thumbnail", maxCount: 1 },
-      { name: "resourceFile", maxCount: 1 },
+      { name: "resourceFiles", maxCount: 20 },
+      { name: "resourceFile", maxCount: 20 },
     ]);
   } catch (error) {
     throw new Error("Failed to configure upload middleware: " + error.message);
@@ -109,26 +131,18 @@ const getUploadVideoandThumbnail = async () => {
     const uploadCourse = multer({
       storage,
       fileFilter: (req, file, cb) => {
-        // Configuration for different file types
         const fileConfig = {
           thumbnail: {
             mimeTypes: ["image/png", "image/jpg", "image/jpeg", "image/webp"],
-            maxSize: 2 * 1024 * 1024, // 2MB
+            maxSize: 2 * 1024 * 1024,
             error: {
               type: "Thumbnail must be an image (PNG, JPG, JPEG, WEBP)",
               size: "Thumbnail exceeds maximum size of 10MB",
             },
           },
           video: {
-            mimeTypes: [
-              "video/mp4",
-              "video/quicktime", // mov
-              "video/x-msvideo", // avi
-              "video/x-matroska", // mkv
-              "video/webm",
-              "video/mpeg",
-            ],
-            maxSize: 10 * 1024 * 1024 * 1024, // 10GB
+            mimeTypes: ["video/mp4", "video/quicktime", "video/x-msvideo", "video/x-matroska", "video/webm", "video/mpeg"],
+            maxSize: 10 * 1024 * 1024 * 1024,
             error: {
               type: "Video must be MP4, MOV, AVI, MKV, WEBM, or MPEG format",
               size: "Video exceeds maximum size of 10GB",
@@ -136,28 +150,20 @@ const getUploadVideoandThumbnail = async () => {
           },
         };
 
-        // Check if field is valid
         if (!fileConfig[file.fieldname]) {
           return cb(new Error(`Unexpected field: ${file.fieldname}. Only 'thumbnail' and 'video' are allowed.`), false);
         }
 
         const config = fileConfig[file.fieldname];
 
-        // Check MIME type
         if (!config.mimeTypes.includes(file.mimetype)) {
           return cb(new Error(config.error.type), false);
         }
 
-        // Check file size
-        if (file.size > config.maxSize) {
-          return cb(new Error(config.error.size), false);
-        }
-
-        // All checks passed
         cb(null, true);
       },
       limits: {
-        fileSize: 10 * 1024 * 1024 * 1024, // Global limit set to 10GB
+        fileSize: 10 * 1024 * 1024 * 1024,
       },
     });
 
@@ -212,7 +218,6 @@ const profileImageStorage = multer.diskStorage({
 
   filename(req, file, callback) {
     const extension = path.extname(file.originalname);
-
     const uniqueName = [file.fieldname, Date.now(), Math.round(Math.random() * 1e9)].join("-");
 
     callback(null, `${uniqueName}${extension}`);
@@ -221,7 +226,6 @@ const profileImageStorage = multer.diskStorage({
 
 const profileImageFilter = (req, file, callback) => {
   const allowedFields = ["avatar", "cover"];
-
   const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 
   if (!allowedFields.includes(file.fieldname)) {

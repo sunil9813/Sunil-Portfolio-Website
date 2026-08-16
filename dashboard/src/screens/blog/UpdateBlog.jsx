@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import TagsInput from "react-tagsinput";
 import { IoCameraSharp } from "react-icons/io5";
 import { MdClose } from "react-icons/md";
+import axios from "axios";
 
 import Editor from "@/textEditor/Editor";
 import { Input, Loader, StickyHeaderComponent, UseMouseMoveEffect, Wrapper } from "@/routes";
@@ -12,6 +13,7 @@ import { CommonClassForInput } from "@/utils";
 import { CategoryDropDown } from "@/components/common/DropDown";
 import { TextareaInput } from "@/components/customeUI/Input";
 import { getallBlog, getBlogPrivate, selectBlog, updateBlog } from "@/redux/slices/blogSlice";
+import { REACT_APP_BACKEND_URL } from "@/utils/Api";
 
 import "react-tagsinput/react-tagsinput.css";
 
@@ -21,6 +23,11 @@ const initialState = {
   category: null,
   groupId: "",
   tags: [],
+  seoTitle: "",
+  canonicalUrl: "",
+  ogImage: "",
+  keywords: [],
+  relatedPosts: [],
 };
 
 export const UpdateBlog = () => {
@@ -39,18 +46,26 @@ export const UpdateBlog = () => {
   const [blogImages, setBlogImages] = useState(null);
   const [imagePreviews, setImagePreviews] = useState("");
   const [description, setDescription] = useState("");
+  const [availableBlogs, setAvailableBlogs] = useState([]);
 
   const [tagError, setTagError] = useState("");
   const [titleError, setTitleError] = useState("");
   const [metaDescError, setMetaDescError] = useState("");
 
-  const { title, category, metaDescription, tags, groupId } = blog;
+  const { title, category, metaDescription, tags, groupId, seoTitle, canonicalUrl, ogImage, keywords, relatedPosts } = blog;
 
   useEffect(() => {
     if (slug) {
       dispatch(getBlogPrivate(slug));
     }
   }, [slug, dispatch]);
+
+  useEffect(() => {
+    axios
+      .get(`${REACT_APP_BACKEND_URL}/blog/all`)
+      .then((response) => setAvailableBlogs(response.data?.BlogList || []))
+      .catch(() => setAvailableBlogs([]));
+  }, []);
 
   useEffect(() => {
     if (!blogEdit) {
@@ -64,6 +79,11 @@ export const UpdateBlog = () => {
       visibility: blogEdit.visibility || "",
       category: blogEdit.category || null,
       tags: blogEdit.tags ? blogEdit.tags.map((tag) => tag.tag) : [],
+      seoTitle: blogEdit.seo?.title || "",
+      canonicalUrl: blogEdit.seo?.canonicalUrl || "",
+      ogImage: blogEdit.seo?.ogImage || "",
+      keywords: blogEdit.seo?.keywords || [],
+      relatedPosts: (blogEdit.relatedPosts || []).map((post) => post?._id || post).filter(Boolean),
     });
 
     setDescription(blogEdit.description || "");
@@ -117,6 +137,32 @@ export const UpdateBlog = () => {
     }
 
     event.target.value = "";
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setBlog((previousBlog) => ({
+      ...previousBlog,
+      [name]: value,
+    }));
+  };
+
+  const handleKeywordChange = (newKeywords) => {
+    setBlog((previousBlog) => ({
+      ...previousBlog,
+      keywords: newKeywords.map((keyword) => keyword.trim()).filter(Boolean),
+    }));
+  };
+
+  const handleRelatedPostToggle = (postId) => {
+    setBlog((previousBlog) => {
+      const isSelected = previousBlog.relatedPosts.includes(postId);
+      return {
+        ...previousBlog,
+        relatedPosts: isSelected ? previousBlog.relatedPosts.filter((id) => id !== postId) : [...previousBlog.relatedPosts, postId].slice(0, 6),
+      };
+    });
   };
 
   const handleDropThumbnail = useCallback(
@@ -222,6 +268,11 @@ export const UpdateBlog = () => {
     formData.append("title", title.trim());
     formData.append("description", description || "");
     formData.append("metaDescription", metaDescription.trim());
+    formData.append("seoTitle", seoTitle.trim());
+    formData.append("canonicalUrl", canonicalUrl.trim());
+    formData.append("ogImage", ogImage.trim());
+    formData.append("keywords", JSON.stringify(keywords));
+    formData.append("relatedPosts", JSON.stringify(relatedPosts));
 
     if (blogImages) {
       formData.append("cover", blogImages);
@@ -346,6 +397,19 @@ export const UpdateBlog = () => {
 
               {metaDescError && <p className="mt-1.5 text-[10px] font-medium text-rose-600 dark:text-rose-200/75">{metaDescError}</p>}
             </div>
+
+            <BlogSeoAndRelatedFields
+              currentBlogId={blogEdit?._id}
+              seoTitle={seoTitle}
+              canonicalUrl={canonicalUrl}
+              ogImage={ogImage}
+              keywords={keywords}
+              relatedPosts={relatedPosts}
+              availableBlogs={availableBlogs}
+              onInputChange={handleInputChange}
+              onKeywordChange={handleKeywordChange}
+              onRelatedPostToggle={handleRelatedPostToggle}
+            />
           </div>
         </Wrapper>
 
@@ -453,5 +517,59 @@ export const UpdateBlog = () => {
         </Wrapper>
       </div>
     </>
+  );
+};
+
+const BlogSeoAndRelatedFields = ({ currentBlogId, seoTitle, canonicalUrl, ogImage, keywords, relatedPosts, availableBlogs, onInputChange, onKeywordChange, onRelatedPostToggle }) => {
+  const selectableBlogs = availableBlogs.filter((post) => post._id !== currentBlogId);
+
+  return (
+    <div className="space-y-4 rounded-3xl border border-gray-200/70 bg-gray-50/45 p-4 dark:border-white/[0.05] dark:bg-white/[0.016]">
+      <div>
+        <p className="text-[11px] font-semibold text-gray-700 dark:text-white/70">SEO & preview controls</p>
+        <p className="mt-1 text-[9px] text-gray-400 dark:text-white/25">Optional fields for richer search previews and manual related posts.</p>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <Input type="text" name="seoTitle" value={seoTitle} handleChange={onInputChange} placeholder="SEO title optional" />
+        <Input type="text" name="canonicalUrl" value={canonicalUrl} handleChange={onInputChange} placeholder="Canonical URL optional" />
+        <Input type="text" name="ogImage" value={ogImage} handleChange={onInputChange} placeholder="Open Graph image URL optional" />
+        <div className="rounded-2xl border border-gray-200/80 bg-gray-50/65 p-1 dark:border-white/[0.055] dark:bg-white/[0.022]">
+          <TagsInput
+            className={`${CommonClassForInput} !border-0 !bg-transparent !p-1.5 [&_.react-tagsinput-input]:!m-0 [&_.react-tagsinput-input]:!h-8 [&_.react-tagsinput-input]:!bg-transparent [&_.react-tagsinput-input]:!text-[11px] [&_.react-tagsinput-input]:!outline-none dark:[&_.react-tagsinput-input]:!text-white/65 [&_.react-tagsinput-tag]:!mb-1 [&_.react-tagsinput-tag]:!mr-1.5 [&_.react-tagsinput-tag]:!rounded-full [&_.react-tagsinput-tag]:!border [&_.react-tagsinput-tag]:!border-teal-300/20 [&_.react-tagsinput-tag]:!bg-teal-500/[0.07] [&_.react-tagsinput-tag]:!px-2.5 [&_.react-tagsinput-tag]:!py-1 [&_.react-tagsinput-tag]:!text-[9px] dark:[&_.react-tagsinput-tag]:!text-teal-200/70`}
+            value={keywords}
+            onChange={onKeywordChange}
+            inputProps={{ placeholder: "SEO keywords" }}
+          />
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-white/35">Manual related posts</span>
+          <span className="text-[9px] text-gray-400 dark:text-white/25">{relatedPosts.length}/6 selected</span>
+        </div>
+        <div className="grid max-h-56 gap-2 overflow-y-auto pr-1 md:grid-cols-2">
+          {selectableBlogs.length ? (
+            selectableBlogs.map((post) => (
+              <button
+                key={post._id}
+                type="button"
+                onClick={() => onRelatedPostToggle(post._id)}
+                className={`rounded-2xl border p-3 text-left text-[11px] transition ${
+                  relatedPosts.includes(post._id)
+                    ? "border-cyan-300/25 bg-cyan-300/[0.08] text-cyan-700 dark:text-cyan-100/80"
+                    : "border-gray-200/70 bg-white/35 text-gray-600 hover:bg-white/60 dark:border-white/[0.05] dark:bg-white/[0.02] dark:text-white/45 dark:hover:bg-white/[0.04]"
+                }`}
+              >
+                <span className="line-clamp-2 font-semibold">{post.title}</span>
+              </button>
+            ))
+          ) : (
+            <p className="text-[10px] text-gray-400 dark:text-white/30">Create more blogs to select related posts.</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };

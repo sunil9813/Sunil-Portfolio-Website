@@ -308,7 +308,7 @@ export const BlogDetails = () => {
         </div>
       </Wrapper>
 
-      <Comments />
+      {blog?._id && <Comments resourceId={blog._id} resourceType="Posts" />}
     </>
   );
 };

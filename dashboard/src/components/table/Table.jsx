@@ -1011,8 +1011,15 @@ export const Table = ({
             </td>
 
             <td className={tdClass}>
-              <StatusToggles item={item} handleVisibilityToggle={handleVisibilityToggle} handleFeaturedToggle={handleFeaturedToggle} />
+              <div className="flexC">
+                <BareVisibilitySwitch item={item} handleVisibilityToggle={handleVisibilityToggle} />
+              </div>
             </td>
+            <td className={tdClass}>
+              <div className="flexC">
+              <BareFeaturedSwitch item={item} handleFeaturedToggle={handleFeaturedToggle} />
+              </div>
+             </td>
 
             {renderDateCell(item)}
 

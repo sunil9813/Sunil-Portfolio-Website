@@ -46,8 +46,8 @@ export const Button = ({ children }) => {
         <div className="absolute inset-0 rounded bg-gradient-to-r from-indigo-500/10 via-indigo-400/20 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <div className="relative z-10 flex items-center gap-4">
           <p className="text-indigo-400 text-sm group-hover:text-indigo-300 transition-colors duration-300 drop-shadow-sm">
-            <p className="group-hover:-translate-y-7 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">{children}</p>
-            <p className="absolute top-7 left-0 group-hover:top-0 duration-[1.125s] ease-[cubic-bezier(0.19,1,0.22,1)]">{children}</p>
+            <p className="group-hover:-translate-y-7 duration-[1.125s] ease-out">{children}</p>
+            <p className="absolute top-7 left-0 group-hover:top-0 duration-[1.125s] ease-out">{children}</p>
           </p>
         </div>
       </button>

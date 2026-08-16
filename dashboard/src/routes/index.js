@@ -22,10 +22,16 @@ export { TypeDropdown } from "@/components/common/dropdown/CustomeDropDown";
 export { StickyHeaderComponent } from "@/components/header/StickyHeaderComponent";
 export { UniversityDropDown, FacultyDropDown } from "@/screens/universityStructure/StructureAcademicDropDown";
 export { AssetConfigure } from "@/pages/setting/AssetConfigure";
+export { OrderManagement } from "@/screens/order/OrderManagement";
+export { CouponManagement } from "@/screens/order/CouponManagement";
+export { BusinessOverview } from "@/screens/business/BusinessOverview";
+export { ReviewSupportManagement } from "@/screens/business/ReviewSupportManagement";
+export { PlanBundleManagement } from "@/screens/business/PlanBundleManagement";
 
 export { CreateProject } from "@/screens/project/CreateProject";
 export { ProjectDetails } from "@/screens/project/ProjectDetails";
 export { ProjectList } from "@/screens/project/ProjectList";
+export { ProjectReports } from "@/screens/project/ProjectReports";
 export { UpdateProject } from "@/screens/project/UpdateProject";
 export { UserCreateProjectList } from "@/screens/project/UserCreateProjectList";
 
@@ -88,6 +94,8 @@ export { ViewCategory } from "@/screens/category/ViewCategory";
 /* -----------  Blog ----------- */
 export { BlogDetails } from "@/screens/blog/BlogDetails";
 export { BlogList } from "@/screens/blog/BlogList";
+export { BlogNewsletterSubscribers } from "@/screens/blog/BlogNewsletterSubscribers";
+export { BlogReports } from "@/screens/blog/BlogReports";
 export { CreateBlog } from "@/screens/blog/CreateBlog";
 export { UpdateBlog } from "@/screens/blog/UpdateBlog";
 
@@ -119,6 +127,7 @@ export { CoursesWiseAllChapter } from "@/screens/universityStructure/courses/all
 export { ChapterDetails } from "@/screens/universityStructure/chapter/ChapterDetails";
 export { ChapterOverview } from "@/screens/universityStructure/chapter/ChapterOverview";
 export { CreateChapterr } from "@/screens/universityStructure/chapter/CreateChapterr";
+export { CreateSubheading } from "@/screens/universityStructure/chapter/CreateSubheading";
 export { UpdateChapter } from "@/screens/universityStructure/chapter/UpdateChapter";
 
 /* ---- ##########  Pages ########## -----------*/

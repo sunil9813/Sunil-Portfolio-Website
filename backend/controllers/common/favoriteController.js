@@ -2,6 +2,14 @@ const asyncHandler = require("express-async-handler");
 const { mongoose } = require("mongoose");
 const FavoriteModel = require("../../models/common/favoriteModel");
 
+const resourceModelNames = {
+  Courses: "Subject",
+};
+
+const getResourceModel = (resourceType) => {
+  return mongoose.model(resourceModelNames[resourceType] || resourceType);
+};
+
 const toggleFavorite = asyncHandler(async (req, res) => {
   const resourceId = req.body.resourceId;
   const resourceType = req.body.resourceType;
@@ -16,7 +24,7 @@ const toggleFavorite = asyncHandler(async (req, res) => {
   }
 
   try {
-    const resourceModel = mongoose.model(resourceType);
+    const resourceModel = getResourceModel(resourceType);
     const resource = await resourceModel.findById(resourceId);
 
     if (!resource) {
@@ -28,6 +36,9 @@ const toggleFavorite = asyncHandler(async (req, res) => {
     if (!favorite) {
       // Create a new favorite list if it doesn't exist for the resource type
       favorite = await FavoriteModel.create({ owner: req.user.id, items: [resourceId], itemType: resourceType });
+      if (resourceType === "Courses") {
+        await resourceModel.updateOne({ _id: resourceId }, { $inc: { bookmarksCount: 1 } });
+      }
       return res.json({ status: "added" });
     } else {
       const existingIndex = favorite.items.indexOf(resourceId);
@@ -36,11 +47,17 @@ const toggleFavorite = asyncHandler(async (req, res) => {
         // Resource is already in favorites, so remove it
         favorite.items.splice(existingIndex, 1);
         await favorite.save();
+        if (resourceType === "Courses") {
+          await resourceModel.updateOne({ _id: resourceId, bookmarksCount: { $gt: 0 } }, { $inc: { bookmarksCount: -1 } });
+        }
         return res.json({ status: "removed" });
       } else {
         // Resource is not in favorites, so add it
         favorite.items.push(resourceId);
         await favorite.save();
+        if (resourceType === "Courses") {
+          await resourceModel.updateOne({ _id: resourceId }, { $inc: { bookmarksCount: 1 } });
+        }
         return res.json({ status: "added" });
       }
     }
@@ -73,13 +90,20 @@ const getUserFavorite = asyncHandler(async (req, res) => {
       const items = favorite.items[0]; // Since we pushed items as an array
 
       // Create a query to find items of the specific itemType
-      const itemModel = mongoose.model(itemType);
+      const itemModel = getResourceModel(itemType);
 
       // Fetch items and populate the `category` and `user` fields
-      const itemsData = await itemModel
-        .find({ _id: { $in: items } })
-        .populate("category", "title") // Populate category with only the `title` field
-        .populate("user", "name email"); // Populate user with `name` and `email` fields
+      let itemsQuery = itemModel.find({ _id: { $in: items } });
+
+      if (itemModel.schema.path("category")) {
+        itemsQuery = itemsQuery.populate("category", "title");
+      }
+
+      if (itemModel.schema.path("user")) {
+        itemsQuery = itemsQuery.populate("user", "name email");
+      }
+
+      const itemsData = await itemsQuery;
 
       favoritesByItemType[itemType] = itemsData;
     }

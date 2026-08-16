@@ -177,7 +177,7 @@ const createTestimonial = asyncHandler(async (req, res) => {
   // Create the testimonial
   try {
     const introduction = await testimonialModel.create({
-      user: type === "contact" ? null : req.user._id, // No user for contact
+      user: req.user?._id || null,
       fullname,
       position,
       company,
@@ -221,6 +221,15 @@ const getAllTestimonials = asyncHandler(async (req, res) => {
       path: "user",
       select: "avatar name email",
     });
+
+  res.status(200).json({
+    totalTestimonial: testimonialList?.length,
+    testimonialList,
+  });
+});
+
+const getMyTestimonials = asyncHandler(async (req, res) => {
+  const testimonialList = await testimonialModel.find({ user: req.user._id }).sort("-createdAt");
 
   res.status(200).json({
     totalTestimonial: testimonialList?.length,
@@ -375,4 +384,5 @@ module.exports = {
   getAllTestimonialsByAdmin,
   getTestimonialsByAdmin,
   getAllTestimonials,
+  getMyTestimonials,
 };

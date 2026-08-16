@@ -53,7 +53,7 @@ export const UserListCard = ({ rowData }) => {
                          [&::after]:bg-[linear-gradient(105deg,transparent_40%,rgba(255,255,255,0.03)_45%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0.03)_55%,transparent_60%)]
                          group-hover:[&::after]:opacity-100
                          /* TRANSITION */
-                         transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]
+                         transition-all duration-300 ease-out
                          hover:-translate-y-1.5
                          hover:shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_4px_12px_rgba(0,0,0,0.06),0_20px_40px_rgba(0,0,0,0.08)]
                          dark:hover:shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_16px_48px_rgba(0,0,0,0.55)]

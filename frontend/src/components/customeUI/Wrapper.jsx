@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import dotImage from "../../assets/image/dots.png";
 
 export const Wrapper = ({ children, className, dark }) => {
   return (
@@ -7,9 +6,6 @@ export const Wrapper = ({ children, className, dark }) => {
       <div className={`bg-light-surface2 dark:bg-dark-surface2 rounded-3xl relative ${className}`}>
         {dark && (
           <>
-            <div className="">
-              <img className="absolute right-0 top-[-80px] w-96 h-40" src={dotImage} alt=""></img>
-            </div>
             {/* for background just to show colors in opposte */}
             {/* <div className="pointer-events-none absolute z-50 left-[-250px] top-[-102px] h-[712px] w-[733px] rounded-full bg-[#4474F2] opacity-[0.11] blur-[100px]" aria-hidden="true"></div> */}
 

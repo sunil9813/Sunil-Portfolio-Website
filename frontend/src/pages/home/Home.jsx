@@ -1,4 +1,9 @@
-import { BeyondJustCode, Expertise, Feature, Hero, MoreContent, Testimonial } from "@/router";
+import { BeyondJustCode } from "@/screen/home/BeyondJustCode";
+import { Expertise } from "@/screen/home/Expertise";
+import { Feature } from "@/screen/home/Feature";
+import { Hero } from "@/screen/home/Hero";
+import { MoreContent } from "@/screen/home/MoreContent";
+import { Testimonial } from "@/screen/home/Testimonial";
 import { Welcome, WhyToSelect } from "@/screen/home/Hero";
 
 export const Home = () => {

@@ -5,7 +5,7 @@ import PropTypes from "prop-types";
 import { getUserFavorite, toggleFavorite } from "@/redux/slices/common/favoriteSlice";
 import { TertiaryButton } from "./customeUI/Button";
 
-export const FavoriteButton = ({ resourceType, resourceId, initialFavorited = false }) => {
+export const FavoriteButton = ({ resourceType, resourceId, initialFavorited = false, className = "", showLabel = false }) => {
   const dispatch = useDispatch();
   const { isFavoriteLoading } = useSelector((state) => state.favorite);
 
@@ -34,8 +34,11 @@ export const FavoriteButton = ({ resourceType, resourceId, initialFavorited = fa
   };
 
   return (
-    <TertiaryButton onClick={handleFavoriteToggle} disabled={isFavoriteLoading}>
-      {isFavorited ? <FaBookmark size={15} /> : <FaRegBookmark size={15} />}
+    <TertiaryButton onClick={handleFavoriteToggle} disabled={isFavoriteLoading} className={className}>
+      <span className="inline-flex items-center justify-center gap-1.5">
+        <span className="blog-action-icon">{isFavorited ? <FaBookmark size={15} /> : <FaRegBookmark size={15} />}</span>
+        {showLabel && <span>{isFavorited ? "Saved" : "Save"}</span>}
+      </span>
     </TertiaryButton>
   );
 };
@@ -43,4 +46,6 @@ FavoriteButton.propTypes = {
   resourceType: PropTypes.string.isRequired,
   resourceId: PropTypes.string.isRequired,
   initialFavorited: PropTypes.bool,
+  className: PropTypes.string,
+  showLabel: PropTypes.bool,
 };

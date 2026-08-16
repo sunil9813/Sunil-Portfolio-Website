@@ -2,9 +2,25 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import projectService from "../services/projectService";
 
+const emptyProjects = { posts: [], total: 0 };
+
+const normalizeProjects = (payload) => {
+  if (Array.isArray(payload)) {
+    return { ...emptyProjects, posts: payload, total: payload.length };
+  }
+
+  const posts = Array.isArray(payload?.posts) ? payload.posts : [];
+
+  return {
+    ...payload,
+    posts,
+    total: payload?.total ?? posts.length,
+  };
+};
+
 const initialState = {
   project: null,
-  projects: [],
+  projects: emptyProjects,
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -34,7 +50,7 @@ const projectSlice = createSlice({
   reducers: {
     PROJECT_RESET(state) {
       state.project = false;
-      state.projects = null;
+      state.projects = emptyProjects;
       state.isError = false;
       state.isSuccess = false;
       state.isLoading = false;
@@ -50,13 +66,13 @@ const projectSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.projects = action.payload;
+        state.projects = normalizeProjects(action.payload);
       })
       .addCase(getAllProject.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.projects = null;
+        state.projects = emptyProjects;
         toast.error(action.payload);
       })
       .addCase(getProject.pending, (state) => {

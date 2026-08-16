@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
 const initialState = {
-  favoriteResource: [],
+  favoriteResource: {},
   isFavoriteLoading: false,
   isError: false,
   isSuccess: false,
@@ -50,7 +50,7 @@ const favoriteSlice = createSlice({
         state.isFavoriteLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.favoriteResource = null;
+        state.favoriteResource = {};
       })
       // Handle pending state
       .addCase(toggleFavorite.pending, (state) => {
@@ -62,12 +62,19 @@ const favoriteSlice = createSlice({
       // Handle fulfilled state
       .addCase(toggleFavorite.fulfilled, (state, action) => {
         const { resourceType, resourceId, status } = action.payload;
-        // Initialize the resource type in the state if it doesn't exist
+        if (!state.favoriteResource || Array.isArray(state.favoriteResource)) {
+          state.favoriteResource = {};
+        }
+
+        // Only update the lightweight boolean map when this resource type is not already a populated array.
+        // Components that need full dashboard cards refetch getUserFavorite after toggling.
         if (!state.favoriteResource[resourceType]) {
           state.favoriteResource[resourceType] = {};
         }
-        // Toggle the favorite status for the resource
-        state.favoriteResource[resourceType][resourceId] = status === "added" ? true : status === "removed" ? false : false;
+
+        if (!Array.isArray(state.favoriteResource[resourceType])) {
+          state.favoriteResource[resourceType][resourceId] = status === "added";
+        }
 
         state.isFavoriteLoading = false;
         state.isSuccess = true;

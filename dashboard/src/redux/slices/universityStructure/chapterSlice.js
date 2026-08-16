@@ -34,6 +34,16 @@ export const createChapter = createAsyncThunk("chapters/create", async (formdata
     return thunkAPI.rejectWithValue(message);
   }
 });
+
+export const createSubheading = createAsyncThunk("chapters/subheadings/create", async ({ chapterId, formData }, thunkAPI) => {
+  try {
+    return await chapterService.createSubheading({ chapterId, formData });
+  } catch (error) {
+    const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
 export const deleteChapter = createAsyncThunk("chapters/delete", async (id, thunkAPI) => {
   try {
     return await chapterService.deleteChapter(id);
@@ -108,6 +118,21 @@ const chapterSlice = createSlice({
         toast.success(action.payload);
       })
       .addCase(createChapter.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        toast.error(action.payload);
+      })
+      .addCase(createSubheading.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(createSubheading.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        toast.success(action.payload?.message || "Subheading created successfully.");
+      })
+      .addCase(createSubheading.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;

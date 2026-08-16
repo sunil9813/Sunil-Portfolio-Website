@@ -34,6 +34,7 @@ const userSchema = mongoose.Schema(
       },
     ],
     paid: { type: Boolean, default: false },
+    paymentExpiresAt: { type: Date },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Users following this user
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Users whom this user is following
   },

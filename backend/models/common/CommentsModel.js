@@ -22,7 +22,7 @@ const RatingSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const CommentSchema = new mongoose.Schema(
@@ -49,8 +49,9 @@ const CommentSchema = new mongoose.Schema(
       ref: "Comment",
     },
     replies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const CommentModel = mongoose.model("Comment", CommentSchema);

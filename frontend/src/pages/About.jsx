@@ -1,5 +1,5 @@
 import { Vortex } from "@/components/ui/Vortex";
-import { ProfileInfo } from "@/router";
+import { ProfileInfo } from "@/screen/about/ProfileInfo";
 import { Resume } from "@/screen/about/Resume";
 import { Service } from "@/screen/about/Service";
 import { Skill } from "@/screen/about/Skill";

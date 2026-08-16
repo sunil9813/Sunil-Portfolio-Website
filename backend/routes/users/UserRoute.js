@@ -62,7 +62,7 @@ router.patch("/reset-password/:resetToken", validation(UserPassword), resetPassw
 router.patch("/change-password", protect, validation(changePasswordVld), changePassword);
 router.post("/send-otp/:email", sendOTPctr);
 router.post("/loginwith-otp/:email", loginWithOTP);
-router.delete("/profile", deleteAccount);
+router.delete("/profile", protect, deleteAccount);
 
 router.post("/toggleFollow/:userId", protect, verified, toggleFollow);
 router.get("/followers/:userId", protect, verified, getUserFollowers);

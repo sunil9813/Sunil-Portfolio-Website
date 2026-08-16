@@ -2,10 +2,38 @@ import courseService from "@/redux/services/universityStructure/courseService";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
+const emptyCourses = { data: [], total: 0 };
+const emptyChapterByCourse = { subject: null, chapters: [], total: 0 };
+
+const normalizeCourses = (payload) => {
+  if (Array.isArray(payload)) {
+    return { ...emptyCourses, data: payload, total: payload.length };
+  }
+
+  const data = Array.isArray(payload?.data) ? payload.data : [];
+
+  return {
+    ...payload,
+    data,
+    total: payload?.total ?? data.length,
+  };
+};
+
+const normalizeChapterByCourse = (payload) => {
+  const chapters = Array.isArray(payload?.chapters) ? payload.chapters : [];
+
+  return {
+    ...payload,
+    subject: payload?.subject || null,
+    chapters,
+    total: payload?.total ?? chapters.length,
+  };
+};
+
 const initialState = {
   course: null,
-  courses: [],
-  chapterByCourse: [],
+  courses: emptyCourses,
+  chapterByCourse: emptyChapterByCourse,
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -24,6 +52,22 @@ export const getAllCourseWithChapters = createAsyncThunk("getAllSubjectsWithChap
     return await courseService.getAllCourseWithChapters();
   } catch (error) {
     const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+export const getCoursePageSubjects = createAsyncThunk("subjects/courses/page", async (_, thunkAPI) => {
+  try {
+    return await courseService.getCoursePageSubjects();
+  } catch (error) {
+    const message = (error.response && error.response.data && (error.response.data.error || error.response.data.message)) || error.message || "Unable to load courses";
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+export const getNotePageSubjects = createAsyncThunk("subjects/notes/page", async (_, thunkAPI) => {
+  try {
+    return await courseService.getNotePageSubjects();
+  } catch (error) {
+    const message = (error.response && error.response.data && (error.response.data.error || error.response.data.message)) || error.message || "Unable to load notes";
     return thunkAPI.rejectWithValue(message);
   }
 });
@@ -82,7 +126,8 @@ const courseSlice = createSlice({
   reducers: {
     COURSE_RESET(state) {
       state.course = false;
-      state.courses = null;
+      state.courses = emptyCourses;
+      state.chapterByCourse = emptyChapterByCourse;
       state.isError = false;
       state.isSuccess = false;
       state.isLoading = false;
@@ -98,13 +143,13 @@ const courseSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.courses = action.payload;
+        state.courses = normalizeCourses(action.payload);
       })
       .addCase(getAllCourse.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.courses = null;
+        state.courses = emptyCourses;
         toast.error(action.payload);
       })
       .addCase(getAllCourseWithChapters.pending, (state) => {
@@ -114,13 +159,45 @@ const courseSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.courses = action.payload;
+        state.courses = normalizeCourses(action.payload);
       })
       .addCase(getAllCourseWithChapters.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.courses = null;
+        state.courses = emptyCourses;
+        toast.error(action.payload);
+      })
+      .addCase(getCoursePageSubjects.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getCoursePageSubjects.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.courses = normalizeCourses(action.payload);
+      })
+      .addCase(getCoursePageSubjects.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.courses = emptyCourses;
+        toast.error(action.payload);
+      })
+      .addCase(getNotePageSubjects.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getNotePageSubjects.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.courses = normalizeCourses(action.payload);
+      })
+      .addCase(getNotePageSubjects.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.courses = emptyCourses;
         toast.error(action.payload);
       })
       .addCase(getUserCourses.pending, (state) => {
@@ -130,13 +207,13 @@ const courseSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.courses = action.payload;
+        state.courses = normalizeCourses(action.payload);
       })
       .addCase(getUserCourses.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.courses = null;
+        state.courses = emptyCourses;
         toast.error(action.payload);
       })
       .addCase(getCourse.pending, (state) => {
@@ -162,13 +239,13 @@ const courseSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.chapterByCourse = action.payload;
+        state.chapterByCourse = normalizeChapterByCourse(action.payload);
       })
       .addCase(getChaptersBySubjectSlug.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.chapterByCourse = null;
+        state.chapterByCourse = emptyChapterByCourse;
         toast.error(action.payload);
       })
       .addCase(createCourse.pending, (state) => {
@@ -219,6 +296,6 @@ const courseSlice = createSlice({
   },
 });
 
-export const { RESOURCES_RESET } = courseSlice.actions;
+export const { COURSE_RESET } = courseSlice.actions;
 export const selectBlog = (state) => state.course.course;
 export default courseSlice.reducer;

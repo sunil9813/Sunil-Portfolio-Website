@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 
@@ -45,16 +45,47 @@ const textEditorRoute = require("./routes/CloudinaryImgUploadRouterForEditor");
 const orderRoute = require("./routes/order/OrderRoute");
 const PriceLimitConfigRoute = require("./routes/order/PriceLimitConfigRoute");
 const PaymentRoute = require("./routes/order/PaymentRoute");
+const CouponRoute = require("./routes/order/CouponRoute");
+const BusinessRoute = require("./routes/product/BusinessRoute");
+const SeoRoute = require("./routes/SeoRoute");
+const { handleStripeWebhook } = require("./controllers/order/PaymentController");
+const { createRateLimiter, securityHeaders } = require("./middleware/securityMiddleware");
 const path = require("path");
 const bodyParser = require("body-parser");
 const { deleteEmptyFolders } = require("./config/cloud/cloudinary");
 const app = express();
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.post("/api/v1/payment/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
+app.use(securityHeaders);
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: false, limit: "2mb" }));
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "2mb" }));
+
+const authRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: "Too many auth requests. Please wait a few minutes and try again.",
+});
+const checkoutRateLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 180,
+  message: "Too many checkout requests. Please wait a few minutes and try again.",
+});
+const businessRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 240,
+});
+const contentRateLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 240,
+});
+const contactRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: "Too many messages from this device. Please wait a few minutes and try again.",
+});
 
 app.use(
   cors({
@@ -72,16 +103,17 @@ app.use(
 );
 
 // Route middle
+app.use("/", SeoRoute);
 app.use("/api/v1/images", textEditorRoute);
-app.use("/api/v1/auth", userRoute);
+app.use("/api/v1/auth", authRateLimiter, userRoute);
 
 app.use("/api/v1/project", projectRoute);
-app.use("/api/v1/favorite", favoriteRoute);
+app.use("/api/v1/favorite", contentRateLimiter, favoriteRoute);
 app.use("/api/v1/asset-limit", AssetLimitConfigRoute);
 app.use("/api/v1/category", categoryRoute);
-app.use("/api/v1/blog", blogRoute);
-app.use("/api/v1/comment", commentRoute);
-app.use("/api/v1/like", likeRoute);
+app.use("/api/v1/blog", contentRateLimiter, blogRoute);
+app.use("/api/v1/comment", contentRateLimiter, commentRoute);
+app.use("/api/v1/like", contentRateLimiter, likeRoute);
 
 // About routes
 app.use("/api/v1/portfolio/intro", introRoute);
@@ -93,11 +125,13 @@ app.use("/api/v1/portfolio/testimonial", testimonialRoute);
 //Setting routes
 app.use("/api/v1/setting", settingRoute);
 
-app.use("/api/v1/contact", contactRoute);
+app.use("/api/v1/contact", contactRateLimiter, contactRoute);
 
 app.use("/api/v1/price-limit", PriceLimitConfigRoute);
-app.use("/api/v1/order", orderRoute);
-app.use("/api/v1/payment", PaymentRoute);
+app.use("/api/v1/order", checkoutRateLimiter, orderRoute);
+app.use("/api/v1/payment", checkoutRateLimiter, PaymentRoute);
+app.use("/api/v1/coupon", checkoutRateLimiter, CouponRoute);
+app.use("/api/v1/business", businessRateLimiter, BusinessRoute);
 
 /*  -------  AcademicComponentsRoute ----------- */
 app.use("/api/v1/university", UniversityRoute);
@@ -108,6 +142,7 @@ app.use("/api/v1/chapter", ChapterRoute);
 /*  -------  End AcademicComponentsRoute ----------- */
 
 app.use("/api/v1/dashboard", dashboardRoute);
+app.use("/api/v1/seo", SeoRoute);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Sunil Portfolio.");

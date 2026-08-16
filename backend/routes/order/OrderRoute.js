@@ -6,6 +6,10 @@ const {
   getAllOrderByAdmin,
   deleteOrderByAdmin,
   getSingleOrder,
+  getOrderReceipt,
+  updateOrderStatusByAdmin,
+  getPurchasedAccess,
+  checkProductAccess,
 } = require("../../controllers/order/OrderControllers");
 const validation = require("../../middleware/Validation");
 const { orderSchemaValidation } = require("../../utils/validations");
@@ -13,8 +17,12 @@ const router = express.Router();
 
 router.post("/new", validation(orderSchemaValidation), protect, newOrder);
 router.get("/me", protect, loggedInUserOrders);
+router.get("/purchases", protect, getPurchasedAccess);
+router.get("/receipt/:id", protect, getOrderReceipt);
+router.get("/access/:productType/:productId", protect, checkProductAccess);
 router.get("/admin/orders", protect, admin, getAllOrderByAdmin);
 router.get("/admin/:id", protect, admin, getSingleOrder);
+router.patch("/admin/:id/status", protect, admin, updateOrderStatusByAdmin);
 router.delete("/admin", protect, admin, deleteOrderByAdmin);
 
 module.exports = router;

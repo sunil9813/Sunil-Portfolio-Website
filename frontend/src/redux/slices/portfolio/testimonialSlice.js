@@ -2,9 +2,27 @@ import testimonialService from "@/redux/services/portfolio/testimonialService";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
+const emptyTestimonials = { testimonialList: [], total: 0 };
+
+const normalizeTestimonials = (payload) => {
+  if (Array.isArray(payload)) {
+    return { ...emptyTestimonials, testimonialList: payload, total: payload.length };
+  }
+
+  const testimonialList = Array.isArray(payload?.testimonialList) ? payload.testimonialList : [];
+
+  return {
+    ...payload,
+    testimonialList,
+    total: payload?.total ?? testimonialList.length,
+  };
+};
+
 const initialState = {
   testimonial: null,
-  testimonials: [],
+  testimonials: emptyTestimonials,
+  myTestimonials: [],
+  isMyTestimonialsLoading: false,
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -13,6 +31,14 @@ const initialState = {
 export const getAllTestimonial = createAsyncThunk("testimonials/all", async (_, thunkAPI) => {
   try {
     return await testimonialService.getAllTestimonial();
+  } catch (error) {
+    const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+export const getMyTestimonials = createAsyncThunk("testimonials/my", async (_, thunkAPI) => {
+  try {
+    return await testimonialService.getMyTestimonials();
   } catch (error) {
     const message = (error.response && error.response.data && error.response.data.error) || "An error occurred";
     return thunkAPI.rejectWithValue(message);
@@ -57,7 +83,7 @@ const testimonialSlice = createSlice({
   reducers: {
     UNIVERSITY_RESET(state) {
       state.testimonial = false;
-      state.testimonials = null;
+      state.testimonials = emptyTestimonials;
       state.isError = false;
       state.isSuccess = false;
       state.isLoading = false;
@@ -73,13 +99,29 @@ const testimonialSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isError = false;
-        state.testimonials = action.payload;
+        state.testimonials = normalizeTestimonials(action.payload);
       })
       .addCase(getAllTestimonial.rejected, (state, action) => {
         state.isLoading = false;
         state.isSuccess = false;
         state.isError = true;
-        state.testimonials = null;
+        state.testimonials = emptyTestimonials;
+        toast.error(action.payload);
+      })
+      .addCase(getMyTestimonials.pending, (state) => {
+        state.isMyTestimonialsLoading = true;
+      })
+      .addCase(getMyTestimonials.fulfilled, (state, action) => {
+        state.isMyTestimonialsLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+        state.myTestimonials = action.payload?.testimonialList || [];
+      })
+      .addCase(getMyTestimonials.rejected, (state, action) => {
+        state.isMyTestimonialsLoading = false;
+        state.isSuccess = false;
+        state.isError = true;
+        state.myTestimonials = [];
         toast.error(action.payload);
       })
       .addCase(getTestimonial.pending, (state) => {

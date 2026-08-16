@@ -1,7 +1,7 @@
 const express = require("express");
 const { protect, admin } = require("../../middleware/authMiddleware");
 const { upload } = require("../../middleware/imageMiddleware");
-const { createChapter, getAllChapter, getChapter, deleteChapter } = require("../../controllers/educationController/ChapterController");
+const { createChapter, createSubheading, getAllChapter, getChapter, deleteChapter } = require("../../controllers/educationController/ChapterController");
 const { getUploadVideoandThumbnail } = require("../../utils/uploadImg");
 const router = express.Router();
 
@@ -16,6 +16,7 @@ const uploadVideoandThumbnail = async (req, res, next) => {
 };
 
 router.post("/", protect, uploadVideoandThumbnail, createChapter);
+router.post("/:chapterId/subheadings", protect, uploadVideoandThumbnail, createSubheading);
 router.get("/", getAllChapter);
 router.get("/details/:slug", getChapter);
 router.delete("/", protect, admin, deleteChapter);

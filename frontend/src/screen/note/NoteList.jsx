@@ -42,7 +42,7 @@ export const NoteList = () => {
         <div className="container">
           <div className="heading m-auto text-center pt-12 lg:pt-28 mb-10 w-full lg:w-2/3 relative z-20">
             <h1 className="text-xl md:text-3xl lg:text-6xl font-semibold gardient-text note-title">Curated Reads for Modern Learners</h1>
-            <h2 className="text-lg md:text-xl lg:text-2xl textColor font-medium heading-gardient">Timeless and trailblazing reads supporting your academic growth and intellectual journey.</h2>
+            <h2 className="text-lg md:text-xl lg:text-2xl textColor font-medium">Timeless and trailblazing reads supporting your academic growth and intellectual journey.</h2>
             <p className="text-xs md:text-sm mt-3">Read by learners, leaders, and forward-thinkers in over 100 countries.</p>
           </div>
           <div className="relative z-20 grid grid-cols-1 items-stretch justify-items-center gap-x-8 gap-y-20 md:grid-cols-2 lg:grid-cols-4">

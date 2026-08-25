@@ -81,7 +81,7 @@ const MenuBar = ({ editor, type, onSubmit, submitLabel = "Submit", disabled = fa
 
   return (
     <div
-      className={`relative z-20 flex items-center justify-between gap-3 border-gray-200/70 bg-gray-50/75 px-2.5 py-2 backdrop-blur-xl dark:border-white/[0.05] dark:bg-white/[0.018] ${
+      className={`comment-editor-toolbar relative z-20 flex items-center justify-between gap-3 border-gray-200/70 bg-gray-50/75 px-2.5 py-2 backdrop-blur-xl dark:border-white/[0.05] dark:bg-white/[0.018] ${
         isDefault ? "border-b" : "border-t"
       }`}
     >
@@ -219,7 +219,7 @@ export const CommentEditor = ({ value = "", onChange = () => {}, onSubmit, submi
 
         <MenuBar editor={editor} type={type} onSubmit={onSubmit} submitLabel={submitLabel} disabled={disabled} />
 
-        <EditorContent editor={editor} className="relative z-10 min-h-[150px] px-3 py-3" />
+        <EditorContent editor={editor} className="comment-editor-content relative z-10 min-h-[150px] px-3 py-3" />
       </div>
     );
   }
@@ -231,7 +231,7 @@ export const CommentEditor = ({ value = "", onChange = () => {}, onSubmit, submi
         <div className="pointer-events-none absolute -bottom-16 -left-16 size-40 rounded-full bg-cyan-500/[0.014] blur-[60px]" />
 
         <div className="relative z-10">
-          <EditorContent editor={editor} className="min-h-[170px] rounded-t-xl px-4 py-4" />
+          <EditorContent editor={editor} className="comment-editor-content min-h-[170px] rounded-t-xl px-4 py-4" />
           <MenuBar editor={editor} type={type} onSubmit={onSubmit} submitLabel={submitLabel} disabled={disabled} />
         </div>
       </Wrapper>

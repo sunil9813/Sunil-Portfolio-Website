@@ -44,7 +44,11 @@ export const ProjectCard = () => {
         const title = project?.title?.toLowerCase() || "";
         const description = project?.metaDescription?.toLowerCase() || "";
         const category = project?.category?.title || "";
-        const formats = project?.formats?.map((item) => item?.format).join(" ").toLowerCase() || "";
+        const formats =
+          project?.formats
+            ?.map((item) => item?.format)
+            .join(" ")
+            .toLowerCase() || "";
         const matchesSearch = !query || title.includes(query) || description.includes(query) || formats.includes(query);
         const matchesCategory = categoryFilter === "all" || category === categoryFilter;
         const price = getProjectPrice(project);
@@ -117,8 +121,14 @@ export const ProjectCard = () => {
           <div className="relative">
             <p className="mx-auto mb-4 inline-flex rounded-full bg-white/[0.05] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-100/65">No matches</p>
             <HeadingThree>No projects found</HeadingThree>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-6 textColor opacity-60">Try a different keyword, category, or pricing filter. Projects added from the dashboard will appear here automatically.</p>
-            <button type="button" onClick={resetFilters} className="mt-6 rounded-full bg-white px-6 py-3 text-xs font-semibold text-[#071319] shadow-[0_14px_35px_rgba(255,255,255,0.12)] transition hover:-translate-y-0.5">
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 textColor opacity-60">
+              Try a different keyword, category, or pricing filter. Projects added from the dashboard will appear here automatically.
+            </p>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="mt-6 rounded-full bg-white px-6 py-3 text-xs font-semibold text-[#071319] shadow-[0_14px_35px_rgba(255,255,255,0.12)] transition hover:-translate-y-0.5"
+            >
               Clear filters
             </button>
           </div>
@@ -130,35 +140,13 @@ export const ProjectCard = () => {
 };
 
 const getBentoClass = (index = 0) => {
-  const pattern = [
-    "xl:col-span-4",
-    "xl:col-span-2",
-    "xl:col-span-3",
-    "xl:col-span-3",
-    "xl:col-span-2",
-    "xl:col-span-2",
-    "xl:col-span-2",
-  ];
+  const pattern = ["xl:col-span-4", "xl:col-span-2", "xl:col-span-3", "xl:col-span-3", "xl:col-span-2", "xl:col-span-2", "xl:col-span-2"];
 
   return pattern[index % pattern.length];
 };
 
-const ProjectFilters = ({
-  searchTerm,
-  setSearchTerm,
-  categoryFilter,
-  setCategoryFilter,
-  accessFilter,
-  setAccessFilter,
-  sortBy,
-  setSortBy,
-  categoryOptions,
-  onReset,
-}) => {
-  const categoryOptionsList = [
-    { value: "all", label: "All categories" },
-    ...categoryOptions.map((category) => ({ value: category, label: category })),
-  ];
+const ProjectFilters = ({ searchTerm, setSearchTerm, categoryFilter, setCategoryFilter, accessFilter, setAccessFilter, sortBy, setSortBy, categoryOptions, onReset }) => {
+  const categoryOptionsList = [{ value: "all", label: "All categories" }, ...categoryOptions.map((category) => ({ value: category, label: category }))];
   const accessOptions = [
     { value: "all", label: "All access" },
     { value: "free", label: "Free" },
@@ -182,12 +170,7 @@ const ProjectFilters = ({
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search projects, stacks, layouts..."
             autoComplete="off"
-            className="h-12 w-full rounded-full px-5 text-sm font-normal text-white/75 outline-none backdrop-blur-2xl transition placeholder:text-white/35 focus:text-white"
-            style={{
-              background: "linear-gradient(135deg, rgba(7, 15, 22, 0.88), rgba(18, 29, 37, 0.68))",
-              boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,.045), inset 0 -18px 36px rgba(45,212,191,.045), 0 16px 42px rgba(0,0,0,.18)",
-            }}
+            className="h-12 w-full rounded-full px-5 text-sm font-normal text-white/75 outline-none bg-white/10 backdrop-blur-2xl transition placeholder:text-white/35 focus:text-white"
           />
         </div>
 
@@ -198,7 +181,7 @@ const ProjectFilters = ({
           <button
             type="button"
             onClick={onReset}
-            className="flex h-12 items-center justify-center rounded-full bg-[linear-gradient(180deg,#FFFFFF_0%,#E8E8E8_100%)] px-6 text-[10px] font-semibold uppercase tracking-[0.16em] text-black shadow-[inset_0_1px_0_rgba(255,255,255,.8),inset_0_-10px_18px_rgba(0,0,0,.12),0_16px_36px_rgba(255,255,255,.10)] transition hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,.9),inset_0_-10px_18px_rgba(0,0,0,.14),0_22px_46px_rgba(255,255,255,.16)]"
+            className="flex h-12 items-center justify-center rounded-full bg-[linear-gradient(180deg,#FFFFFF_0%,#E8E8E8_100%)] px-12 text-[10px] font-semibold uppercase tracking-[0.16em] text-black shadow-[inset_0_1px_0_rgba(255,255,255,.8),inset_0_-10px_18px_rgba(0,0,0,.12),0_16px_36px_rgba(255,255,255,.10)] transition hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,.9),inset_0_-10px_18px_rgba(0,0,0,.14),0_22px_46px_rgba(255,255,255,.16)]"
           >
             Reset
           </button>
@@ -268,7 +251,9 @@ export const ProjectCardDesignFrist = ({ project, index = 0 }) => {
           <div className="flex flex-1 flex-col px-3 pb-3 pt-5">
             <div className="flex items-start justify-between gap-3">
               <NavLink to={`/project-details/${project?.slug}`} className="min-w-0">
-                <HeadingThree className={`line-clamp-2 min-h-[46px] font-semibold leading-6 tracking-[-0.02em] text-white/92 transition group-hover:text-white ${isWideCard ? "text-[19px]" : "text-[17px]"}`}>
+                <HeadingThree
+                  className={`line-clamp-2 min-h-[46px] font-semibold leading-6 tracking-[-0.02em] text-white/92 transition group-hover:text-white ${isWideCard ? "text-[19px]" : "text-[17px]"}`}
+                >
                   {truncateText(project?.title, isWideCard ? 78 : 58)}
                 </HeadingThree>
               </NavLink>

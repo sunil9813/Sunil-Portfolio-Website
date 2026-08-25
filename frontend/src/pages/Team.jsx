@@ -1,99 +1,220 @@
 import { TertiaryButton } from "@/components/customeUI/Button";
 import { HeadingThree } from "@/components/customeUI/Title";
+
 import { GoArrowDown } from "react-icons/go";
+import { FaLinkedinIn } from "react-icons/fa";
+import { HiArrowUpRight } from "react-icons/hi2";
 
-const imageData = [
-  { id: 1, image: "../image/home/m1.jpg" },
-  { id: 2, image: "../image/home/m2.jpg" },
-  { id: 3, image: "../image/home/m3.jpg" },
-  { id: 4, image: "../image/home/m4.jpg" },
-  { id: 5, image: "../image/home/m5.jpg" },
-  { id: 6, image: "../image/home/m6.jpg" },
-  { id: 7, image: "../image/home/m7.jpg" },
-];
-
-const teamData = [
-  {
-    id: 1,
-    profile: "../image/team/t1.jpg",
-    name: "Mr. Prabin Thapa Magar",
-    designation: "Front End Developer",
-    experience: "4+ years",
-    link: "https://www.linkedin.com/in/prabin-thapa-magar-69a361145/",
-  },
-  { id: 2, profile: "../image/team/t2.png", name: "Mr. Sunil B K", designation: "Full Stack Developer", experience: "3+ years", link: "https://www.linkedin.com/in/sunil-b-k-856b36231/" },
-
-  { id: 3, profile: "../image/team/t3.jpg", name: "Mr. MD Samsad Ali", designation: "Backend Developer", experience: "2+ years", link: "https://www.linkedin.com/in/samsad-ali-763245206/" },
-  { id: 4, profile: "../image/team/t4.jpeg", name: "Mr. Saroj Adhikari", designation: "Quality Assurance(QA)", experience: "1+ years", link: "https://www.linkedin.com/in/saroj-adhikari-b90b11244/" },
-  { id: 5, profile: "../image/team/t5.jpg", name: "Mr. Shyam Basnet", designation: "DevOps Engineer", experience: "1+ years", link: "https://www.linkedin.com/in/shyam-basnet-281157173/" },
-  { id: 6, profile: "../image/team/t6.jpeg", name: "Mr. Peter Rai", designation: "Mobile App Developer", experience: "1+ years", link: "https://www.linkedin.com/in/peter-rai-1132a9165/" },
-  {
-    id: 7,
-    profile: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    name: "Mr. Bijen Shrestha",
-    designation: "Graphic Designer",
-    experience: "1.5+ years",
-    link: "https://www.linkedin.com/in/bijen-shrestha-530122167/",
-  },
-];
+import { teamData, imageData, floatingTeamMembers } from "@/assets/dummyData";
 
 export const Team = () => {
   return (
     <section className="team">
+      {/* ============================================ */}
+      {/* EXISTING BACKGROUND CIRCLES                  */}
+      {/* ============================================ */}
+
       <TeamsHeader />
+
+      {/* ============================================ */}
+      {/* EXISTING FLOATING TEAM MEMBERS               */}
+      {/* ============================================ */}
+
       <TeamsMember />
+
+      {/* ============================================ */}
+      {/* EXISTING BACKGROUND                          */}
+      {/* ============================================ */}
+
       <div className="TeamsHeader_headerBg"></div>
+
+      {/* ============================================ */}
+      {/* MAIN CONTENT                                 */}
+      {/* ============================================ */}
+
       <div className="container relative z-50">
-        <div className="heading flex flex-col gap-5 items-center mt-28 mx-auto w-1/2 text-center">
-          <button className="text-orange-500 bg-[#282028] rounded-full p-1 px-5 block">Our Team</button>
-          <h1 className="text-[60px] font-semibold gardient-text team-title">Your team, reimagined.</h1>
-          <p className="text-m">
-            Empowering teams with intuitive tools and scalable architecture. I build systems that simplify collaboration, speed up delivery, and help your team focus on what really matters — results.
+        {/* ========================================== */}
+        {/* HEADER                                     */}
+        {/* ========================================== */}
+        <div className="heading mx-auto mt-28 flex max-w-[900px] flex-col items-center text-center">
+          {/* Small label */}
+          <div
+            className="
+      mb-7
+      inline-flex
+      items-center
+      gap-2
+      rounded-full
+      border border-orange-400/10
+      bg-[#282028]/80
+      px-5
+      py-1.5
+      backdrop-blur-md
+    "
+          >
+            <span
+              className="
+        h-1.5
+        w-1.5
+        rounded-full
+        bg-orange-400
+        shadow-[0_0_8px_rgba(251,146,60,0.5)]
+      "
+            />
+
+            <span
+              className="
+        text-[11px]
+        font-medium
+        uppercase
+        tracking-[0.16em]
+        text-orange-400
+      "
+            >
+              Our Team
+            </span>
+          </div>
+
+          {/* Main heading */}
+          <h1
+            className="
+      max-w-[900px]
+      text-[42px]
+      font-semibold
+      leading-[1.05]
+      tracking-[-0.045em]
+      text-white
+
+      sm:text-[48px]
+      md:text-[54px]
+      lg:text-[60px]
+    "
+          >
+            <span
+              className="
+        relative
+        inline-flex
+        items-center
+        overflow-hidden
+        rounded-[16px]
+        border border-cyan-300/[0.14]
+        bg-[#12313f]/65
+        px-5
+        py-2
+        text-[#a8def3]
+        backdrop-blur-xl
+      "
+            >
+              {/* subtle top shine */}
+              <span
+                className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-0
+          h-px
+          w-[70%]
+          -translate-x-1/2
+          bg-gradient-to-r
+          from-transparent
+          via-cyan-200/30
+          to-transparent
+        "
+              />
+
+              <span className="relative z-10">Your team,</span>
+            </span>
+
+            <span className="mt-3 block">reimagined for what’s next.</span>
+          </h1>
+
+          {/* Description */}
+          <p
+            className="
+      mt-7
+      max-w-[620px]
+      text-[14px]
+      leading-7
+      text-white/40
+      sm:text-[15px]
+    "
+          >
+            A team of developers, designers and engineers working together to turn ambitious ideas into polished digital products, scalable systems and meaningful experiences.
           </p>
-          <TertiaryButton>Get started today</TertiaryButton>
-          <button className="flexC gap-2">
-            Learn more <GoArrowDown />
-          </button>
+
+          {/* Actions */}
+          <div
+            className="
+      mt-8
+      flex
+      flex-wrap
+      items-center
+      justify-center
+      gap-4
+    "
+          >
+            <TertiaryButton>Meet the Team</TertiaryButton>
+
+            <button
+              type="button"
+              className="
+        group
+        flex
+        items-center
+        gap-2
+        px-3
+        py-2
+        text-[13px]
+        font-medium
+        text-white/45
+        transition-colors
+        duration-300
+        hover:text-white
+      "
+            >
+              Learn more
+              <GoArrowDown
+                className="
+          text-[14px]
+          transition-transform
+          duration-300
+          group-hover:translate-y-1
+        "
+              />
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-4 gap-6 p-8 w-full pt-32">
-          {teamData.map((member) => {
-            // Find matching image in imageData by id
+        {/* ========================================== */}
+        {/* TEAM GRID                                  */}
+        {/* ========================================== */}
+
+        <div
+          className="
+            grid
+            w-full
+            grid-cols-1
+            gap-3
+            py-24
+            sm:grid-cols-2
+            lg:grid-cols-3
+            xl:grid-cols-4
+          "
+        >
+          {teamData.map((member, index) => {
             const matchingImage = imageData.find((image) => image.id === member.id);
-            if (!matchingImage) return null; // Skip if no matching image found
 
-            // Randomly select an SVG mask from v1.svg to v7.svg
-            const maskNumber = Math.floor(Math.random() * 7) + 1;
-            const maskUrl = `/image/team/v${maskNumber}.svg`; // Adjust path as needed
+            if (!matchingImage) return null;
 
-            return (
-              <div key={member.id} className="box rounded-lg relative overflow-hidden">
-                <img src={matchingImage.image} alt={`Background ${member.id}`} className="w-full h-full object-cover absolute top-0 left-0 -z-10" />
-                <div className="relative z-10 h-72 flex items-center justify-center">
-                  <div className="absolute top-0 left-0 h-72 w-full shape-image flex items-center justify-center">
-                    <img
-                      src={member.profile}
-                      alt={member.designation}
-                      className="w-full h-full object-cover profile-image"
-                      style={{
-                        maskImage: `url(${maskUrl})`,
-                        WebkitMaskImage: `url(${maskUrl})`,
-                        maskSize: "contain",
-                        WebkitMaskSize: "contain",
-                        maskPosition: "center",
-                        WebkitMaskPosition: "center",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskRepeat: "no-repeat",
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="text-center p-4">
-                  <span className="text-gray-200">{member?.name}</span>
-                  <HeadingThree>{member.designation}</HeadingThree>
-                  <span>{member.experience}</span>
-                </div>
-              </div>
-            );
+            /*
+             * Keeping your existing mask system.
+             * Using member id instead of Math.random()
+             * so every member keeps the same shape
+             * after React re-renders.
+             */
+            const maskNumber = ((member.id - 1) % 7) + 1;
+            const maskUrl = `/image/team/v${maskNumber}.svg`;
+
+            return <TeamCard key={member.id} member={member} index={index} matchingImage={matchingImage} maskUrl={maskUrl} />;
           })}
         </div>
       </div>
@@ -101,74 +222,634 @@ export const Team = () => {
   );
 };
 
+/* ========================================================== */
+/* TEAM CARD                                                  */
+/* ========================================================== */
+
+const TeamCard = ({ member, index, matchingImage, maskUrl }) => {
+  return (
+    <article
+      className="
+        group
+        relative
+        isolate
+        overflow-hidden
+        rounded-[24px]
+
+        border
+        border-white/[0.055]
+
+        bg-white/[0.018]
+
+        transition-all
+        duration-500
+        ease-out
+
+        hover:-translate-y-1
+        hover:border-white/[0.11]
+        hover:bg-white/[0.025]
+      "
+    >
+      {/* ===================================================== */}
+      {/* VERY SUBTLE TOP GLOW                                  */}
+      {/* ===================================================== */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-[-90px]
+          h-[180px]
+          w-[70%]
+          -translate-x-1/2
+          rounded-full
+          bg-cyan-300/[0.035]
+          blur-[70px]
+          opacity-0
+          transition-opacity
+          duration-700
+          group-hover:opacity-100
+        "
+      />
+
+      {/* ===================================================== */}
+      {/* IMAGE AREA                                            */}
+      {/* ===================================================== */}
+
+      <div
+        className="
+          relative
+          m-[6px]
+          overflow-hidden
+          rounded-[19px]
+          bg-[#0b0d11]/80
+        "
+      >
+        {/* background image */}
+
+        <img
+          src={matchingImage.image}
+          alt=""
+          aria-hidden="true"
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+
+            opacity-[0.26]
+            saturate-[0.8]
+
+            transition-all
+            duration-700
+
+            group-hover:scale-[1.04]
+            group-hover:opacity-[0.34]
+          "
+        />
+
+        {/* background overlay */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            bg-gradient-to-b
+            from-white/[0.015]
+            via-transparent
+            to-[#080a0d]/80
+          "
+        />
+
+        {/* side vignette */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            bg-gradient-to-r
+            from-black/10
+            via-transparent
+            to-black/10
+          "
+        />
+
+        {/* =================================================== */}
+        {/* PROFILE                                             */}
+        {/* =================================================== */}
+
+        <div
+          className="
+            relative
+            z-10
+            flex
+            h-[280px]
+            items-center
+            justify-center
+            overflow-hidden
+          "
+        >
+          <img
+            src={member.profile}
+            alt={member.name}
+            loading="lazy"
+            className="
+              profile-image
+              h-[96%]
+              w-[96%]
+              object-cover
+
+              transition-transform
+              duration-700
+              ease-out
+
+              group-hover:scale-[1.035]
+            "
+            style={{
+              maskImage: `url(${maskUrl})`,
+              WebkitMaskImage: `url(${maskUrl})`,
+              maskSize: "contain",
+              WebkitMaskSize: "contain",
+              maskPosition: "center",
+              WebkitMaskPosition: "center",
+              maskRepeat: "no-repeat",
+              WebkitMaskRepeat: "no-repeat",
+            }}
+          />
+
+          {/* image bottom fade */}
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              inset-x-0
+              bottom-0
+              z-20
+              h-[100px]
+              bg-gradient-to-t
+              from-[#090b0e]
+              via-[#090b0e]/50
+              to-transparent
+            "
+          />
+
+          {/* ================================================= */}
+          {/* TOP META                                          */}
+          {/* ================================================= */}
+
+          <div
+            className="
+              absolute
+              left-3.5
+              right-3.5
+              top-3.5
+              z-30
+              flex
+              items-center
+              justify-between
+            "
+          >
+            {/* number */}
+
+            <span
+              className="
+                flex
+                h-8
+                min-w-8
+                items-center
+                justify-center
+
+                rounded-full
+
+                border
+                border-white/[0.075]
+
+                bg-black/20
+
+                px-2
+
+                text-[8px]
+                font-semibold
+                tracking-[0.16em]
+                text-white/35
+
+                backdrop-blur-xl
+              "
+            >
+              {String(index + 1).padStart(2, "0")}
+            </span>
+
+            {/* LinkedIn */}
+
+            <a
+              href={member.link}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${member.name} LinkedIn`}
+              className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+
+                rounded-full
+
+                border
+                border-white/[0.075]
+
+                bg-black/20
+
+                text-white/35
+
+                backdrop-blur-xl
+
+                transition-all
+                duration-300
+
+                hover:border-white/30
+                hover:bg-white
+                hover:text-black
+              "
+            >
+              <FaLinkedinIn size={12} />
+            </a>
+          </div>
+
+          {/* ================================================= */}
+          {/* BOTTOM META                                       */}
+          {/* ================================================= */}
+
+          <div
+            className="
+              absolute
+              bottom-3.5
+              left-3.5
+              right-3.5
+              z-30
+
+              flex
+              items-center
+              justify-between
+              gap-2
+            "
+          >
+            {/* team label */}
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+
+                rounded-full
+
+                border
+                border-white/[0.06]
+
+                bg-black/20
+
+                px-2.5
+                py-1.5
+
+                backdrop-blur-xl
+              "
+            >
+              <span
+                className="
+                  h-[4px]
+                  w-[4px]
+                  rounded-full
+                  bg-orange-400
+                "
+              />
+
+              <span
+                className="
+                  text-[8px]
+                  font-semibold
+                  uppercase
+                  tracking-[0.17em]
+                  text-white/32
+                "
+              >
+                Team member
+              </span>
+            </div>
+
+            {/* experience */}
+
+            <div
+              className="
+                flex
+                items-center
+                gap-1.5
+
+                rounded-full
+
+                border
+                border-white/[0.06]
+
+                bg-black/20
+
+                px-2.5
+                py-1.5
+
+                backdrop-blur-xl
+              "
+            >
+              <span
+                className="
+                  h-[5px]
+                  w-[5px]
+                  rounded-full
+                  bg-emerald-400
+                  shadow-[0_0_7px_rgba(52,211,153,0.45)]
+                "
+              />
+
+              <span
+                className="
+                  text-[8px]
+                  font-medium
+                  text-white/38
+                "
+              >
+                {member.experience}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* subtle inner edge */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            z-40
+            rounded-[19px]
+            ring-1
+            ring-inset
+            ring-white/[0.035]
+          "
+        />
+      </div>
+
+      {/* ===================================================== */}
+      {/* CONTENT                                               */}
+      {/* ===================================================== */}
+
+      <div
+        className="
+          px-4
+          pb-4
+          pt-3
+        "
+      >
+        <div
+          className="
+            flex
+            items-end
+            justify-between
+            gap-3
+          "
+        >
+          {/* member info */}
+
+          <div className="min-w-0 flex-1">
+            <h3
+              className="
+                truncate
+
+                text-[15px]
+                font-semibold
+                leading-tight
+                tracking-[-0.025em]
+
+                text-white/90
+              "
+            >
+              {member.name}
+            </h3>
+
+            <p
+              className="
+                mt-1
+                truncate
+
+                text-[10px]
+                font-medium
+
+                text-white/32
+              "
+            >
+              {member.designation}
+            </p>
+          </div>
+
+          {/* profile action */}
+
+          <a
+            href={member.link}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`View ${member.name}`}
+            className="
+              group/link
+
+              flex
+              h-8
+              w-8
+              shrink-0
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+              border-white/[0.06]
+
+              bg-white/[0.025]
+
+              text-white/25
+
+              transition-all
+              duration-300
+
+              group-hover:border-white/[0.10]
+              group-hover:text-white/55
+
+              hover:!border-cyan-300/20
+              hover:!bg-cyan-300/[0.06]
+              hover:!text-cyan-200
+            "
+          >
+            <HiArrowUpRight
+              size={14}
+              className="
+                transition-transform
+                duration-300
+
+                group-hover/link:-translate-y-[1px]
+                group-hover/link:translate-x-[1px]
+              "
+            />
+          </a>
+        </div>
+      </div>
+
+      {/* ===================================================== */}
+      {/* TOP HOVER LINE                                        */}
+      {/* ===================================================== */}
+
+      <div
+        className="
+          pointer-events-none
+
+          absolute
+          left-1/2
+          top-0
+
+          h-px
+          w-[45%]
+
+          -translate-x-1/2
+
+          bg-gradient-to-r
+          from-transparent
+          via-cyan-200/40
+          to-transparent
+
+          opacity-0
+
+          transition-opacity
+          duration-500
+
+          group-hover:opacity-100
+        "
+      />
+    </article>
+  );
+};
+/* ========================================================== */
+/* TEAMS HEADER                                               */
+/* ========================================================== */
+
 const TeamsHeader = () => {
   return (
     <div className="TeamsHeader_circles">
+      {/* ============================================ */}
+      {/* CIRCLE 01                                    */}
+      {/* ============================================ */}
+
       <svg xmlns="http://www.w3.org/2000/svg" width="764" height="764" fill="none">
         <g filter="url(#circle-1_svg__a)" opacity="0.3">
-          <circle cx="382" cy="382" r="379.5" stroke="url(#circle-1_svg__b)" strokeDasharray="4 6" strokeLinecap="round" transform="rotate(-90 382 382)"></circle>
+          <circle cx="382" cy="382" r="379.5" stroke="url(#circle-1_svg__b)" strokeDasharray="4 6" strokeLinecap="round" transform="rotate(-90 382 382)" />
         </g>
+
         <defs>
           <linearGradient id="circle-1_svg__b" x1="2" x2="762" y1="2" y2="762" gradientUnits="userSpaceOnUse">
-            <stop offset="0.146" stopColor="#fff" stopOpacity="0"></stop>
-            <stop offset="0.302" stopColor="#fff" stopOpacity="0.396"></stop>
-            <stop offset="0.427" stopColor="#fff"></stop>
-            <stop offset="0.568" stopColor="#fff" stopOpacity="0"></stop>
-            <stop offset="0.682" stopColor="#fff" stopOpacity="0.66"></stop>
-            <stop offset="0.807" stopColor="#fff" stopOpacity="0.29"></stop>
-            <stop offset="0.899" stopColor="#fff" stopOpacity="0.37"></stop>
+            <stop offset="0.146" stopColor="#fff" stopOpacity="0" />
+
+            <stop offset="0.302" stopColor="#fff" stopOpacity="0.396" />
+
+            <stop offset="0.427" stopColor="#fff" />
+
+            <stop offset="0.568" stopColor="#fff" stopOpacity="0" />
+
+            <stop offset="0.682" stopColor="#fff" stopOpacity="0.66" />
+
+            <stop offset="0.807" stopColor="#fff" stopOpacity="0.29" />
+
+            <stop offset="0.899" stopColor="#fff" stopOpacity="0.37" />
           </linearGradient>
+
           <filter id="circle-1_svg__a" width="764" height="764" x="0" y="0" colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse">
-            <feFlood floodOpacity="0" result="BackgroundImageFix"></feFlood>
-            <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"></feBlend>
-            <feGaussianBlur result="effect1_foregroundBlur_709_11734" stdDeviation="1"></feGaussianBlur>
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+
+            <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+
+            <feGaussianBlur result="effect1_foregroundBlur_709_11734" stdDeviation="1" />
           </filter>
         </defs>
       </svg>
+
+      {/* ============================================ */}
+      {/* CIRCLE 02                                    */}
+      {/* ============================================ */}
+
       <svg xmlns="http://www.w3.org/2000/svg" width="924" height="924" fill="none">
         <g filter="url(#circle-2_svg__a)" opacity="0.3">
-          <path
-            stroke="url(#circle-2_svg__b)"
-            strokeDasharray="4 6"
-            strokeLinecap="round"
-            d="M464.518 921.993a.5.5 0 0 0-.502-.497 677 677 0 0 1-4.032 0 .5.5 0 0 0-.503.497 470 470 0 0 1-5.041-.054.5.5 0 0 0-.491-.508 486 486 0 0 1-4.013-.086.5.5 0 0 0-.513.487 462 462 0 0 1-5.01-.162.5.5 0 0 0-.48-.519 439 439 0 0 1-3.992-.171.5.5 0 0 0-.523.476 464 464 0 0 1-5.025-.271.5.5 0 0 0-.469-.529q-2.007-.12-4.011-.259a.5.5 0 0 0-.533.464 459 459 0 0 1-5.009-.378.5.5 0 0 0-.457-.539q-1.997-.164-3.987-.344a.5.5 0 0 0-.543.452 452 452 0 0 1-4.984-.485.5.5 0 0 0-.446-.549 475 475 0 0 1-4-.433.5.5 0 0 0-.553.441 480 480 0 0 1-4.995-.596.5.5 0 0 0-.434-.559q-1.99-.25-3.974-.518a.5.5 0 0 0-.562.428 473 473 0 0 1-4.958-.701.5.5 0 0 0-.421-.568 473 473 0 0 1-3.964-.605.5.5 0 0 0-.571.416q-2.49-.394-4.97-.815a.5.5 0 0 0-.408-.577q-1.98-.338-3.953-.692a.5.5 0 0 0-.58.404 442 442 0 0 1-4.93-.92.5.5 0 0 0-.396-.585q-1.965-.38-3.923-.776a.5.5 0 0 0-.589.39 448 448 0 0 1-4.926-1.03.5.5 0 0 0-.383-.595 463 463 0 0 1-3.921-.865.5.5 0 0 0-.598.378q-2.45-.555-4.89-1.137a.5.5 0 0 0-.37-.602 459 459 0 0 1-3.89-.949.5.5 0 0 0-.606.365q-2.435-.609-4.861-1.243a.5.5 0 0 0-.357-.61q-1.944-.51-3.881-1.038a.5.5 0 0 0-.614.352 454 454 0 0 1-4.84-1.352.5.5 0 0 0-.343-.618 448 448 0 0 1-3.848-1.12.5.5 0 0 0-.621.338q-2.403-.714-4.795-1.452a.5.5 0 0 0-.329-.626 449 449 0 0 1-3.832-1.207.5.5 0 0 0-.628.324 452 452 0 0 1-4.78-1.564.5.5 0 0 0-.315-.633 446 446 0 0 1-3.798-1.288.5.5 0 0 0-.635.31 472 472 0 0 1-4.731-1.664.5.5 0 0 0-.301-.64 378 378 0 0 1-3.765-1.37.5.5 0 0 0-.642.296 465 465 0 0 1-4.708-1.773.5.5 0 0 0-.288-.646 482 482 0 0 1-3.738-1.455.5.5 0 0 0-.649.282 471 471 0 0 1-4.656-1.872.5.5 0 0 0-.274-.652 512 512 0 0 1-3.698-1.534.5.5 0 0 0-.655.268 462 462 0 0 1-4.622-1.977.5.5 0 0 0-.259-.658 464 464 0 0 1-3.672-1.618.5.5 0 0 0-.661.253 470 470 0 0 1-4.572-2.075.5.5 0 0 0-.244-.664 479 479 0 0 1-3.631-1.695.5.5 0 0 0-.665.238 459 459 0 0 1-4.525-2.174.5.5 0 0 0-.23-.669 463.622 463.622 0 0 1-3.599-1.778.5.5 0 0 0-.671.224 495 495 0 0 1-4.479-2.275.5.5 0 0 0-.215-.673 479 479 0 0 1-3.554-1.854.5.5 0 0 0-.675.209 467 467 0 0 1-4.422-2.368.5.5 0 0 0-.2-.679 429 429 0 0 1-3.518-1.934.5.5 0 0 0-.68.195 468 468 0 0 1-4.376-2.469.5.5 0 0 0-.186-.682 441 441 0 0 1-3.47-2.009.5.5 0 0 0-.684.18 466 466 0 0 1-4.316-2.56.5.5 0 0 0-.17-.687 440 440 0 0 1-3.427-2.083.5.5 0 0 0-.688.164 459 459 0 0 1-4.265-2.658.5.5 0 0 0-.155-.69 460 460 0 0 1-3.381-2.158.5.5 0 0 0-.691.15 474 474 0 0 1-4.201-2.747.5.5 0 0 0-.141-.693 495 495 0 0 1-3.33-2.23.5.5 0 0 0-.694.135 453 453 0 0 1-4.145-2.842.5.5 0 0 0-.125-.695 481 481 0 0 1-3.284-2.304.5.5 0 0 0-.697.119 458 458 0 0 1-4.079-2.928.5.5 0 0 0-.11-.699 447 447 0 0 1-3.231-2.372.5.5 0 0 0-.7.104 495 495 0 0 1-4.015-3.017.5.5 0 0 0-.095-.701 471 471 0 0 1-3.181-2.444.5.5 0 0 0-.701.088 452 452 0 0 1-3.949-3.103.5.5 0 0 0-.079-.702 446 446 0 0 1-3.126-2.512.5.5 0 0 0-.703.074 472 472 0 0 1-3.88-3.188.5.5 0 0 0-.064-.704 476 476 0 0 1-3.071-2.58.5.5 0 0 0-.705.058 456 456 0 0 1-3.811-3.272.5.5 0 0 0-.049-.705 504 504 0 0 1-3.014-2.645.5.5 0 0 0-.705.043 475 475 0 0 1-3.738-3.353.5.5 0 0 0-.034-.706 505 505 0 0 1-2.956-2.711.5.5 0 0 0-.707.028 475 475 0 0 1-3.664-3.434.5.5 0 0 0-.019-.707q-1.454-1.38-2.896-2.774a.5.5 0 0 0-.707.013 458 458 0 0 1-3.59-3.513.5.5 0 0 0-.003-.707 474 474 0 0 1-2.835-2.835.5.5 0 0 0-.708-.003 475 475 0 0 1-3.512-3.59.5.5 0 0 0 .012-.707 474 474 0 0 1-2.773-2.896.5.5 0 0 0-.707-.019 458 458 0 0 1-3.434-3.665.5.5 0 0 0 .028-.706 446 446 0 0 1-2.711-2.957.5.5 0 0 0-.706-.033 475 475 0 0 1-3.353-3.738.5.5 0 0 0 .043-.706q-1.33-1.5-2.645-3.013a.5.5 0 0 0-.705-.049 454 454 0 0 1-3.272-3.811.5.5 0 0 0 .058-.705 471 471 0 0 1-2.58-3.071.5.5 0 0 0-.704-.064 472 472 0 0 1-3.188-3.88.5.5 0 0 0 .074-.703 446 446 0 0 1-2.512-3.126.5.5 0 0 0-.702-.079 458 458 0 0 1-3.104-3.949.5.5 0 0 0 .09-.701 471 471 0 0 1-2.445-3.181.5.5 0 0 0-.7-.095 449 449 0 0 1-3.018-4.016.5.5 0 0 0 .104-.699 447 447 0 0 1-2.373-3.231.5.5 0 0 0-.698-.11 464 464 0 0 1-2.928-4.079.5.5 0 0 0 .119-.697 461 461 0 0 1-2.304-3.284.5.5 0 0 0-.696-.125 459 459 0 0 1-2.84-4.145.5.5 0 0 0 .133-.695 437 437 0 0 1-2.229-3.33.5.5 0 0 0-.693-.14 468 468 0 0 1-2.747-4.201.5.5 0 0 0 .15-.691 477 477 0 0 1-2.159-3.381.5.5 0 0 0-.69-.155 467 467 0 0 1-2.657-4.266.5.5 0 0 0 .164-.687q-1.05-1.708-2.083-3.427a.5.5 0 0 0-.687-.17 462 462 0 0 1-2.56-4.316.5.5 0 0 0 .18-.684 426 426 0 0 1-2.009-3.471.5.5 0 0 0-.682-.185 470 470 0 0 1-2.469-4.376.5.5 0 0 0 .194-.68q-.974-1.755-1.934-3.518a.5.5 0 0 0-.678-.2 466 466 0 0 1-2.368-4.422.5.5 0 0 0 .209-.676 443 443 0 0 1-1.854-3.554.5.5 0 0 0-.673-.215 450 450 0 0 1-2.275-4.479.5.5 0 0 0 .224-.67 477 477 0 0 1-1.778-3.599.5.5 0 0 0-.669-.23 461 461 0 0 1-2.174-4.525.5.5 0 0 0 .238-.666 451 451 0 0 1-1.695-3.63.5.5 0 0 0-.664-.244q-1.05-2.28-2.075-4.573a.5.5 0 0 0 .253-.66 450 450 0 0 1-1.618-3.672.5.5 0 0 0-.658-.259 462 462 0 0 1-1.977-4.622.5.5 0 0 0 .268-.655 446 446 0 0 1-1.534-3.699.5.5 0 0 0-.652-.273 459 459 0 0 1-1.872-4.656.5.5 0 0 0 .282-.649 445 445 0 0 1-1.455-3.739.5.5 0 0 0-.646-.287q-.9-2.348-1.773-4.708a.5.5 0 0 0 .296-.642 472 472 0 0 1-1.37-3.765.5.5 0 0 0-.64-.302 458 458 0 0 1-1.664-4.73.5.5 0 0 0 .31-.636 457 457 0 0 1-1.289-3.797.5.5 0 0 0-.632-.315q-.795-2.385-1.564-4.78a.5.5 0 0 0 .324-.628q-.612-1.913-1.207-3.832a.5.5 0 0 0-.626-.33 452 452 0 0 1-1.452-4.794.5.5 0 0 0 .337-.621 462 462 0 0 1-1.12-3.848.5.5 0 0 0-.618-.343q-.688-2.415-1.35-4.84a.5.5 0 0 0 .35-.614 462 462 0 0 1-1.037-3.882.5.5 0 0 0-.61-.356 454 454 0 0 1-1.243-4.862.5.5 0 0 0 .364-.606 459 459 0 0 1-.948-3.889.5.5 0 0 0-.603-.37 456 456 0 0 1-1.136-4.891.5.5 0 0 0 .378-.597 448 448 0 0 1-.866-3.922.5.5 0 0 0-.594-.383q-.528-2.457-1.03-4.925a.5.5 0 0 0 .39-.59 450 450 0 0 1-.776-3.923.5.5 0 0 0-.586-.395 462 462 0 0 1-.919-4.93.5.5 0 0 0 .404-.581 459 459 0 0 1-.693-3.952.5.5 0 0 0-.577-.409q-.42-2.48-.814-4.969a.5.5 0 0 0 .416-.572q-.31-1.978-.605-3.963a.5.5 0 0 0-.568-.422 458 458 0 0 1-.701-4.957.5.5 0 0 0 .428-.563 458 458 0 0 1-.518-3.974.5.5 0 0 0-.559-.434 461 461 0 0 1-.596-4.994.5.5 0 0 0 .44-.553 461 461 0 0 1-.432-4.001.5.5 0 0 0-.55-.445q-.255-2.488-.485-4.984a.5.5 0 0 0 .453-.543q-.18-1.992-.344-3.988a.5.5 0 0 0-.54-.457 465 465 0 0 1-.378-5.008.5.5 0 0 0 .465-.534 460 460 0 0 1-.26-4.011.5.5 0 0 0-.529-.469 465 465 0 0 1-.27-5.025.5.5 0 0 0 .476-.523q-.095-1.993-.171-3.991a.5.5 0 0 0-.52-.481 466 466 0 0 1-.16-5.01.5.5 0 0 0 .486-.513 468 468 0 0 1-.086-4.012.5.5 0 0 0-.508-.492 469 469 0 0 1-.055-5.041.5.5 0 0 0 .498-.502 472 472 0 0 1 0-4.032.5.5 0 0 0-.498-.503q.014-2.524.055-5.041a.5.5 0 0 0 .508-.491q.035-2.009.086-4.013a.5.5 0 0 0-.487-.513q.067-2.508.162-5.01a.5.5 0 0 0 .519-.48 458 458 0 0 1 .171-3.992.5.5 0 0 0-.476-.523q.121-2.515.27-5.025a.5.5 0 0 0 .53-.469q.12-2.007.259-4.011a.5.5 0 0 0-.465-.533q.176-2.508.379-5.009a.5.5 0 0 0 .539-.457q.164-1.997.344-3.987a.5.5 0 0 0-.452-.543q.228-2.497.485-4.984a.5.5 0 0 0 .549-.446q.207-2.003.433-4a.5.5 0 0 0-.441-.553q.285-2.502.596-4.995a.5.5 0 0 0 .559-.434q.25-1.99.518-3.974a.5.5 0 0 0-.428-.562q.338-2.483.701-4.958a.5.5 0 0 0 .568-.421q.294-1.984.605-3.964a.5.5 0 0 0-.416-.571q.394-2.49.815-4.97a.5.5 0 0 0 .576-.408 446 446 0 0 1 .693-3.953.5.5 0 0 0-.404-.58q.446-2.47.92-4.93a.5.5 0 0 0 .585-.396q.38-1.965.776-3.923a.5.5 0 0 0-.39-.589q.502-2.467 1.03-4.926a.5.5 0 0 0 .595-.383q.423-1.964.865-3.921a.5.5 0 0 0-.378-.598q.556-2.45 1.136-4.89a.5.5 0 0 0 .603-.37q.466-1.948.949-3.89a.5.5 0 0 0-.365-.606q.609-2.436 1.242-4.861a.5.5 0 0 0 .611-.357q.51-1.944 1.038-3.881a.5.5 0 0 0-.352-.614q.663-2.426 1.351-4.84a.5.5 0 0 0 .619-.344 466 466 0 0 1 1.12-3.847.5.5 0 0 0-.338-.621q.714-2.403 1.452-4.795a.5.5 0 0 0 .626-.329q.596-1.92 1.207-3.832a.5.5 0 0 0-.324-.628 452 452 0 0 1 1.564-4.78.5.5 0 0 0 .633-.315q.636-1.903 1.288-3.798a.5.5 0 0 0-.31-.635q.82-2.372 1.664-4.731a.5.5 0 0 0 .64-.301q.677-1.887 1.37-3.765a.5.5 0 0 0-.296-.642 451 451 0 0 1 1.773-4.708.5.5 0 0 0 .646-.288q.72-1.874 1.455-3.738a.5.5 0 0 0-.282-.649q.924-2.334 1.872-4.656a.5.5 0 0 0 .652-.274 460 460 0 0 1 1.534-3.698.5.5 0 0 0-.268-.655q.976-2.318 1.977-4.622a.5.5 0 0 0 .658-.259 450 450 0 0 1 1.618-3.672.5.5 0 0 0-.253-.661 465 465 0 0 1 2.075-4.572.5.5 0 0 0 .664-.245q.84-1.818 1.695-3.63a.5.5 0 0 0-.238-.665 459 459 0 0 1 2.174-4.525.5.5 0 0 0 .669-.23 459 459 0 0 1 1.778-3.599.5.5 0 0 0-.224-.671q1.125-2.246 2.275-4.479a.5.5 0 0 0 .673-.215q.92-1.78 1.854-3.554a.5.5 0 0 0-.209-.675 454 454 0 0 1 2.368-4.422.5.5 0 0 0 .678-.2q.96-1.764 1.935-3.518a.5.5 0 0 0-.195-.68 459 459 0 0 1 2.469-4.376.5.5 0 0 0 .682-.186q.997-1.74 2.008-3.47a.5.5 0 0 0-.179-.684 462 462 0 0 1 2.56-4.316.5.5 0 0 0 .687-.17q1.035-1.719 2.083-3.427a.5.5 0 0 0-.164-.688 481 481 0 0 1 2.658-4.265.5.5 0 0 0 .69-.155q1.071-1.695 2.157-3.381a.5.5 0 0 0-.149-.691 454 454 0 0 1 2.747-4.201.5.5 0 0 0 .693-.141 480 480 0 0 1 2.23-3.33.5.5 0 0 0-.135-.694q1.41-2.08 2.841-4.145a.5.5 0 0 0 .696-.125 442 442 0 0 1 2.304-3.284.5.5 0 0 0-.12-.697 462 462 0 0 1 2.929-4.079.5.5 0 0 0 .698-.11 444 444 0 0 1 2.373-3.231.5.5 0 0 0-.104-.7 466 466 0 0 1 3.017-4.015.5.5 0 0 0 .7-.095q1.217-1.596 2.445-3.181a.5.5 0 0 0-.088-.701 458 458 0 0 1 3.103-3.949.5.5 0 0 0 .702-.079q1.25-1.569 2.512-3.126a.5.5 0 0 0-.074-.703 472 472 0 0 1 3.188-3.88.5.5 0 0 0 .704-.064 476 476 0 0 1 2.58-3.071.5.5 0 0 0-.058-.705 456 456 0 0 1 3.272-3.811c.208.182.524.16.705-.049a471 471 0 0 1 2.645-3.014.5.5 0 0 0-.043-.705 475 475 0 0 1 3.353-3.738c.204.186.52.171.706-.034a505 505 0 0 1 2.711-2.956.5.5 0 0 0-.028-.707 475 475 0 0 1 3.434-3.664.5.5 0 0 0 .707-.019q1.38-1.454 2.774-2.896a.5.5 0 0 0-.013-.707 458 458 0 0 1 3.513-3.59.5.5 0 0 0 .707-.003 474 474 0 0 1 2.835-2.835.5.5 0 0 0 .003-.707 458 458 0 0 1 3.59-3.513.5.5 0 0 0 .707.013q1.442-1.394 2.896-2.774a.5.5 0 0 0 .019-.707 458 458 0 0 1 3.665-3.434.5.5 0 0 0 .706.028q1.473-1.362 2.956-2.711a.5.5 0 0 0 .034-.706 475 475 0 0 1 3.738-3.353.5.5 0 0 0 .705.043 471 471 0 0 1 3.014-2.645.5.5 0 0 0 .049-.705 456 456 0 0 1 3.811-3.272c.178.21.494.236.705.058q1.53-1.296 3.071-2.58a.5.5 0 0 0 .064-.704 472 472 0 0 1 3.88-3.188.5.5 0 0 0 .703.074q1.557-1.263 3.126-2.512a.5.5 0 0 0 .079-.702 460 460 0 0 1 3.949-3.104.5.5 0 0 0 .701.09q1.585-1.23 3.181-2.445a.5.5 0 0 0 .095-.7 451 451 0 0 1 4.016-3.018.5.5 0 0 0 .699.104q1.61-1.192 3.231-2.373a.5.5 0 0 0 .11-.698q2.031-1.475 4.079-2.928a.5.5 0 0 0 .697.119q1.636-1.159 3.284-2.304a.5.5 0 0 0 .125-.696 459 459 0 0 1 4.145-2.84.5.5 0 0 0 .695.133q1.66-1.12 3.329-2.229a.5.5 0 0 0 .141-.693 456 456 0 0 1 4.201-2.747.5.5 0 0 0 .691.15 477 477 0 0 1 3.381-2.159.5.5 0 0 0 .155-.69 481 481 0 0 1 4.265-2.657.5.5 0 0 0 .688.164q1.708-1.05 3.427-2.083a.5.5 0 0 0 .17-.687 462 462 0 0 1 4.316-2.56.5.5 0 0 0 .684.18q1.73-1.012 3.47-2.009a.5.5 0 0 0 .186-.682q2.18-1.246 4.376-2.469a.5.5 0 0 0 .68.195q1.754-.975 3.518-1.934a.5.5 0 0 0 .2-.679 454 454 0 0 1 4.422-2.368.5.5 0 0 0 .675.21q1.773-.936 3.554-1.855a.5.5 0 0 0 .215-.673 463 463 0 0 1 4.48-2.275.5.5 0 0 0 .67.224q1.796-.896 3.599-1.778a.5.5 0 0 0 .23-.669 459 459 0 0 1 4.525-2.174.5.5 0 0 0 .666.238q1.81-.855 3.63-1.695a.5.5 0 0 0 .244-.664q2.28-1.05 4.572-2.075a.5.5 0 0 0 .661.253 450 450 0 0 1 3.672-1.618.5.5 0 0 0 .259-.658 455 455 0 0 1 4.622-1.977.5.5 0 0 0 .655.268q1.845-.775 3.698-1.534a.5.5 0 0 0 .274-.652q2.322-.948 4.656-1.872a.5.5 0 0 0 .649.282q1.865-.735 3.738-1.455a.5.5 0 0 0 .288-.646q2.348-.9 4.708-1.773a.5.5 0 0 0 .642.296q1.878-.693 3.765-1.37a.5.5 0 0 0 .302-.64 447 447 0 0 1 4.73-1.664.5.5 0 0 0 .636.31 457 457 0 0 1 3.797-1.289.5.5 0 0 0 .315-.632q2.385-.795 4.78-1.564a.5.5 0 0 0 .628.324q1.912-.612 3.832-1.207a.5.5 0 0 0 .33-.626 452 452 0 0 1 4.794-1.452.5.5 0 0 0 .621.337q1.92-.567 3.848-1.12a.5.5 0 0 0 .343-.618q2.415-.688 4.84-1.35a.5.5 0 0 0 .614.35q1.937-.526 3.882-1.037a.5.5 0 0 0 .356-.61 456 456 0 0 1 4.862-1.243.5.5 0 0 0 .606.365q1.94-.483 3.889-.949a.5.5 0 0 0 .37-.602q2.44-.582 4.891-1.136a.5.5 0 0 0 .597.377q1.957-.442 3.922-.865a.5.5 0 0 0 .383-.595 455 455 0 0 1 4.925-1.03.5.5 0 0 0 .59.39 457 457 0 0 1 3.922-.776.5.5 0 0 0 .396-.585q2.461-.473 4.93-.92a.5.5 0 0 0 .581.404q1.973-.355 3.952-.693a.5.5 0 0 0 .409-.576q2.48-.42 4.969-.815a.5.5 0 0 0 .572.416 457 457 0 0 1 3.963-.605.5.5 0 0 0 .422-.567q2.474-.365 4.957-.702a.5.5 0 0 0 .563.428q1.984-.267 3.974-.518a.5.5 0 0 0 .433-.558 465 465 0 0 1 4.995-.597.5.5 0 0 0 .553.44q1.998-.225 4-.432a.5.5 0 0 0 .446-.55q2.488-.255 4.984-.484a.5.5 0 0 0 .543.452q1.992-.18 3.988-.344a.5.5 0 0 0 .457-.54q2.5-.201 5.008-.377a.5.5 0 0 0 .534.464q2.002-.138 4.011-.26a.5.5 0 0 0 .469-.528q2.508-.15 5.025-.27a.5.5 0 0 0 .523.475q1.993-.095 3.991-.171a.5.5 0 0 0 .48-.519 467 467 0 0 1 5.011-.161.5.5 0 0 0 .512.486q2.005-.051 4.013-.086a.5.5 0 0 0 .492-.508q2.517-.04 5.041-.054a.5.5 0 0 0 .502.497 469 469 0 0 1 4.032 0 .5.5 0 0 0 .502-.497q2.525.014 5.042.054a.5.5 0 0 0 .491.508q2.009.035 4.013.086a.5.5 0 0 0 .513-.486q2.508.066 5.01.161a.5.5 0 0 0 .48.519q1.998.077 3.992.171a.5.5 0 0 0 .523-.475q2.515.12 5.025.27a.5.5 0 0 0 .469.529q2.007.12 4.011.259a.5.5 0 0 0 .533-.464q2.508.175 5.008.378a.5.5 0 0 0 .458.539q1.997.164 3.987.344a.5.5 0 0 0 .543-.452q2.496.229 4.984.485a.5.5 0 0 0 .446.549q2.003.208 4 .433a.5.5 0 0 0 .553-.44q2.502.285 4.995.596a.5.5 0 0 0 .433.558q1.99.25 3.975.518a.5.5 0 0 0 .562-.428q2.483.337 4.958.702a.5.5 0 0 0 .421.567q1.985.294 3.963.605a.5.5 0 0 0 .572-.416q2.489.394 4.969.815a.5.5 0 0 0 .409.577q1.98.337 3.953.692a.5.5 0 0 0 .58-.404q2.47.447 4.93.92a.5.5 0 0 0 .396.585q1.964.38 3.923.776a.5.5 0 0 0 .589-.39q2.468.502 4.925 1.03a.5.5 0 0 0 .384.595q1.963.424 3.921.865a.5.5 0 0 0 .598-.377q2.45.555 4.89 1.136a.5.5 0 0 0 .37.602q1.948.466 3.89.949a.5.5 0 0 0 .605-.365q2.436.609 4.862 1.243a.5.5 0 0 0 .357.61q1.944.51 3.881 1.038a.5.5 0 0 0 .614-.351q2.425.663 4.84 1.35a.5.5 0 0 0 .343.619q1.928.551 3.848 1.12a.5.5 0 0 0 .621-.338q2.403.714 4.794 1.453a.5.5 0 0 0 .33.625q1.92.596 3.832 1.207a.5.5 0 0 0 .628-.323q2.395.768 4.78 1.563a.5.5 0 0 0 .315.633q1.902.636 3.797 1.288a.5.5 0 0 0 .636-.31q2.372.82 4.73 1.664a.5.5 0 0 0 .302.64q1.887.677 3.765 1.37a.5.5 0 0 0 .642-.296q2.36.874 4.708 1.773a.5.5 0 0 0 .288.646q1.873.72 3.738 1.455a.5.5 0 0 0 .649-.281q2.334.923 4.656 1.871a.5.5 0 0 0 .274.652q1.853.759 3.698 1.534a.5.5 0 0 0 .655-.267q2.317.975 4.622 1.976a.5.5 0 0 0 .259.658q1.84.8 3.672 1.618a.5.5 0 0 0 .66-.253q2.293 1.026 4.573 2.075a.5.5 0 0 0 .244.664q1.82.84 3.63 1.695a.5.5 0 0 0 .666-.238q2.27 1.076 4.525 2.174a.5.5 0 0 0 .23.669q1.803.882 3.599 1.778a.5.5 0 0 0 .67-.223q2.247 1.125 4.479 2.274a.5.5 0 0 0 .215.673 443 443 0 0 1 3.554 1.854.5.5 0 0 0 .676-.209q2.218 1.173 4.421 2.369a.5.5 0 0 0 .201.678q1.764.96 3.518 1.934a.5.5 0 0 0 .68-.194q2.195 1.223 4.376 2.468a.5.5 0 0 0 .186.682q1.74.997 3.47 2.008a.5.5 0 0 0 .684-.179q2.165 1.27 4.316 2.56a.5.5 0 0 0 .17.687q1.719 1.035 3.427 2.083a.5.5 0 0 0 .687-.164q2.14 1.318 4.265 2.658a.5.5 0 0 0 .156.69q1.695 1.07 3.381 2.158a.5.5 0 0 0 .691-.15 468 468 0 0 1 4.201 2.748.5.5 0 0 0 .141.692q1.67 1.108 3.329 2.23c.229.154.54.094.695-.135q2.08 1.41 4.145 2.842a.5.5 0 0 0 .125.695 461 461 0 0 1 3.284 2.304.5.5 0 0 0 .697-.119q2.048 1.453 4.079 2.928a.5.5 0 0 0 .11.698q1.621 1.18 3.231 2.373a.5.5 0 0 0 .699-.103q2.016 1.498 4.016 3.016a.5.5 0 0 0 .095.701 467 467 0 0 1 3.181 2.444.5.5 0 0 0 .701-.088 458 458 0 0 1 3.949 3.103.5.5 0 0 0 .079.702q1.569 1.25 3.126 2.512a.5.5 0 0 0 .703-.074 476 476 0 0 1 3.879 3.188.5.5 0 0 0 .065.704q1.542 1.284 3.071 2.58a.5.5 0 0 0 .705-.058 456 456 0 0 1 3.81 3.272.5.5 0 0 0 .05.705q1.513 1.316 3.013 2.645a.5.5 0 0 0 .706-.043 475 475 0 0 1 3.738 3.353.5.5 0 0 0 .033.706q1.485 1.35 2.957 2.711a.5.5 0 0 0 .706-.028 458 458 0 0 1 3.665 3.434.5.5 0 0 0 .019.707q1.454 1.38 2.896 2.774a.5.5 0 0 0 .707-.012 457 457 0 0 1 3.589 3.512.5.5 0 0 0 .004.707 474 474 0 0 1 2.835 2.835.5.5 0 0 0 .707.004 457 457 0 0 1 3.512 3.589.5.5 0 0 0-.012.707q1.394 1.442 2.774 2.896a.5.5 0 0 0 .707.019 458 458 0 0 1 3.434 3.665.5.5 0 0 0-.028.706 505 505 0 0 1 2.711 2.956c.185.205.501.22.706.034a456 456 0 0 1 3.352 3.738.5.5 0 0 0-.042.705 471 471 0 0 1 2.645 3.014.5.5 0 0 0 .705.05 456 456 0 0 1 3.272 3.81.5.5 0 0 0-.058.705q1.296 1.53 2.58 3.071a.5.5 0 0 0 .704.065 456 456 0 0 1 3.187 3.879.5.5 0 0 0-.073.703q1.263 1.557 2.512 3.126a.5.5 0 0 0 .702.079 452 452 0 0 1 3.103 3.949.5.5 0 0 0-.088.701 471 471 0 0 1 2.444 3.181.5.5 0 0 0 .701.095 495 495 0 0 1 3.017 4.016.5.5 0 0 0-.104.699 479 479 0 0 1 2.373 3.231.5.5 0 0 0 .698.11 473 473 0 0 1 2.928 4.079.5.5 0 0 0-.119.697q1.159 1.636 2.304 3.284a.5.5 0 0 0 .695.125 434 434 0 0 1 2.841 4.145.5.5 0 0 0-.134.694 495 495 0 0 1 2.23 3.33.5.5 0 0 0 .693.141 489 489 0 0 1 2.747 4.201.5.5 0 0 0-.15.691 429 429 0 0 1 2.158 3.381.5.5 0 0 0 .69.155 467 467 0 0 1 2.658 4.266.5.5 0 0 0-.164.687 440 440 0 0 1 2.083 3.427.5.5 0 0 0 .686.17 466 466 0 0 1 2.561 4.316.5.5 0 0 0-.18.684q1.012 1.73 2.009 3.47a.5.5 0 0 0 .682.186q1.245 2.181 2.468 4.376a.5.5 0 0 0-.194.68q.975 1.754 1.934 3.518a.5.5 0 0 0 .678.2q1.197 2.204 2.369 4.422a.5.5 0 0 0-.209.675 479 479 0 0 1 1.854 3.554.5.5 0 0 0 .673.216 448 448 0 0 1 2.274 4.479.5.5 0 0 0-.223.67q.896 1.796 1.778 3.599a.5.5 0 0 0 .669.23 482 482 0 0 1 2.174 4.525.5.5 0 0 0-.238.666 461 461 0 0 1 1.695 3.63.5.5 0 0 0 .664.244q1.049 2.28 2.075 4.573a.5.5 0 0 0-.253.66 430 430 0 0 1 1.618 3.672.5.5 0 0 0 .658.259 449 449 0 0 1 1.976 4.622.5.5 0 0 0-.267.655q.775 1.845 1.534 3.698a.5.5 0 0 0 .652.274q.948 2.322 1.871 4.656a.5.5 0 0 0-.281.649q.735 1.865 1.455 3.738a.5.5 0 0 0 .646.288q.899 2.348 1.773 4.708a.5.5 0 0 0-.296.642q.693 1.879 1.371 3.765a.5.5 0 0 0 .639.302 448 448 0 0 1 1.663 4.73.5.5 0 0 0-.309.636q.652 1.895 1.288 3.797a.5.5 0 0 0 .633.315q.795 2.385 1.564 4.78a.5.5 0 0 0-.324.628q.612 1.912 1.207 3.832a.5.5 0 0 0 .625.33q.74 2.391 1.453 4.794a.5.5 0 0 0-.337.621q.567 1.92 1.119 3.848a.5.5 0 0 0 .618.343q.689 2.415 1.351 4.84a.5.5 0 0 0-.351.614q.528 1.937 1.038 3.882a.5.5 0 0 0 .61.356q.634 2.426 1.243 4.862a.5.5 0 0 0-.365.606q.483 1.94.949 3.889a.5.5 0 0 0 .602.37 440 440 0 0 1 1.136 4.891.5.5 0 0 0-.377.597q.441 1.957.865 3.922a.5.5 0 0 0 .595.383q.528 2.457 1.03 4.925a.5.5 0 0 0-.39.59q.396 1.958.776 3.922a.5.5 0 0 0 .585.396q.473 2.461.92 4.93a.5.5 0 0 0-.404.581q.355 1.973.692 3.952a.5.5 0 0 0 .577.409q.421 2.48.815 4.969a.5.5 0 0 0-.416.572q.31 1.978.605 3.963a.5.5 0 0 0 .567.422q.364 2.474.702 4.957a.5.5 0 0 0-.428.563q.267 1.984.518 3.974a.5.5 0 0 0 .558.433q.312 2.495.597 4.995a.5.5 0 0 0-.441.553q.225 1.998.433 4a.5.5 0 0 0 .549.446q.256 2.488.485 4.984a.5.5 0 0 0-.452.543q.18 1.992.344 3.988a.5.5 0 0 0 .539.457q.203 2.5.378 5.008a.5.5 0 0 0-.464.534q.139 2.002.259 4.011a.5.5 0 0 0 .529.469q.149 2.508.27 5.025a.5.5 0 0 0-.475.523q.094 1.993.171 3.991a.5.5 0 0 0 .519.48q.095 2.502.161 5.011a.5.5 0 0 0-.486.512q.051 2.005.086 4.013a.5.5 0 0 0 .508.492q.04 2.517.054 5.041a.5.5 0 0 0-.497.502 452 452 0 0 1 0 4.032.5.5 0 0 0 .497.502 470 470 0 0 1-.054 5.042.5.5 0 0 0-.508.491 486 486 0 0 1-.086 4.013.5.5 0 0 0 .486.513 462 462 0 0 1-.161 5.01.5.5 0 0 0-.519.48 439 439 0 0 1-.171 3.992c-.013.275.2.509.475.523a464 464 0 0 1-.27 5.025.5.5 0 0 0-.529.469q-.12 2.007-.259 4.011a.5.5 0 0 0 .464.533 459 459 0 0 1-.378 5.008.5.5 0 0 0-.539.458q-.164 1.997-.344 3.987a.5.5 0 0 0 .452.543 454 454 0 0 1-.485 4.984.5.5 0 0 0-.549.446 437 437 0 0 1-.433 4 .5.5 0 0 0 .441.553q-.285 2.502-.597 4.995a.5.5 0 0 0-.558.433 469 469 0 0 1-.518 3.975.5.5 0 0 0 .428.562 451 451 0 0 1-.702 4.958.5.5 0 0 0-.567.421 467 467 0 0 1-.605 3.963.5.5 0 0 0 .416.572 481 481 0 0 1-.815 4.97.5.5 0 0 0-.577.408q-.338 1.98-.692 3.952a.5.5 0 0 0 .403.581q-.446 2.47-.919 4.93a.5.5 0 0 0-.585.396 513 513 0 0 1-.776 3.923.5.5 0 0 0 .39.589 448 448 0 0 1-1.031 4.926.5.5 0 0 0-.594.383 463 463 0 0 1-.865 3.921.5.5 0 0 0 .377.598 445 445 0 0 1-1.136 4.89.5.5 0 0 0-.602.37 459 459 0 0 1-.949 3.89.5.5 0 0 0 .365.605q-.609 2.436-1.243 4.862a.5.5 0 0 0-.61.357q-.51 1.944-1.038 3.881a.5.5 0 0 0 .352.614 454 454 0 0 1-1.352 4.84.5.5 0 0 0-.618.343 448 448 0 0 1-1.12 3.848.5.5 0 0 0 .338.621q-.714 2.403-1.452 4.795a.5.5 0 0 0-.626.329 449 449 0 0 1-1.207 3.832.5.5 0 0 0 .324.628 460 460 0 0 1-1.564 4.78.5.5 0 0 0-.633.315 446 446 0 0 1-1.288 3.797.5.5 0 0 0 .31.636 472 472 0 0 1-1.664 4.731.5.5 0 0 0-.64.301 432 432 0 0 1-1.37 3.765.5.5 0 0 0 .296.642 465 465 0 0 1-1.773 4.708.5.5 0 0 0-.646.288 482 482 0 0 1-1.455 3.738.5.5 0 0 0 .282.649 471 471 0 0 1-1.872 4.656.5.5 0 0 0-.652.274 442 442 0 0 1-1.534 3.698.5.5 0 0 0 .268.655 462 462 0 0 1-1.977 4.622.5.5 0 0 0-.658.259 430 430 0 0 1-1.618 3.672.5.5 0 0 0 .253.661 470 470 0 0 1-2.075 4.572.5.5 0 0 0-.664.244 461 461 0 0 1-1.695 3.63.5.5 0 0 0 .238.666 482 482 0 0 1-2.174 4.525.5.5 0 0 0-.669.23 480 480 0 0 1-1.778 3.599.5.5 0 0 0 .224.67 470 470 0 0 1-2.275 4.479.5.5 0 0 0-.673.215 443 443 0 0 1-1.854 3.554.5.5 0 0 0 .209.676 467 467 0 0 1-2.368 4.422.5.5 0 0 0-.679.2 429 429 0 0 1-1.934 3.518.5.5 0 0 0 .195.68 481 481 0 0 1-2.469 4.376.5.5 0 0 0-.682.186 441 441 0 0 1-2.009 3.47.5.5 0 0 0 .18.684 466 466 0 0 1-2.56 4.316.5.5 0 0 0-.687.17 440 440 0 0 1-2.083 3.427.5.5 0 0 0 .164.687 446 446 0 0 1-2.658 4.266.5.5 0 0 0-.69.155 429 429 0 0 1-2.158 3.381.5.5 0 0 0 .15.691 466 466 0 0 1-2.747 4.201.5.5 0 0 0-.693.141 471 471 0 0 1-2.23 3.329.5.5 0 0 0 .135.695 453 453 0 0 1-2.842 4.145.5.5 0 0 0-.695.125 471 471 0 0 1-2.304 3.284.5.5 0 0 0 .119.697 473 473 0 0 1-2.928 4.079.5.5 0 0 0-.698.11 479 479 0 0 1-2.373 3.231.5.5 0 0 0 .104.699 478 478 0 0 1-3.017 4.016.5.5 0 0 0-.701.095 471 471 0 0 1-2.444 3.181.5.5 0 0 0 .088.701 452 452 0 0 1-3.103 3.949.5.5 0 0 0-.702.079 446 446 0 0 1-2.512 3.126.5.5 0 0 0 .074.703 472 472 0 0 1-3.188 3.88.5.5 0 0 0-.704.064 476 476 0 0 1-2.58 3.071.5.5 0 0 0 .058.705 473 473 0 0 1-3.272 3.811.5.5 0 0 0-.705.049 475 475 0 0 1-2.645 3.013.5.5 0 0 0 .043.706 475 475 0 0 1-3.353 3.738.5.5 0 0 0-.706.033q-1.35 1.485-2.711 2.957a.5.5 0 0 0 .028.706 458 458 0 0 1-3.434 3.665.5.5 0 0 0-.707.019q-1.38 1.454-2.774 2.896a.5.5 0 0 0 .013.707 458 458 0 0 1-3.513 3.59.5.5 0 0 0-.707.003 474 474 0 0 1-2.835 2.835.5.5 0 0 0-.003.707 458 458 0 0 1-3.59 3.513.5.5 0 0 0-.707-.013q-1.442 1.394-2.896 2.774a.5.5 0 0 0-.019.707 458 458 0 0 1-3.665 3.434.5.5 0 0 0-.706-.028q-1.472 1.361-2.957 2.711a.5.5 0 0 0-.033.706 475 475 0 0 1-3.738 3.353.5.5 0 0 0-.706-.043q-1.5 1.33-3.013 2.645a.5.5 0 0 0-.049.705 473 473 0 0 1-3.811 3.272.5.5 0 0 0-.705-.058q-1.53 1.296-3.071 2.58a.5.5 0 0 0-.064.704 472 472 0 0 1-3.88 3.188.5.5 0 0 0-.703-.074q-1.557 1.263-3.126 2.512a.5.5 0 0 0-.079.702 452 452 0 0 1-3.949 3.103.5.5 0 0 0-.701-.088 471 471 0 0 1-3.181 2.444.5.5 0 0 0-.095.701 457 457 0 0 1-4.016 3.017.5.5 0 0 0-.699-.104 479 479 0 0 1-3.231 2.373.5.5 0 0 0-.11.698 473 473 0 0 1-4.079 2.928.5.5 0 0 0-.697-.119q-1.637 1.158-3.284 2.304a.5.5 0 0 0-.125.695 453 453 0 0 1-4.145 2.842.5.5 0 0 0-.695-.135 449 449 0 0 1-3.33 2.23.5.5 0 0 0-.14.693 489 489 0 0 1-4.201 2.747.5.5 0 0 0-.691-.15 429 429 0 0 1-3.381 2.158.5.5 0 0 0-.155.69q-2.126 1.341-4.266 2.658a.5.5 0 0 0-.687-.164 440 440 0 0 1-3.427 2.083.5.5 0 0 0-.17.687 466 466 0 0 1-4.316 2.56.5.5 0 0 0-.684-.18q-1.73 1.012-3.47 2.009a.5.5 0 0 0-.186.682 481 481 0 0 1-4.376 2.469.5.5 0 0 0-.68-.195q-1.755.975-3.518 1.934a.5.5 0 0 0-.2.679q-2.204 1.195-4.422 2.368a.5.5 0 0 0-.676-.209 443 443 0 0 1-3.554 1.854.5.5 0 0 0-.215.673 470 470 0 0 1-4.479 2.275.5.5 0 0 0-.67-.224q-1.796.896-3.599 1.778a.5.5 0 0 0-.23.669 482 482 0 0 1-4.525 2.174.5.5 0 0 0-.666-.238 461 461 0 0 1-3.63 1.695.5.5 0 0 0-.244.664q-2.28 1.05-4.573 2.075a.5.5 0 0 0-.66-.253 464 464 0 0 1-3.672 1.618.5.5 0 0 0-.259.658 472 472 0 0 1-4.622 1.977.5.5 0 0 0-.655-.268q-1.845.775-3.699 1.534a.5.5 0 0 0-.273.652q-2.322.948-4.656 1.872a.5.5 0 0 0-.649-.282q-1.865.735-3.739 1.455a.5.5 0 0 0-.287.646q-2.348.899-4.708 1.773a.5.5 0 0 0-.642-.296q-1.88.693-3.765 1.37a.5.5 0 0 0-.302.64 472 472 0 0 1-4.73 1.664.5.5 0 0 0-.636-.31q-1.895.652-3.797 1.288a.5.5 0 0 0-.315.633q-2.385.795-4.78 1.564a.5.5 0 0 0-.628-.324q-1.913.612-3.832 1.207a.5.5 0 0 0-.33.626q-2.391.738-4.794 1.452a.5.5 0 0 0-.621-.338q-1.92.568-3.848 1.12a.5.5 0 0 0-.343.618q-2.415.689-4.84 1.352a.5.5 0 0 0-.614-.352q-1.938.528-3.882 1.038a.5.5 0 0 0-.356.611q-2.426.633-4.862 1.242a.5.5 0 0 0-.606-.365q-1.94.483-3.889.949a.5.5 0 0 0-.37.603q-2.44.58-4.891 1.136a.5.5 0 0 0-.597-.378q-1.957.44-3.922.865a.5.5 0 0 0-.383.595q-2.457.528-4.925 1.03a.5.5 0 0 0-.59-.39q-1.958.396-3.922.776a.5.5 0 0 0-.396.585q-2.461.474-4.93.92a.5.5 0 0 0-.581-.404q-1.973.354-3.952.692a.5.5 0 0 0-.409.577q-2.48.421-4.969.815a.5.5 0 0 0-.572-.416q-1.978.31-3.963.605a.5.5 0 0 0-.422.568q-2.474.363-4.957.701a.5.5 0 0 0-.563-.428q-1.984.267-3.974.518a.5.5 0 0 0-.434.559 483 483 0 0 1-4.994.596.5.5 0 0 0-.553-.441q-1.997.225-4.001.433a.5.5 0 0 0-.445.549q-2.488.257-4.984.485a.5.5 0 0 0-.543-.452q-1.992.18-3.988.344a.5.5 0 0 0-.457.539q-2.501.203-5.008.378a.5.5 0 0 0-.534-.464q-2.002.139-4.011.259a.5.5 0 0 0-.469.529q-2.51.149-5.025.271a.5.5 0 0 0-.523-.476q-1.993.094-3.991.171a.5.5 0 0 0-.481.519q-2.501.094-5.01.162a.5.5 0 0 0-.513-.487q-2.004.051-4.012.086a.5.5 0 0 0-.492.508q-2.517.04-5.041.054Z"
-          ></path>
+          <circle cx="462" cy="462" r="459.5" stroke="url(#circle-2_svg__b)" strokeDasharray="4 6" strokeLinecap="round" />
         </g>
+
         <defs>
           <linearGradient id="circle-2_svg__b" x1="922" x2="2" y1="2" y2="922" gradientUnits="userSpaceOnUse">
-            <stop offset="0.146" stopColor="#fff" stopOpacity="0"></stop>
-            <stop offset="0.302" stopColor="#fff" stopOpacity="0.396"></stop>
-            <stop offset="0.427" stopColor="#fff"></stop>
-            <stop offset="0.568" stopColor="#fff" stopOpacity="0"></stop>
-            <stop offset="0.682" stopColor="#fff" stopOpacity="0.66"></stop>
-            <stop offset="0.807" stopColor="#fff" stopOpacity="0.29"></stop>
-            <stop offset="0.899" stopColor="#fff" stopOpacity="0.37"></stop>
+            <stop offset="0.146" stopColor="#fff" stopOpacity="0" />
+
+            <stop offset="0.302" stopColor="#fff" stopOpacity="0.396" />
+
+            <stop offset="0.427" stopColor="#fff" />
+
+            <stop offset="0.568" stopColor="#fff" stopOpacity="0" />
+
+            <stop offset="0.682" stopColor="#fff" stopOpacity="0.66" />
+
+            <stop offset="0.807" stopColor="#fff" stopOpacity="0.29" />
+
+            <stop offset="0.899" stopColor="#fff" stopOpacity="0.37" />
           </linearGradient>
+
           <filter id="circle-2_svg__a" width="924" height="924" x="0" y="0" colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse">
-            <feFlood floodOpacity="0" result="BackgroundImageFix"></feFlood>
-            <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"></feBlend>
-            <feGaussianBlur result="effect1_foregroundBlur_709_11733" stdDeviation="1"></feGaussianBlur>
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+
+            <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+
+            <feGaussianBlur result="effect1_foregroundBlur_709_11733" stdDeviation="1" />
           </filter>
         </defs>
       </svg>
+
+      {/* ============================================ */}
+      {/* CIRCLE 03                                    */}
+      {/* ============================================ */}
+
       <svg xmlns="http://www.w3.org/2000/svg" width="604" height="604" fill="none">
         <g filter="url(#circle-3_svg__a)" opacity="0.3">
-          <circle cx="302" cy="302" r="299.5" stroke="url(#circle-3_svg__b)" strokeDasharray="4 6" strokeLinecap="round"></circle>
+          <circle cx="302" cy="302" r="299.5" stroke="url(#circle-3_svg__b)" strokeDasharray="4 6" strokeLinecap="round" />
         </g>
+
         <defs>
           <linearGradient id="circle-3_svg__b" x1="2" x2="602" y1="2" y2="602" gradientUnits="userSpaceOnUse">
-            <stop offset="0.146" stopColor="#fff" stopOpacity="0"></stop>
-            <stop offset="0.302" stopColor="#fff" stopOpacity="0.396"></stop>
-            <stop offset="0.427" stopColor="#fff"></stop>
-            <stop offset="0.568" stopColor="#fff" stopOpacity="0"></stop>
-            <stop offset="0.682" stopColor="#fff" stopOpacity="0.66"></stop>
-            <stop offset="0.807" stopColor="#fff" stopOpacity="0.29"></stop>
-            <stop offset="0.899" stopColor="#fff" stopOpacity="0.37"></stop>
+            <stop offset="0.146" stopColor="#fff" stopOpacity="0" />
+
+            <stop offset="0.302" stopColor="#fff" stopOpacity="0.396" />
+
+            <stop offset="0.427" stopColor="#fff" />
+
+            <stop offset="0.568" stopColor="#fff" stopOpacity="0" />
+
+            <stop offset="0.682" stopColor="#fff" stopOpacity="0.66" />
+
+            <stop offset="0.807" stopColor="#fff" stopOpacity="0.29" />
+
+            <stop offset="0.899" stopColor="#fff" stopOpacity="0.37" />
           </linearGradient>
+
           <filter id="circle-3_svg__a" width="604" height="604" x="0" y="0" colorInterpolationFilters="sRGB" filterUnits="userSpaceOnUse">
-            <feFlood floodOpacity="0" result="BackgroundImageFix"></feFlood>
-            <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"></feBlend>
-            <feGaussianBlur result="effect1_foregroundBlur_709_11732" stdDeviation="1"></feGaussianBlur>
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+
+            <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+
+            <feGaussianBlur result="effect1_foregroundBlur_709_11732" stdDeviation="1" />
           </filter>
         </defs>
       </svg>
@@ -176,28 +857,20 @@ const TeamsHeader = () => {
   );
 };
 
-const TeamsMember = () => {
-  // Using different placeholder image URLs that are more reliable
-  const teamMembers = [
-    { width: 28, height: 28, rotation: 205, circleSize: 382, rotateDirection: "left", img: "https://randomuser.me/api/portraits/women/1.jpg" },
-    { width: 21, height: 21, rotation: 335, circleSize: 382, rotateDirection: "left", img: "https://randomuser.me/api/portraits/men/1.jpg" },
-    { width: 21, height: 21, rotation: 25, circleSize: 302, rotateDirection: "right", img: "https://randomuser.me/api/portraits/women/2.jpg" },
-    { width: 21, height: 21, rotation: 315, circleSize: 302, rotateDirection: "right", img: "https://randomuser.me/api/portraits/men/2.jpg" },
-    { width: 24, height: 24, rotation: 145, circleSize: 462, rotateDirection: "right", img: "https://randomuser.me/api/portraits/women/3.jpg" },
-    { width: 21, height: 21, rotation: 145, circleSize: 302, rotateDirection: "right", img: "https://randomuser.me/api/portraits/men/3.jpg" },
-    { width: 32, height: 32, rotation: 110, circleSize: 382, rotateDirection: "left", img: "https://randomuser.me/api/portraits/women/4.jpg" },
-    { width: 40, height: 40, rotation: 230, circleSize: 462, rotateDirection: "right", img: "https://randomuser.me/api/portraits/men/4.jpg" },
-    { width: 40, height: 40, rotation: 315, circleSize: 462, rotateDirection: "right", img: "https://randomuser.me/api/portraits/women/5.jpg" },
-    { width: 28, height: 28, rotation: 275, circleSize: 382, rotateDirection: "left", img: "https://randomuser.me/api/portraits/men/5.jpg" },
-    { width: 32, height: 32, rotation: 45, circleSize: 382, rotateDirection: "left", img: "https://randomuser.me/api/portraits/women/6.jpg" },
-  ];
+/* ========================================================== */
+/* FLOATING TEAM MEMBERS                                      */
+/* ========================================================== */
 
+const TeamsMember = () => {
   return (
     <div className="TeamsHeader_circleAnchors">
-      {teamMembers.map((member, index) => (
+      {floatingTeamMembers.map((member, index) => (
         <div
           key={`member-${index}`}
-          className={`TeamsHeader_circleIconWrapper TeamsHeader_rotate${member.rotateDirection === "left" ? "Left" : "Right"}`}
+          className={`
+            TeamsHeader_circleIconWrapper
+            ${member.rotateDirection === "left" ? "TeamsHeader_rotateLeft" : "TeamsHeader_rotateRight"}
+          `}
           style={{
             width: `${member.circleSize}px`,
             "--rotation": `${member.rotation}deg`,
@@ -205,7 +878,7 @@ const TeamsMember = () => {
         >
           <div className="TeamsHeader_circleIcon">
             <img
-              alt={`Team member ${index}`}
+              alt={`Team member ${index + 1}`}
               loading="lazy"
               width={member.width}
               height={member.height}
@@ -215,7 +888,7 @@ const TeamsMember = () => {
               style={{
                 width: `${member.width}px`,
                 height: `${member.height}px`,
-                minWidth: `${member.width}px`, // Ensures image maintains size
+                minWidth: `${member.width}px`,
               }}
             />
           </div>

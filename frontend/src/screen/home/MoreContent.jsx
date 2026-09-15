@@ -1,5 +1,4 @@
 import { HeadingThree, InputLabel } from "@/components/customeUI/Title";
-import React from "react";
 import { FaRegHandPointRight, FaRegLightbulb } from "react-icons/fa";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { IoSpeedometerOutline } from "react-icons/io5";
@@ -7,7 +6,7 @@ import { MdOutlineCreditScore } from "react-icons/md";
 import { TbUsersGroup } from "react-icons/tb";
 import { GrUser } from "react-icons/gr";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 
 export const MoreContent = () => {
   const [activeCard, setActiveCard] = useState(1);
@@ -32,32 +31,43 @@ export const MoreContent = () => {
   };
 
   return (
-    <section className="py-10">
+    <section className="home-more py-10">
       <div className="container text-center">
         <div className="flexC">
           <span className="text-xl md:text-3xl lg:text-6xl font-semibold line-through opacity-50">One</span>
-          <h1 className="text-xl md:text-3xl lg:text-6xl font-semibold blog-detail-title">&nbsp;a few more things.</h1>
+          <h2 className="text-xl md:text-3xl lg:text-6xl font-semibold blog-detail-title">&nbsp;a few more things.</h2>
         </div>
         <p>Explore a set of advanced utilities and features designed to streamline development, optimize performance, and elevate your workflow.</p>
 
         <div className="content flex flex-wrap mt-10 gap-4 justify-center">
           {cardData.map((card) => (
-            <motion.div
+            <Motion.div
               key={card.id}
-              className="hnZxpu relative h-[474px] overflow-hidden cursor-pointer"
+              className={`hnZxpu relative h-[474px] overflow-hidden cursor-pointer${activeCard === card.id ? " is-active" : ""}`}
+              role="button"
+              tabIndex={0}
+              aria-label={card.title}
+              aria-expanded={activeCard === card.id}
+              onFocus={() => setActiveCard(card.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setActiveCard(card.id);
+                }
+              }}
               onHoverStart={() => !isMobile && setActiveCard(card.id)}
               onClick={() => isMobile && handleCardInteraction(card.id)}
-              initial={{ width: card.id === 1 ? 384 : 100 }}
+              initial={false}
               animate={{
-                width: activeCard === card.id ? 384 : 100,
+                flexGrow: activeCard === card.id ? 4 : 1,
                 transition: {
-                  duration: 0.6,
-                  ease: [0.34, 1.4, 0.64, 1],
+                  duration: 0.5,
+                  ease: [0.16, 1, 0.3, 1],
                 },
               }}
               whileTap={isMobile ? { scale: 0.98 } : {}}
             >
-              <motion.div
+              <Motion.div
                 className="isiSZ absolute top-0 h-[474px]"
                 animate={{
                   scale: activeCard === card.id ? 1 : 1.2,
@@ -65,9 +75,9 @@ export const MoreContent = () => {
                 }}
               >
                 <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-              </motion.div>
+              </Motion.div>
 
-              <motion.div
+              <Motion.div
                 className="iLpqQ absolute"
                 initial={{ left: 62, top: 42 }}
                 animate={{
@@ -77,26 +87,27 @@ export const MoreContent = () => {
                 }}
               >
                 <HeadingThree>{card.title}</HeadingThree>
-              </motion.div>
+              </Motion.div>
 
               <AnimatePresence>
                 {activeCard === card.id && (
-                  <motion.div
+                  <Motion.div
                     className="w-full h-full flex flex-col text-left justify-end relative z-20 p-8 pb-12"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3 }}
                   >
+                    <h3 className="home-more__active-title">{card.title}</h3>
                     <p>{card.content}</p>
                     <div className="flex items-center gap-2 mt-3">
                       {card.icon}
                       <InputLabel>{card.label}</InputLabel>
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </Motion.div>
           ))}
         </div>
       </div>

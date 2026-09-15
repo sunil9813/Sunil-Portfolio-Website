@@ -1,139 +1,107 @@
-import { BsCodeSlash, BsDatabase, BsEye, BsHeart, BsShieldLock, BsStars, BsWifi } from "react-icons/bs";
+import { BsArrowUpRight, BsBook, BsClock, BsCodeSlash, BsDatabase, BsShieldLock, BsWifi } from "react-icons/bs";
 import { FaCloud } from "react-icons/fa6";
-import { FiCopy } from "react-icons/fi";
-import { HiCheckBadge, HiSparkles } from "react-icons/hi2";
+import { HiCheckBadge } from "react-icons/hi2";
+import networkingImage from "@/assets/course-hero/networking.jpg";
+import databaseImage from "@/assets/course-hero/databases.jpg";
+import cyberSecurityImage from "@/assets/course-hero/cyber-security.jpg";
+import softwareDevelopmentImage from "@/assets/course-hero/software-development.jpg";
+import cloudComputingImage from "@/assets/course-hero/cloud-computing.jpg";
 
 const heroCards = [
   {
-    title: "Stephen Ramiz",
-    topic: "Networks",
-    description: "Routing, packets and secure communication systems.",
-    views: "372",
-    likes: "44",
+    title: "Computer Networks",
+    topic: "Networking",
+    description: "Master routing, protocols, network design and secure communication.",
+    modules: "10",
+    duration: "6h",
     Icon: BsWifi,
+    image: networkingImage,
     variant: "orb",
-    className: "left-[8%] top-[170px] z-10 -rotate-[12deg] opacity-55 blur-[1.5px] scale-[0.96]",
+    position: "far-left",
   },
   {
-    title: "Arman Meymandi",
-    topic: "Data Systems",
-    description: "Schema design, queries, indexing and storage engines.",
-    views: "312",
-    likes: "48",
+    title: "Database Systems",
+    topic: "Databases",
+    description: "Design schemas, write efficient queries and understand modern storage.",
+    modules: "12",
+    duration: "8h",
     Icon: BsDatabase,
+    image: databaseImage,
     variant: "wave",
-    copyStyle: "green",
-    className: "left-[24%] top-[128px] z-30 -rotate-[13deg]",
+    primaryAction: true,
+    position: "left",
   },
   {
-    title: "John Smith",
+    title: "Cyber Security",
     topic: "Cyber Security",
-    description: "Threat models, defensive systems and secure practice.",
-    views: "312",
-    likes: "48",
+    description: "Learn threat analysis, ethical security and defensive engineering.",
+    modules: "14",
+    duration: "10h",
     Icon: BsShieldLock,
+    image: cyberSecurityImage,
     variant: "helmet",
     featured: true,
-    className: "left-1/2 top-[58px] z-50 -translate-x-1/2",
+    position: "center",
   },
   {
-    title: "Alex Jackson",
-    topic: "Programming",
-    description: "Build practical software with clean frontend patterns.",
-    views: "312",
-    likes: "48",
+    title: "Software Development",
+    topic: "Development",
+    description: "Build maintainable applications with clean code and modern workflows.",
+    modules: "16",
+    duration: "12h",
     Icon: BsCodeSlash,
+    image: softwareDevelopmentImage,
     variant: "portrait",
-    className: "right-[24%] top-[128px] z-30 rotate-[13deg]",
+    position: "right",
   },
   {
-    title: "Maria Gomez",
-    topic: "Cloud",
-    description: "Deploy apps, services and infrastructure workflows.",
-    views: "372",
-    likes: "44",
+    title: "Cloud Computing",
+    topic: "Cloud & DevOps",
+    description: "Deploy scalable services and automate cloud infrastructure workflows.",
+    modules: "11",
+    duration: "9h",
     Icon: FaCloud,
+    image: cloudComputingImage,
     variant: "skull",
-    className: "right-[8%] top-[170px] z-10 rotate-[12deg] opacity-55 blur-[1.5px] scale-[0.96]",
+    position: "far-right",
   },
 ];
 
-const stylePills = [
-  { label: "Bokeh", accent: "from-lime-200 to-emerald-500" },
-  { label: "Claymation", accent: "from-orange-300 to-lime-300" },
-  { label: "Fantasy", accent: "from-green-200 to-cyan-400" },
-  { label: "Disney Pixar", accent: "from-pink-300 to-lime-300" },
-  { label: "Studio Ghibli", accent: "from-cyan-200 to-lime-500" },
-  { label: "Collage", accent: "from-rose-300 to-emerald-300" },
-  { label: "Pop Art", accent: "from-fuchsia-400 to-lime-300" },
-  { label: "80s Retro", accent: "from-violet-400 to-green-300" },
-  { label: "Cyberpunk", accent: "from-cyan-400 to-lime-400" },
-  { label: "Pixel Art", accent: "from-amber-200 to-lime-500" },
-  { label: "Retro Comics", accent: "from-slate-300 to-lime-300" },
-  { label: "3D Models", accent: "from-blue-300 to-emerald-400" },
-  { label: "GTA Cover Art", accent: "from-teal-300 to-green-500" },
-  { label: "Porcelain", accent: "from-neutral-300 to-slate-500" },
-  { label: "1990s anime", accent: "from-sky-300 to-lime-300" },
-  { label: "Watercolor", accent: "from-orange-300 to-rose-400" },
-  { label: "Oilpaint", accent: "from-zinc-300 to-lime-300" },
-];
-
-export const CourseHero = () => {
+export const CourseHero = ({ courseCount = 0 }) => {
   return (
-    <section className="relative isolate min-h-[980px] overflow-hidden bg-[#020402] pt-16 text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_9%_0%,rgba(181,255,124,0.28),transparent_18%),radial-gradient(circle_at_91%_0%,rgba(181,255,124,0.26),transparent_18%),linear-gradient(180deg,#172610_0%,#050805_34%,#010201_100%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.19] [background-image:radial-gradient(rgba(216,255,181,0.75)_0.75px,transparent_0.75px)] [background-size:7px_7px]" />
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[780px] -translate-x-1/2 opacity-[0.16] [background-image:linear-gradient(rgba(185,255,118,0.48)_1px,transparent_1px),linear-gradient(90deg,rgba(185,255,118,0.48)_1px,transparent_1px)] [background-size:80px_80px] [mask-image:radial-gradient(ellipse_at_center,black_0%,transparent_72%)]" />
+    <section aria-labelledby="course-showcase-title" className="course-hero-showcase">
+      <div className="course-hero-showcase__aurora pointer-events-none absolute inset-0" />
+      <div className="course-hero-showcase__beams pointer-events-none absolute inset-0" />
+      <div className="course-hero-showcase__grid pointer-events-none absolute inset-0" />
+      <div className="course-hero-showcase__spotlight pointer-events-none absolute left-1/2 top-[255px] h-[420px] w-[760px] -translate-x-1/2" />
 
-      <div className="pointer-events-none absolute left-1/2 top-[100px] h-[680px] w-[1120px] -translate-x-1/2 rounded-[50%] border border-[#b7ff74]/20 bg-[radial-gradient(ellipse_at_top,rgba(171,255,111,0.15)_0%,rgba(107,170,62,0.055)_32%,transparent_62%)] shadow-[0_-2px_7px_rgba(216,255,185,0.9),0_-17px_44px_rgba(151,255,83,0.38),0_-80px_150px_rgba(151,255,83,0.18)] sm:w-[1380px] xl:w-[1570px]" />
-      <div className="pointer-events-none absolute left-1/2 top-[86px] h-[98px] w-[850px] -translate-x-1/2 rounded-full bg-[#a9ff65]/[0.17] blur-[48px]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-[355px] bg-gradient-to-b from-transparent via-black/82 to-[#0B1117]" />
-
-      <div className="relative z-50 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8">
-        <div className="relative mx-auto text-center">
-          <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-[#b7ff74]/55 bg-black/42 px-4 py-1.5 shadow-[0_0_22px_rgba(181,255,124,0.12),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
-            <HiSparkles size={14} className="text-[#c6ff9a]" />
-            <span className="text-[11px] text-[#ecffe1]">New: Our AI integration just landed</span>
-          </div>
-
-          <h1 className="mx-auto mt-4 max-w-[1180px] text-[42px] font-semibold leading-[1.02] text-white sm:text-[58px] lg:text-[66px] xl:text-[76px]">
-            Think better with <span className="font-mono text-[#a8ff5c] drop-shadow-[0_0_22px_rgba(168,255,92,0.28)]">Course-Boom</span>
+      <div className="relative z-20 mx-auto h-[700px] max-w-[1500px] px-4 sm:h-[700px] sm:px-6 lg:px-8">
+        <div className="course-hero-showcase__content relative z-30 mx-auto max-w-[820px] pt-10 text-center sm:pt-12">
+          <span className="course-hero-showcase__kicker">Career-focused IT learning</span>
+          <h1 id="course-showcase-title" className="course-hero-showcase__title mt-3 text-[32px] font-semibold leading-[1.08] tracking-[-0.035em] text-white sm:text-[44px] lg:text-[52px]">
+            Build skills for the <span className="text-[#a8ff6a]">digital future</span>
           </h1>
+          <p className="course-hero-showcase__description mx-auto mt-3 max-w-[650px] text-[12px] leading-5 text-white/52 sm:text-[14px] sm:leading-6">
+            Practical IT courses designed to strengthen your technical foundations and help you create, secure, and scale modern technology.
+          </p>
+
+          <div className="course-hero-showcase__signals" aria-label="Course highlights">
+            <span><BsBook />{courseCount > 0 ? `${courseCount} curated courses` : "Curated courses"}</span>
+            <span><BsCodeSlash />Practical curriculum</span>
+            <span><BsClock />Learn at your pace</span>
+          </div>
         </div>
 
-        <div className="relative mx-auto mt-0 h-[760px] max-w-[1420px] overflow-visible">
-          <div className="pointer-events-none absolute left-1/2 top-[90px] h-px w-[62%] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#d3ffb8]/55 to-transparent" />
+        <div className="course-hero-card-deck absolute inset-x-0 top-[172px] hidden h-[560px] lg:block">
+          {heroCards.map((card) => (
+            <HeroCourseCard key={card.title} card={card} />
+          ))}
+        </div>
 
-          <div className="absolute inset-x-0 top-0 hidden h-[560px] lg:block">
-            {heroCards.map((card) => (
-              <HeroCourseCard key={card.title} card={card} />
-            ))}
-          </div>
-
-          <div className="mx-auto grid max-w-[920px] grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:hidden">
-            {heroCards.slice(1, 5).map((card) => (
-              <HeroCourseCard key={card.title} card={{ ...card, className: "", featured: card.featured }} mobile />
-            ))}
-          </div>
-
-          <div className="absolute left-1/2 top-[520px] z-30 hidden w-full max-w-[1240px] -translate-x-1/2 px-4 lg:block">
-            <div className="grid grid-cols-6 gap-x-5 gap-y-5 opacity-70">
-              {stylePills.map((pill, index) => (
-                <div
-                  key={pill.label}
-                  className={`${index > 11 ? "translate-x-28" : ""} flex h-[58px] items-center gap-4 rounded-full border border-white/[0.07] bg-black/43 px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.045),0_18px_50px_rgba(0,0,0,0.42)] backdrop-blur-xl`}
-                >
-                  <span className={`flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${pill.accent} p-[2px] shadow-[0_0_18px_rgba(168,255,92,0.20)]`}>
-                    <span className="flex size-full items-center justify-center rounded-full bg-[#080c07] text-[10px] text-[#d9ffc7]">
-                      <BsStars />
-                    </span>
-                  </span>
-
-                  <span className="truncate text-[13px] text-white/48">{pill.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="course-hero-card-deck course-hero-card-deck--mobile absolute inset-x-0 top-[220px] mx-auto h-[520px] max-w-[680px] lg:hidden">
+          {heroCards.map((card) => (
+            <HeroCourseCard key={card.title} card={card} mobile />
+          ))}
         </div>
       </div>
     </section>
@@ -142,27 +110,29 @@ export const CourseHero = () => {
 
 const HeroCourseCard = ({ card, mobile = false }) => {
   const Icon = card.Icon;
-  const cardSize = card.featured ? "h-[390px] w-[288px]" : "h-[365px] w-[268px]";
-  const copyButtonClass =
-    card.copyStyle === "green"
-      ? "border-[#d8ffb4]/60 bg-[#b7ff7c] text-[#13210b] shadow-[0_0_22px_rgba(174,255,111,0.34)]"
-      : "border-white/70 bg-black/20 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  const cardSize = card.featured ? "h-[398px] w-[292px]" : "h-[374px] w-[274px]";
+  const actionButtonClass = card.primaryAction
+    ? "border-[#d8ffb4]/60 bg-[#b7ff7c] text-[#13210b] shadow-[0_0_22px_rgba(174,255,111,0.34)]"
+    : "border-white/70 bg-black/20 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
 
   return (
     <article
-      className={`${mobile ? "relative h-[382px] w-full" : `absolute ${cardSize} ${card.className}`} overflow-hidden rounded-[34px] border p-[3px] transition-transform duration-300 ${
+      aria-label={`${card.topic} course card`}
+      className={`course-hero-card course-hero-card--${card.position} ${mobile ? "course-hero-card--mobile" : `absolute ${cardSize}`} rounded-[34px] border p-[3px] ${
         card.featured
-          ? "border-[#c7ff93]/70 bg-[linear-gradient(145deg,rgba(207,255,156,0.58),rgba(134,255,90,0.18)_36%,rgba(255,255,255,0.07))] shadow-[0_0_0_1px_rgba(191,255,136,0.22),0_0_32px_rgba(161,255,83,0.52),0_35px_120px_rgba(0,0,0,0.82)]"
-          : "border-white/[0.18] bg-[linear-gradient(145deg,rgba(255,255,255,0.34),rgba(255,255,255,0.06)_42%,rgba(166,255,102,0.08))] shadow-[0_35px_120px_rgba(0,0,0,0.66)]"
+          ? "border-[#d2ffa8]/75 bg-[linear-gradient(145deg,rgba(226,255,196,0.62),rgba(135,255,84,0.20)_38%,rgba(255,255,255,0.07))] shadow-[0_0_0_1px_rgba(191,255,136,0.24),0_0_18px_rgba(203,255,160,0.52),0_0_48px_rgba(133,255,65,0.34),0_38px_120px_rgba(0,0,0,0.88)]"
+          : "border-white/[0.20] bg-[linear-gradient(145deg,rgba(255,255,255,0.38),rgba(255,255,255,0.055)_44%,rgba(166,255,102,0.09))] shadow-[0_32px_95px_rgba(0,0,0,0.76)]"
       }`}
     >
-      <div className="relative h-full overflow-hidden rounded-[30px] border border-white/[0.16] bg-[#050806] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-78px_86px_rgba(0,0,0,0.94)]">
-        <CourseCardArtwork variant={card.variant} featured={card.featured} />
+      <div className="course-hero-card__inner relative h-full overflow-hidden rounded-[30px] border border-white/[0.16] bg-[#050806] shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_-78px_86px_rgba(0,0,0,0.94)]">
+        <CourseCardArtwork image={card.image} title={card.title} variant={card.variant} featured={card.featured} />
 
         <div className="pointer-events-none absolute inset-0 bg-[#020704]/20" />
         <div className="pointer-events-none absolute inset-0 bg-[#15320f]/20 mix-blend-color" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#07120a]/0 via-[#050906]/28 to-[#020302]/96" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,transparent_5%,rgba(2,5,3,0.44)_94%)]" />
+        <div className="course-hero-card__reflection pointer-events-none absolute -left-[22%] -top-[8%] h-[74%] w-[48%] rotate-[18deg] bg-gradient-to-r from-transparent via-white/[0.12] to-transparent blur-[2px]" />
+        <div className="course-hero-card__scan pointer-events-none absolute inset-0 opacity-[0.12] [background-image:repeating-linear-gradient(180deg,transparent_0,transparent_3px,rgba(210,255,184,0.16)_4px)]" />
         <div className="pointer-events-none absolute left-1/2 top-0 z-10 h-px w-[58%] -translate-x-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
         <div className="pointer-events-none absolute inset-0 z-10 rounded-[30px] ring-1 ring-inset ring-white/[0.08]" />
 
@@ -186,18 +156,18 @@ const HeroCourseCard = ({ card, mobile = false }) => {
           <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/[0.10] pt-4">
             <div className="flex items-center gap-4 text-[12px] text-white/84">
               <span className="inline-flex items-center gap-1.5">
-                <BsEye />
-                {card.views}
+                <BsBook />
+                {card.modules} modules
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <BsHeart />
-                {card.likes}
+                <BsClock />
+                {card.duration}
               </span>
             </div>
 
-            <button type="button" className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-[12px] font-medium ${copyButtonClass}`}>
-              <FiCopy className="text-[16px]" />
-              Copy
+            <button type="button" className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-[12px] font-medium ${actionButtonClass}`}>
+              Explore
+              <BsArrowUpRight className="text-[14px]" />
             </button>
           </div>
         </div>
@@ -206,7 +176,11 @@ const HeroCourseCard = ({ card, mobile = false }) => {
   );
 };
 
-const CourseCardArtwork = ({ variant, featured = false }) => {
+const CourseCardArtwork = ({ image, title, variant, featured = false }) => {
+  if (image) {
+    return <img src={image} alt={`${title} course artwork`} className="absolute inset-0 h-full w-full object-cover object-top" />;
+  }
+
   if (variant === "wave") {
     return (
       <div className="absolute inset-0 overflow-hidden bg-[#050807]">
@@ -224,8 +198,8 @@ const CourseCardArtwork = ({ variant, featured = false }) => {
           />
         ))}
         <div className="absolute left-[14%] top-[60%] h-px w-[72%] bg-gradient-to-r from-white/0 via-white/22 to-white/0" />
-        <div className="absolute left-[14%] top-[67%] text-[5px] font-semibold uppercase text-white/46">A new subset of recovery</div>
-        <div className="absolute right-[16%] top-[61%] text-[5px] font-semibold uppercase text-white/46">Homepage icon design</div>
+        <div className="absolute left-[14%] top-[67%] text-[5px] font-semibold uppercase text-white/46">Relational data model</div>
+        <div className="absolute right-[16%] top-[61%] text-[5px] font-semibold uppercase text-white/46">Query performance</div>
       </div>
     );
   }
@@ -255,11 +229,7 @@ const CourseCardArtwork = ({ variant, featured = false }) => {
           />
         ))}
         {Array.from({ length: 6 }).map((_, index) => (
-          <span
-            key={`rail-${index}`}
-            className="absolute right-[24%] h-px rounded-full bg-white/22"
-            style={{ top: `${21 + index * 3.8}%`, width: `${42 - index * 3}px` }}
-          />
+          <span key={`rail-${index}`} className="absolute right-[24%] h-px rounded-full bg-white/22" style={{ top: `${21 + index * 3.8}%`, width: `${42 - index * 3}px` }} />
         ))}
         <div className="absolute right-[20%] top-[18%] h-12 w-16 rounded-[18px] border border-white/12 bg-black/26" />
         {featured && <div className="absolute inset-x-8 top-6 h-20 rounded-full bg-white/24 blur-[28px]" />}
@@ -269,36 +239,45 @@ const CourseCardArtwork = ({ variant, featured = false }) => {
 
   if (variant === "portrait") {
     return (
-      <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_58%_31%,#6e756c_0%,#172018_37%,#040604_82%)]">
-        <div className="absolute left-[34%] top-[17%] h-[220px] w-[138px] rounded-[47%] bg-[linear-gradient(103deg,#101513_0%,#6f8176_41%,#2d3d34_55%,#080b0a_92%)] shadow-[inset_33px_0_36px_rgba(0,0,0,0.72)]" />
-        <div className="absolute left-[23%] top-[20%] h-[135px] w-[92px] rounded-full bg-black/76 blur-[3px]" />
-        <div className="absolute left-[37%] top-[31%] h-[46px] w-[104px] rounded-full bg-[#111816]/82" />
-        {Array.from({ length: 11 }).map((_, index) => (
-          <span
-            key={index}
-            className="absolute h-px rounded-full bg-[#a8ff5c] shadow-[0_0_10px_rgba(168,255,92,0.86)]"
-            style={{
-              left: `${43 + index * 1.4}%`,
-              top: `${39 + index * 1.45}%`,
-              width: `${50 - index * 2}px`,
-              opacity: 0.9 - index * 0.045,
-            }}
-          />
-        ))}
-        <div className="absolute left-[28%] top-[44%] h-px w-[216px] bg-[#a8ff5c]/82 shadow-[0_0_16px_#a8ff5c]" />
-        <div className="absolute left-[42%] top-[43%] h-20 w-36 rounded-full bg-[#3aff5c]/30 blur-[18px]" />
+      <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_70%_24%,rgba(48,255,136,0.24),transparent_27%),linear-gradient(145deg,#08130e_0%,#020403_82%)]">
+        <div className="absolute inset-x-[9%] top-[12%] h-[205px] overflow-hidden rounded-[22px] border border-white/15 bg-[#050a07]/88 shadow-[0_18px_45px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="flex h-8 items-center gap-1.5 border-b border-white/10 px-3">
+            <span className="size-1.5 rounded-full bg-[#ff6b6b]/70" />
+            <span className="size-1.5 rounded-full bg-[#ffd66b]/70" />
+            <span className="size-1.5 rounded-full bg-[#8dff72]/80" />
+            <span className="ml-3 text-[5px] uppercase tracking-[0.14em] text-white/30">app.jsx</span>
+          </div>
+          <div className="space-y-3 p-4">
+            {[74, 52, 84, 61, 46, 78, 56].map((width, index) => (
+              <div key={width} className="flex items-center gap-2">
+                <span className="w-3 text-[5px] text-white/22">{index + 1}</span>
+                <span className={`h-1 rounded-full ${index % 3 === 0 ? "bg-[#80ff77]/70" : index % 3 === 1 ? "bg-[#5eead4]/55" : "bg-white/26"}`} style={{ width: `${width}%` }} />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="absolute left-[18%] top-[48%] h-20 w-[70%] rounded-full bg-[#59ff79]/12 blur-[28px]" />
       </div>
     );
   }
 
   if (variant === "skull") {
     return (
-      <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_61%_28%,#46ff76_0%,#0d4025_31%,#030503_76%)]">
-        <div className="absolute right-[15%] top-[14%] h-[190px] w-[150px] rounded-[47%] border border-[#8dff72]/25 bg-[#bfff9f]/18 shadow-[inset_0_-40px_40px_rgba(0,0,0,0.68)]" />
-        <div className="absolute right-[26%] top-[32%] size-9 rounded-full bg-black/76" />
-        <div className="absolute right-[12%] top-[33%] size-8 rounded-full bg-black/70" />
-        <div className="absolute right-[22%] top-[48%] h-6 w-12 rounded-full bg-black/62" />
-        <div className="absolute right-[8%] top-[12%] h-[208px] w-[110px] rounded-full border-r-[9px] border-[#79ff70]/46 blur-[1px]" />
+      <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_58%_25%,rgba(70,255,194,0.38),transparent_26%),linear-gradient(150deg,#071915_0%,#020504_78%)]">
+        <div className="absolute left-1/2 top-[15%] -translate-x-1/2 text-[116px] text-[#9bffcb]/24 drop-shadow-[0_0_24px_rgba(95,255,185,0.32)]">
+          <FaCloud />
+        </div>
+        <div className="absolute left-[17%] top-[46%] flex w-[66%] items-center justify-between">
+          {[0, 1, 2].map((index) => (
+            <div key={index} className="relative h-16 w-12 rounded-lg border border-[#8dffd0]/22 bg-black/45 shadow-[0_0_18px_rgba(61,255,181,0.10)]">
+              {[0, 1, 2].map((line) => (
+                <span key={line} className="absolute left-2 right-2 h-px bg-[#78ffc1]/42" style={{ top: `${14 + line * 13}px` }} />
+              ))}
+              <span className="absolute bottom-2 right-2 size-1 rounded-full bg-[#7dff9c] shadow-[0_0_7px_#7dff9c]" />
+            </div>
+          ))}
+        </div>
+        <div className="absolute left-1/2 top-[40%] h-16 w-px -translate-x-1/2 bg-gradient-to-b from-[#8dffd0]/65 to-transparent" />
       </div>
     );
   }

@@ -1,130 +1,243 @@
-const ScrollStickySections = ({ data }) => {
-  return (
-    <div className="relative">
-      {data.map((item, index) => {
-        return (
-          <div key={item.id} className="sticky top-24 py-2 w-full flex items-center justify-center overflow-hidden">
-            <div className="flex justify-between gap-4 relative black-custome-box h-96 z-50 w-full">
-              <div className="detail flex-1 p-10 w-full">
-                <h1 className="text-[60px] md:text-[100px] font-semibold opacity-10 absolute top-0 right-5">0{index + 1}</h1>
-                <div className="relative">
-                  <h2 className="text-xl md:text-2xl lg:text-5xl font-semibold textColor gardient-text note-title mb-6">{item.title}</h2>
-                  <div className="text-lg">{item?.content}</div>
-                </div>
-              </div>
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion as Motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
+import { FiCheckCircle, FiCode, FiCopy, FiGitBranch, FiLayers, FiShield, FiZap } from "react-icons/fi";
 
-              <div className="flexC" initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                <img src={item?.cover} alt={item?.id} className="absolute top-0 left-1/3 lg:absolute lg:w-full lg:h-full lg:object-contain lg:flexC" />
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-export const WorkingProcess = () => {
-  return (
-    <>
-      <section className="working-process mb-14">
-        <div className="container">
-          <div className="heading text-center mb-5">
-            <h1 className="text-xl md:text-3xl lg:text-6xl font-semibold gardient-text note-title text-center">Working Process</h1>
-            <p className="">A clear, step-by-step approach to turning ideas into efficient digital solutions.</p>
-          </div>
-
-          <ScrollStickySections data={data} />
-        </div>
-      </section>
-    </>
-  );
-};
-
-const data = [
+const processStages = [
   {
-    id: 1,
-    title: "Planning Phase",
-    cover: "../image/about/plan/p1.svg",
-    content: (
-      <ul className=" list-disc ml-2 md:ml-10 text-sm md:text-lg flex flex-col gap-3 pt-5 w-full">
-        <li>Requirement Analysis: Understand project requirements from stakeholders</li>
-        <li>Database Design: Plan MongoDB schema and relationships </li>
-        <li>API Design: Define RESTful/GrapqhQL endpoints </li>
-        <li>UI/UX Planning: Wireframe React components and user flows </li>
-        <li>Project Setup: Decide on folder structure and tools </li>
-      </ul>
-    ),
+    id: "planning",
+    number: "01",
+    title: "Planning",
+    description: "Turn an idea into a clear product blueprint before development begins.",
+    bullets: ["Requirement analysis", "Database and API design", "User-flow planning", "Project architecture"],
   },
   {
-    id: 2,
-    title: "Development Setup",
-    cover: "../image/about/plan/p2.svg",
-    content: (
-      <ul className=" list-disc ml-2 md:ml-10 text-sm md:text-lg flex flex-col gap-3 pt-5 w-full">
-        <li>Initialize Project</li>
-        <li>Set up backend (Node/Express)</li>
-        <li>Set up frontend (React/Next JS)</li>
-      </ul>
-    ),
+    id: "setup",
+    number: "02",
+    title: "Development setup",
+    description: "Prepare a clean workspace where frontend and backend work can move confidently.",
+    bullets: ["Repository initialization", "Frontend environment", "Backend environment", "Configuration checks"],
   },
   {
-    id: 3,
-    title: "Backend Development",
-    cover: "../image/about/plan/p3.svg",
-    content: (
-      <ul className=" list-disc ml-2 md:ml-10 text-sm md:text-lg flex flex-col gap-3 pt-5 w-full">
-        <li>Create server structure</li>
-        <li>Implement features</li>
-      </ul>
-    ),
+    id: "backend",
+    number: "03",
+    title: "Backend development",
+    description: "Build secure services, business logic, and dependable access to application data.",
+    bullets: ["API implementation", "Authentication flow", "Database integration", "Server validation"],
   },
   {
-    id: 4,
-    title: "Frontend Development",
-    cover: "../image/about/plan/p4.svg",
-    content: (
-      <ul className=" list-disc ml-2 md:ml-10 text-sm md:text-lg flex flex-col gap-3 pt-5 w-full">
-        <li>Create React / Next js app structure</li>
-        <li>Implement features</li>
-      </ul>
-    ),
+    id: "frontend",
+    number: "04",
+    title: "Frontend development",
+    description: "Translate the blueprint into a responsive, intuitive, and polished user experience.",
+    bullets: ["Reusable components", "Responsive layouts", "State management", "API integration"],
   },
   {
-    id: 5,
+    id: "testing",
+    number: "05",
     title: "Testing",
-    cover: "../image/about/plan/p5.svg",
-    content: (
-      <ul className=" list-disc ml-2 md:ml-10 text-sm md:text-lg flex flex-col gap-3 pt-5 w-full">
-        <li>Backend testing</li>
-        <li>Frontend testing</li>
-        <li>Integration testing</li>
-        <li>End-to-end testing</li>
-      </ul>
-    ),
+    description: "Validate the complete product across its most important user and system paths.",
+    bullets: ["Frontend testing", "Backend testing", "Integration checks", "End-to-end verification"],
   },
   {
-    id: 6,
+    id: "deployment",
+    number: "06",
     title: "Deployment",
-    cover: "../image/about/plan/p6.svg",
-    content: (
-      <ul className=" list-disc ml-2 md:ml-10 text-sm md:text-lg flex flex-col gap-3 pt-5 w-full">
-        <li>Backend deployment</li>
-        <li>Frontend deployment</li>
-      </ul>
-    ),
+    description: "Release a stable production build with the right environment and delivery checks.",
+    bullets: ["Production build", "Cloud deployment", "Environment validation", "Release checks"],
   },
   {
-    id: 7,
-    title: "Maintenance & Updates",
-    cover: "../image/about/plan/p7.svg",
-    content: (
-      <ul className=" list-disc ml-2 md:ml-10 text-sm md:text-lg flex flex-col gap-3 pt-5 w-full">
-        <li>Monitor application performance</li>
-        <li>Fix bugs and implement feature requests</li>
-        <li>Optimize for better performance</li>
-        <li>Keep dependencies updated</li>
-      </ul>
-    ),
+    id: "maintenance",
+    number: "07",
+    title: "Maintenance",
+    description: "Keep the product healthy, secure, and valuable as its requirements continue to evolve.",
+    bullets: ["Performance monitoring", "Bug fixes", "Dependency updates", "Feature improvements"],
   },
 ];
+
+const workflowPaths = [
+  "M 7 52 H 96",
+  "M 23 52 C 29 52 27 26 34 26 H 52",
+  "M 44 52 C 50 52 48 78 55 78 H 74",
+  "M 70 52 C 77 52 76 26 83 26 H 96",
+];
+
+const featureIcons = [FiCopy, FiShield, FiZap];
+
+export const WorkingProcess = () => {
+  const sectionRef = useRef(null);
+  const [activeStageId, setActiveStageId] = useState("planning");
+  const [isCompactView, setIsCompactView] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 760px)").matches);
+  const activeStage = processStages.find((stage) => stage.id === activeStageId) || processStages[0];
+  const reduceMotion = useReducedMotion();
+  const lineProgress = useMotionValue(reduceMotion ? 1 : 0);
+  const smoothLineProgress = useSpring(lineProgress, {
+    stiffness: 135,
+    damping: 30,
+    mass: 0.22,
+    restDelta: 0.001,
+  });
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+
+  const lineRevealWidth = useTransform(smoothLineProgress, [0, 1], [0, 100]);
+  const previewOpacity = useTransform(smoothLineProgress, [0.24, 0.38], [0, 1]);
+  const testOpacity = useTransform(smoothLineProgress, [0.48, 0.62], [0, 1]);
+  const releaseOpacity = useTransform(smoothLineProgress, [0.72, 0.86], [0, 1]);
+  const mainCheckOpacity = useTransform(smoothLineProgress, [0.3, 0.42], [0, 1]);
+  const reviewOpacity = useTransform(smoothLineProgress, [0.43, 0.56], [0, 1]);
+  const validationOpacity = useTransform(smoothLineProgress, [0.64, 0.78], [0, 1]);
+  const readyOpacity = useTransform(smoothLineProgress, [0.84, 0.98], [0, 1]);
+
+  useEffect(() => {
+    const compactQuery = window.matchMedia("(max-width: 760px)");
+    const syncCompactView = () => {
+      setIsCompactView(compactQuery.matches);
+      if (compactQuery.matches) lineProgress.set(1);
+    };
+
+    syncCompactView();
+    compactQuery.addEventListener("change", syncCompactView);
+    return () => compactQuery.removeEventListener("change", syncCompactView);
+  }, [lineProgress]);
+
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    if (isCompactView) {
+      lineProgress.set(1);
+      return;
+    }
+
+    const scaledProgress = latest * processStages.length;
+    const stageIndex = Math.min(processStages.length - 1, Math.floor(scaledProgress));
+    const rawLocalProgress = latest >= 0.999 ? 1 : Math.max(0, Math.min(1, scaledProgress - stageIndex));
+    // Finish each drawing before its stage changes, leaving a short reading pause.
+    const localProgress = Math.min(1, rawLocalProgress / 0.82);
+    const nextStageId = processStages[stageIndex].id;
+
+    setActiveStageId((current) => current === nextStageId ? current : nextStageId);
+    lineProgress.set(reduceMotion ? 1 : localProgress);
+  });
+
+  const selectStage = (stageIndex) => {
+    const section = sectionRef.current;
+    setActiveStageId(processStages[stageIndex].id);
+
+    if (!section || typeof window === "undefined" || isCompactView || section.offsetHeight <= window.innerHeight * 1.2) {
+      lineProgress.set(1);
+      return;
+    }
+
+    const scrollableDistance = section.offsetHeight - window.innerHeight;
+    const stageProgress = (stageIndex + 0.16) / processStages.length;
+    window.scrollTo({ top: section.offsetTop + scrollableDistance * stageProgress, behavior: reduceMotion ? "auto" : "smooth" });
+  };
+
+  return (
+    <section
+      ref={sectionRef}
+      className="process-showcase process-neon"
+      aria-labelledby="process-title"
+      style={{ "--process-scroll-height": `${processStages.length * 82}vh` }}
+    >
+      <div className="process-neon__sticky">
+        <div className="container">
+        <div className="process-neon__kicker"><FiGitBranch /><span>Working process</span><small>01 — 07</small></div>
+
+        <div className="process-neon__layout">
+          <aside className="process-neon__sidebar">
+            <span>Development flow</span>
+            <div className="process-neon__nav" role="tablist" aria-label="Development stages">
+              {processStages.map((stage, stageIndex) => (
+                <button
+                  key={stage.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeStageId === stage.id}
+                  className={activeStageId === stage.id ? "is-active" : ""}
+                  onClick={() => selectStage(stageIndex)}
+                >
+                  <i />
+                  <strong>{stage.title}</strong>
+                  <small>{stage.number}</small>
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          <div className="process-neon__main">
+            <AnimatePresence initial={false} mode="popLayout">
+              <Motion.header
+                key={activeStage.id}
+                className="process-neon__headline"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <h2 id="process-title"><strong>{activeStage.title}.</strong> {activeStage.description}</h2>
+              </Motion.header>
+            </AnimatePresence>
+
+            <div className="process-neon__map-scroll">
+              <AnimatePresence initial={false} mode="popLayout">
+                <Motion.div
+                  key={activeStage.id}
+                  className="process-neon__map"
+                  initial={{ opacity: 0.45 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0.3 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="process-neon__grid" />
+                  <svg className="process-neon__paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    {workflowPaths.map((path) => <path key={`base-${path}`} d={path} className="process-neon__path-base" vectorEffect="non-scaling-stroke" />)}
+                    <defs>
+                      <clipPath id={`process-line-reveal-${activeStage.id}`}>
+                        <Motion.rect x="0" y="0" height="100" initial={false} style={{ width: lineRevealWidth }} />
+                      </clipPath>
+                    </defs>
+                    <g clipPath={`url(#process-line-reveal-${activeStage.id})`}>
+                      {workflowPaths.map((path) => (
+                        <path key={path} d={path} className="process-neon__path-active" vectorEffect="non-scaling-stroke" />
+                      ))}
+                    </g>
+                  </svg>
+
+                  <div className="planning-pill planning-pill--root"><FiGitBranch /><strong>project/main</strong></div>
+                  <Motion.div className="planning-pill planning-pill--preview" style={{ opacity: previewOpacity }}><FiLayers /><strong>{activeStage.bullets[0]}</strong></Motion.div>
+                  <Motion.div className="planning-pill planning-pill--test" style={{ opacity: testOpacity }}><FiShield /><strong>{activeStage.bullets[1]}</strong></Motion.div>
+                  <Motion.div className="planning-pill planning-pill--release" style={{ opacity: releaseOpacity }}><FiCode /><strong>{activeStage.bullets[2]}</strong></Motion.div>
+
+                  <Motion.div className="planning-check planning-check--one" style={{ opacity: reviewOpacity }}><FiCheckCircle /><span>reviewed</span></Motion.div>
+                  <Motion.div className="planning-check planning-check--two" style={{ opacity: validationOpacity }}><FiCheckCircle /><span>validated</span></Motion.div>
+                  <Motion.div className="planning-check planning-check--three" style={{ opacity: readyOpacity }}><FiCheckCircle /><span>ready</span></Motion.div>
+                  <Motion.div className="planning-check planning-check--four" style={{ opacity: mainCheckOpacity }}><i /><span>{activeStage.bullets[3]}</span></Motion.div>
+                </Motion.div>
+              </AnimatePresence>
+            </div>
+
+            <AnimatePresence initial={false} mode="popLayout">
+              <Motion.div
+                key={`features-${activeStage.id}`}
+                className="process-neon__features"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.34, delay: 0.16 }}
+              >
+                {activeStage.bullets.slice(0, 3).map((bullet, index) => {
+                  const FeatureIcon = featureIcons[index];
+                  return (
+                    <article key={bullet}>
+                      <div><FeatureIcon /><h3>{bullet}</h3></div>
+                      <p>{index === 0 ? "Define the product direction clearly before implementation starts." : index === 1 ? "Reduce uncertainty by validating the technical foundation early." : "Create a practical path that the next development stage can follow."}</p>
+                    </article>
+                  );
+                })}
+              </Motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+  );
+};

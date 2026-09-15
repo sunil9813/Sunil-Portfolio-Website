@@ -1,12 +1,11 @@
 import { TestimonialCards } from "@/components/ui/InfiniteMovingCards";
-import React from "react";
 
 export const Testimonial = () => {
   return (
     <>
-      <section className=" relative !overflow-hidden">
+      <section className="testimonial-home relative !overflow-hidden">
         <div className="container text-center">
-          <h1 className="text-xl md:text-3xl lg:text-6xl font-semibold blog-detail-title">What People Say</h1>
+          <h2 className="text-xl md:text-3xl lg:text-6xl font-semibold blog-detail-title">What People Say</h2>
           <p className="label-shine">Trusted by clients, collaborators, and teams — here’s what they say about working with me.</p>
         </div>
         <div className="flex flex-col items-center justify-center relative !overflow-hidden mt-5">

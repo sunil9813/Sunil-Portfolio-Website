@@ -1,397 +1,118 @@
-import { Tabs } from "@/components/ui/Tabs";
-import React from "react";
+import { useRef } from "react";
+import { motion as Motion, useInView, useReducedMotion } from "motion/react";
+import { FiCode, FiDatabase, FiGlobe, FiServer } from "react-icons/fi";
+
+const skills = [
+  { name: "HTML", icon: "html5/html5-original.svg", group: "frontend" },
+  { name: "CSS3", icon: "css3/css3-original.svg", group: "frontend" },
+  { name: "Sass", icon: "sass/sass-original.svg", group: "frontend" },
+  { name: "Tailwind CSS", icon: "tailwindcss/tailwindcss-original.svg", group: "frontend" },
+  { name: "Bootstrap", icon: "bootstrap/bootstrap-original.svg", group: "frontend" },
+  { name: "Material UI", icon: "materialui/materialui-original.svg", group: "frontend" },
+  { name: "JavaScript", icon: "javascript/javascript-original.svg", group: "frontend" },
+  { name: "React", icon: "react/react-original.svg", group: "frontend" },
+  { name: "Next.js", icon: "nextjs/nextjs-original.svg", group: "frontend", invert: true },
+  { name: "React Router", icon: "reactrouter/reactrouter-original.svg", group: "frontend" },
+  { name: "Redux Toolkit", icon: "redux/redux-original.svg", group: "frontend" },
+  { name: "Axios", icon: "axios/axios-plain.svg", group: "frontend" },
+  { name: "Node.js", icon: "nodejs/nodejs-original.svg", group: "backend" },
+  { name: "Express.js", icon: "express/express-original.svg", group: "backend", invert: true },
+  { name: "MongoDB", icon: "mongodb/mongodb-original.svg", group: "database" },
+  { name: "MySQL", icon: "mysql/mysql-original.svg", group: "database" },
+  { name: "Firebase", icon: "firebase/firebase-original.svg", group: "database" },
+  { name: "AWS", icon: "amazonwebservices/amazonwebservices-original-wordmark.svg", group: "hosting" },
+  { name: "Netlify", icon: "netlify/netlify-original.svg", group: "hosting" },
+  { name: "Vercel", icon: "vercel/vercel-original.svg", group: "hosting", invert: true },
+  { name: "NPM", icon: "npm/npm-original-wordmark.svg", group: "tools" },
+  { name: "PNPM", icon: "pnpm/pnpm-original.svg", group: "tools" },
+  { name: "VS Code", icon: "vscode/vscode-original.svg", group: "tools" },
+  { name: "Linux", icon: "linux/linux-original.svg", group: "tools" },
+  { name: "Windows", icon: "windows11/windows11-original.svg", group: "tools" },
+  { name: "Git", icon: "git/git-original.svg", group: "tools" },
+  { name: "GitHub", icon: "github/github-original.svg", group: "tools", invert: true },
+];
+
+const disciplines = [
+  { number: "01", title: "Interface", label: "Frontend engineering", description: "Responsive interfaces with clear systems, accessible interactions, and purposeful motion.", groups: ["frontend"], icon: FiCode, tone: "cyan" },
+  { number: "02", title: "Systems", label: "Backend development", description: "Dependable application logic and APIs designed to remain clear as products grow.", groups: ["backend"], icon: FiServer, tone: "violet" },
+  { number: "03", title: "Data", label: "Database architecture", description: "Flexible data foundations that keep information structured, available, and secure.", groups: ["database"], icon: FiDatabase, tone: "peach" },
+  { number: "04", title: "Delivery", label: "Cloud & developer tools", description: "A reliable path from local development through testing, deployment, and production.", groups: ["hosting", "tools"], icon: FiGlobe, tone: "cyan" },
+];
+
+const iconUrl = (icon) => `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${icon}`;
 
 export const Expertise = () => {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-10% 0px" });
+  const reduce = useReducedMotion();
+
   return (
-    <>
-      <section className="expertise py-10 relative">
-        <div className="about-bg-second absolute !top-96 w-full"></div>
-        <div className="container">
-          <div className="heading w-full lg:w-1/2 m-auto text-center mb-5">
-            <h1 className="text-3xl lg:text-6xl font-semibold blog-detail-title">My Expertise</h1>
-            <p className="">Specialized in crafting full-stack web applications with seamless performance, clean architecture, and user-centric design.</p>
+    <section className="expertise-index" aria-labelledby="expertise-title" ref={sectionRef}>
+      <div className="container">
+        <header className="expertise-index__heading">
+          <div>
+            <span className="expertise-index__eyebrow"><i />My expertise <strong>27 connected technologies</strong></span>
+            <h2 id="expertise-title">Every layer, <em>end to end.</em></h2>
           </div>
-          <div className="h-[31rem] lg:h-[20rem] relative w-full">
-            <Tabs tabs={tabs} />
+          <div className="expertise-index__intro">
+            <span>Four disciplines, one pipeline</span>
+            <p>From the interface a user touches to the systems, data, and delivery pipeline behind it—each layer gets the same care.</p>
           </div>
+        </header>
+
+        <div className="expertise-index__ledger">
+          {disciplines.map((discipline, index) => {
+            const Icon = discipline.icon;
+            const items = skills.filter((skill) => discipline.groups.includes(skill.group));
+            const rowDelay = reduce ? 0 : index * 0.12;
+
+            return (
+              <Motion.div
+                className={`expertise-index__row expertise-index__row--${discipline.tone}`}
+                key={discipline.title}
+                initial={{ opacity: 0, y: reduce ? 0 : 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: rowDelay }}
+              >
+                <span className="expertise-index__ghost-number" aria-hidden="true">{discipline.number}</span>
+
+                <div className="expertise-index__marker">
+                  <span>{discipline.number}</span>
+                  <i aria-hidden="true" />
+                </div>
+
+                <div className="expertise-index__meta">
+                  <div className="expertise-index__meta-icon"><Icon aria-hidden="true" /></div>
+                  <h3>{discipline.title}</h3>
+                  <p className="expertise-index__label">{discipline.label}</p>
+                  <p>{discipline.description}</p>
+                </div>
+
+                <ul className="expertise-index__chips">
+                  {items.map((skill, itemIndex) => (
+                    <Motion.li
+                      key={skill.name}
+                      initial={{ opacity: 0, y: reduce ? 0 : 10 }}
+                      animate={isInView ? { opacity: 1, y: 0 } : {}}
+                      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1], delay: rowDelay + 0.15 + itemIndex * 0.03 }}
+                    >
+                      <img className={skill.invert ? "is-inverted" : ""} src={iconUrl(skill.icon)} alt="" loading="lazy" />
+                      <span>{skill.name}</span>
+                    </Motion.li>
+                  ))}
+                </ul>
+              </Motion.div>
+            );
+          })}
+          <div className="expertise-index__terminal" aria-hidden="true"><i /></div>
         </div>
-      </section>
-    </>
+
+        <div className="expertise-index__footer">
+          <span>{skills.length} technologies</span>
+          <span>{disciplines.length} disciplines</span>
+          <strong>Rooted in production-ready engineering</strong>
+        </div>
+      </div>
+    </section>
   );
 };
-
-const tabs = [
-  {
-    title: "All",
-    value: "all",
-    content: (
-      <div className="w-full overflow-scroll md:overflow-hidden relative h-full rounded-2xl p-5 black-custome-box">
-        <h3 className="text-xl md:text-3xl lg:text-4xl text-white mb-5">Tools and Language</h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor">HTML</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor">CSS3</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sass/sass-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">sass</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">tailwind css</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/bootstrap/bootstrap-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">bootstrap</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/materialui/materialui-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">material ui</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">javascript</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">react</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">next js</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/reactrouter/reactrouter-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">react router</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redux/redux-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">redux toolkit</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/axios/axios-plain.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">axios</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">node js</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">express js</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">mongodb</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">mysql</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/firebase/firebase-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">firebase</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">amazon web services</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/netlify/netlify-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">netlify</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">vercel</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.brandfetch.io/idJjJ1f0bI/w/1000/h/1000/theme/dark/icon.png?c=1dxbfHSJFAPEGdCLU4o5B" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">hostinger</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img
-                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAAAAADFHGIkAAAAfklEQVR4AWP4jwOgSfzY1D31JhaJU6oMQBDwEl3iiQADGKj+QJMIYICCOlSJlwwwYIoqsYkBDlAl0uHiAigSTzjhEpHIEj+s4eKcF5EknpgibNgE9keddcvq/ZvyOcFKre3t7dNv/odIIFSm/4DoRpcQA/KxSlgPaQlUQFgCABOfchUR/bqdAAAAAElFTkSuQmCC"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <span className="textColor uppercase">render</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/npm/npm-original-wordmark.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">npm</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/pnpm/pnpm-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">pnpm</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vscode/vscode-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">vscode</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/atom/atom-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">atom</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/linux/linux-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">linux</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/windows11/windows11-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">windows 11</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">git</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/github/github-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">github</span>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Frontend",
-    value: "frontend",
-    content: (
-      <div className="w-full overflow-scroll md:overflow-hidden relative h-full rounded-2xl p-5 black-custome-box">
-        <h3 className="text-xl md:text-3xl lg:text-4xl text-white mb-5">Frontend Development</h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor">HTML</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor">CSS3</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sass/sass-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">sass</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">tailwind css</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/bootstrap/bootstrap-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">bootstrap</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/materialui/materialui-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">material ui</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">javascript</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">react</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">next js</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/reactrouter/reactrouter-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">react router</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/redux/redux-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">redux toolkit</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/axios/axios-plain.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">axios</span>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Backend",
-    value: "backend",
-    content: (
-      <div className="w-full overflow-hidden relative h-full rounded-2xl p-5 black-custome-box">
-        <h3 className="text-xl md:text-3xl lg:text-4xl text-white mb-5">Backend Development</h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">node js</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">express js</span>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Database",
-    value: "database",
-    content: (
-      <div className="w-full overflow-hidden relative h-full rounded-2xl p-5 black-custome-box">
-        <h3 className="text-xl md:text-3xl lg:text-4xl text-white mb-5">Database</h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">mongodb</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">mysql</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/firebase/firebase-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">firebase</span>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Hosting",
-    value: "hosting",
-    content: (
-      <div className="w-full overflow-hidden relative h-full rounded-2xl p-5 black-custome-box">
-        <h3 className="text-xl md:text-3xl lg:text-4xl text-white mb-5">Hosting</h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">amazon web services</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/netlify/netlify-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">netlify</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">vercel</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img src="https://cdn.brandfetch.io/idJjJ1f0bI/w/1000/h/1000/theme/dark/icon.png?c=1dxbfHSJFAPEGdCLU4o5B" className="w-full h-full object-contain" />
-            </div>
-            <span className="textColor uppercase">hostinger</span>
-          </div>
-          <div className="bg-gray-50/10 backdrop-blur-xl h-10 flex items-center gap-2 px-4 pr-6 py-2 rounded-full">
-            <div className="h-full size-10">
-              <img
-                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAAAAADFHGIkAAAAfklEQVR4AWP4jwOgSfzY1D31JhaJU6oMQBDwEl3iiQADGKj+QJMIYICCOlSJlwwwYIoqsYkBDlAl0uHiAigSTzjhEpHIEj+s4eKcF5EknpgibNgE9keddcvq/ZvyOcFKre3t7dNv/odIIFSm/4DoRpcQA/KxSlgPaQlUQFgCABOfchUR/bqdAAAAAElFTkSuQmCC"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <span className="textColor uppercase">render</span>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-];

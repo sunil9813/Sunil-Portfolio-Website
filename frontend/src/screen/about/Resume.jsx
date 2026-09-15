@@ -3,30 +3,64 @@ import { Timeline } from "@/components/ui/Timeline";
 import { InputLabel } from "@/components/customeUI/Title";
 import { FaGraduationCap } from "react-icons/fa";
 import { BsFillHandbagFill } from "react-icons/bs";
+import { motion as Motion } from "motion/react";
+import { FiBookOpen, FiCompass } from "react-icons/fi";
 
 export const Resume = () => {
-  return (
-    <>
-      <div className="py-16 relative z-50">
-        <div className="container">
-          <div className="heading w-full md:mb-16 lg:w-3/5 m-auto text-center mb-10">
-            <h1 className="text-xl md:text-3xl lg:text-6xl font-semibold gardient-text resume-title">Work & Experience</h1>
-            <p>
-              Over the years, I’ve worked on a variety of projects — from building responsive user interfaces to designing robust backend systems. Each role sharpened my ability to solve problems,
-              adapt quickly, and deliver reliable results.
-            </p>
-          </div>
+  const contributions = Array.from({ length: 98 }, (_, index) => (index * 3 + Math.floor(index / 4)) % 5);
 
-          <div className="flex gap-10 flex-col md:flex-col lg:flex-row lg:justify-between md:gap-2">
-            <Timeline data={ExperienceData} />
-            <div className="">
-              <h1 className=" visible lg:hidden mb-10 text-2xl md:text-6xl font-semibold textColor">Education</h1>
+  return (
+    <section className="resume-github relative z-50" aria-labelledby="experience-title">
+      <div className="container">
+        <Motion.header className="resume-github__intro" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.35 }} transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}>
+          <div className="resume-github__intro-copy">
+            <div className="resume-github__eyebrow"><FiCompass /> Professional journey</div>
+            <h1 id="experience-title">A career shaped through <span>creating and learning.</span></h1>
+            <p>Every role is a chapter of solving meaningful problems, collaborating with people, and delivering reliable digital products.</p>
+          </div>
+          <div className="resume-github__contributions">
+            <div><strong>Career pulse</strong><span>2021 — Present</span></div>
+            <div className="resume-github__heatmap" aria-hidden="true">
+              {contributions.map((level, index) => <i key={index} data-level={level} />)}
             </div>
-            <Timeline data={EducationData} />
+            <small>Growth in motion</small>
+          </div>
+        </Motion.header>
+
+        <div className="resume-github__activity-window">
+          <div className="resume-github__activity-layout">
+            <aside className="resume-github__years">
+              <span>Jump to</span>
+              <a href="#experience-2025-1">2025</a>
+              <a href="#experience-2022-2">2022</a>
+              <a href="#experience-2021-0">2021</a>
+              <a href="#education">Education</a>
+            </aside>
+            <div className="resume-github__feed">
+              <Timeline data={ExperienceData} />
+            </div>
           </div>
         </div>
+
+        <section id="education" className="education-releases" aria-labelledby="education-title">
+          <header className="education-releases__heading">
+            <div><FiBookOpen /><span>Academic foundation</span></div>
+            <h2 id="education-title">Education & milestones</h2>
+            <p>Academic foundations that continue to support my work in modern software engineering.</p>
+          </header>
+          <div className="education-releases__grid">
+            {EducationData.map((item, index) => (
+              <Motion.article key={`${item.title}-${item.subtitle}`} className="education-release" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5, delay: index * 0.05 }}>
+                <header><span>{item.icon}</span><time>{item.title}</time><small>Milestone {String(index + 1).padStart(2, "0")}</small></header>
+                <h3>{item.subtitle}</h3>
+                <p>{item.role}</p>
+                <div className="education-release__notes">{item.content}</div>
+              </Motion.article>
+            ))}
+          </div>
+        </section>
       </div>
-    </>
+    </section>
   );
 };
 export const ExperienceData = [
@@ -95,7 +129,6 @@ export const ExperienceData = [
     ),
   },
 ];
-
 export const EducationData = [
   {
     icon: <FaGraduationCap size={17} />,

@@ -1,185 +1,56 @@
-import { useId } from "react";
-import { GlowingButton, TertiaryButton } from "@/components/customeUI/Button";
+import { TertiaryButton } from "@/components/customeUI/Button";
 import { ServiceCard } from "../about/Service";
+import { useInView, useReducedMotion } from "motion/react";
+import { useRef } from "react";
+import { FiArrowRight, FiBookOpen, FiCode, FiFileText, FiFolder, FiGrid, FiLayers, FiSearch, FiCheckCircle } from "react-icons/fi";
+import "./HeroLaunch.scss";
+
+const projectColumns = [
+  { title: "Interface", tone: "cyan", tasks: [["Responsive layouts", "React · Tailwind"], ["Reusable components", "Design systems"], ["Accessible interactions", "Keyboard & focus"]] },
+  { title: "Application", tone: "violet", tasks: [["Connected experiences", "MERN stack"], ["Content & learning", "Courses · Notes"], ["Clear user journeys", "Frontend development"]] },
+  { title: "Foundation", tone: "peach", tasks: [["API architecture", "Node.js · Express"], ["Structured data", "MongoDB"], ["Ready for the next step", "Testing · Deployment"]] },
+];
+
+function PortfolioWorkspace() {
+  return <div className="launch-workspace" aria-hidden="true">
+    <aside className="launch-workspace__rail"><span className="launch-workspace__monogram">G</span><FiGrid /><FiFolder /><FiBookOpen /><FiFileText /><FiCode /></aside>
+    <aside className="launch-workspace__sidebar"><strong>GORKcoder</strong><div className="launch-workspace__search"><FiSearch /> Search my work</div><span className="is-selected"><FiGrid /> Overview</span><span><FiFolder /> Projects</span><span><FiBookOpen /> Courses</span><span><FiFileText /> Notes</span><small>MY TOOLKIT</small><span>React</span><span>Node.js</span><span>MongoDB</span></aside>
+    <div className="launch-workspace__board"><div className="launch-workspace__breadcrumb">Portfolio <span>/</span> Full-stack development</div><header><h3>Ideas into experiences.</h3><span className="launch-workspace__avatar">SBK</span></header><div className="launch-workspace__tabs"><span><FiGrid /> The build</span><span><FiLayers /> Every layer</span></div><div className="launch-workspace__columns">{projectColumns.map(column => <div className={`launch-workspace__column launch-workspace__column--${column.tone}`} key={column.title}><h4><i />{column.title}<span>···</span></h4>{column.tasks.map(([title, label], i) => <div className="launch-workspace__task" key={title}><p>{title}</p><small>{label}</small>{i === 1 && <div className="launch-workspace__lines"><i /><i /><i /></div>}<footer><FiCode /><span>GORKcoder</span><FiCheckCircle /></footer></div>)}</div>)}</div></div>
+    <aside className="launch-workspace__activity"><strong>Build. Learn. Share.</strong><span className="launch-workspace__activity-tab">Inside my portfolio</span>{[["Projects","Ideas brought to life with full-stack development."],["Courses","IT subjects, made easier to explore."],["Notes","Practical lessons from the work along the way."]].map(([title, copy]) => <div key={title}><i /><p><b>{title}</b>{copy}</p></div>)}</aside>
+  </div>;
+}
 
 export const Hero = () => {
-  const id = useId().replace(/:/g, "");
-
-  return (
-    <>
-      <div className="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
-        <ChromaticBackground />
+  const section = useRef(null);
+  const inView = useInView(section);
+  const reduced = useReducedMotion();
+  return <section ref={section} className={`hero-launch${inView && !reduced ? " is-animated" : ""}`} aria-labelledby="home-hero-title">
+    <div className="hero-launch__atmosphere" aria-hidden="true"><div className="hero-launch__mist hero-launch__mist--one" /><div className="hero-launch__mist hero-launch__mist--two" /></div>
+    <div className="container hero-launch__inner">
+      <div className="hero-launch__opening">
+        <div className="hero-launch__copy"><h1 id="home-hero-title">Bringing ideas<br />to full-stack life.</h1><p>Crafting scalable, secure, and modern web applications with thoughtful interfaces and dependable backend architecture.</p><a className="hero-launch__button" href="/project"><span>Explore my work</span><FiArrowRight /></a></div>
+        <svg className="hero-launch__beam" viewBox="0 0 1240 720" preserveAspectRatio="none" aria-hidden="true">
+          <defs><filter id="launch-bloom" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="24" /></filter><filter id="launch-soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6" /></filter><linearGradient id="launch-beam-color" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#777dff" /><stop offset=".7" stopColor="#b1b2ff" /><stop offset="1" stopColor="#ffffff" /></linearGradient></defs>
+          <g className="hero-launch__beam-glow" fill="none" stroke="#738dff" strokeWidth="60" filter="url(#launch-bloom)"><path d="M760 -80 V460 Q760 714 555 714 H15" /><path d="M760 -80 V460 Q760 714 940 714 H1210" /></g>
+          <g fill="none" stroke="url(#launch-beam-color)" strokeWidth="15" filter="url(#launch-soft)"><path d="M760 -80 V460 Q760 714 555 714 H15" /><path d="M760 -80 V460 Q760 714 940 714 H1210" /></g>
+          <path d="M760 400 C760 670 700 714 555 714 H940 C810 714 760 665 760 400Z" fill="#f5f2ff" filter="url(#launch-soft)" opacity=".9" />
+          <g fill="none" stroke="#f5f2ff" strokeWidth="3"><path d="M760 -80 V460 Q760 714 555 714 H15" /><path d="M760 -80 V460 Q760 714 940 714 H1210" /></g>
+        </svg>
       </div>
-
-      <style>
-        {`
-          @keyframes heroAuraFlow-${id} {
-            0%, 100% {
-              transform: translate3d(-18px, 10px, 0) scale(0.96);
-              opacity: 0.42;
-            }
-            50% {
-              transform: translate3d(22px, -18px, 0) scale(1.08);
-              opacity: 0.82;
-            }
-          }
-
-          @keyframes heroVisualFloat-${id} {
-            0%, 100% {
-              transform: translateY(0) scale(1);
-            }
-            50% {
-              transform: translateY(-16px) scale(1.015);
-            }
-          }
-
-          @keyframes heroOrbit-${id} {
-            from {
-              transform: rotate(0deg);
-            }
-            to {
-              transform: rotate(360deg);
-            }
-          }
-
-          @keyframes heroShine-${id} {
-            0% {
-              transform: translateX(-70%);
-              opacity: 0;
-            }
-            35% {
-              opacity: 0.6;
-            }
-            100% {
-              transform: translateX(70%);
-              opacity: 0;
-            }
-          }
-
-          .hero-aura-flow-${id} {
-            animation: heroAuraFlow-${id} 8s ease-in-out infinite;
-          }
-
-          .hero-visual-float-${id} {
-            animation: heroVisualFloat-${id} 6.5s ease-in-out infinite;
-          }
-
-          .hero-orbit-${id} {
-            animation: heroOrbit-${id} 22s linear infinite;
-          }
-
-          .hero-shine-${id} {
-            animation: heroShine-${id} 5.5s ease-in-out infinite;
-          }
-
-          @media (prefers-reduced-motion: reduce) {
-            .hero-aura-flow-${id},
-            .hero-visual-float-${id},
-            .hero-orbit-${id},
-            .hero-shine-${id} {
-              animation: none;
-            }
-          }
-        `}
-      </style>
-
-      <section className="hero relative z-10 min-h-[100svh] overflow-hidden">
-        <div className="pointer-events-none absolute left-1/2 top-24 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-sky-300/10 blur-[130px]" />
-        <div className="pointer-events-none absolute bottom-10 right-0 h-[360px] w-[360px] rounded-full bg-amber-300/10 blur-[130px]" />
-
-        <div className="container relative z-20 grid min-h-[100svh] items-center gap-12 pb-16 pt-28 sm:pt-32 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16 lg:pb-10 lg:pt-20">
-          <div className="heading mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
-            <div className="mb-6 inline-flex">
-              <GlowingButton className="!text-[11px] sm:!text-xs md:!text-sm">Let's build something powerful together.</GlowingButton>
-            </div>
-
-            <h1 className="text-[40px] font-semibold leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl md:text-7xl xl:text-[82px]">
-              Bringing ideas
-              <span className="block bg-gradient-to-r from-white via-sky-100 to-white/40 bg-clip-text text-transparent">to full stack life.</span>
-            </h1>
-
-            <p className="mx-auto mt-6 max-w-xl text-sm leading-7 textColor opacity-75 sm:text-base md:text-lg lg:mx-0">
-              Crafting scalable, secure, and modern web applications using MongoDB, Express, React, and Node.js.
-            </p>
-
-            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <TertiaryButton>Start a Project</TertiaryButton>
-
-              <a href="#projects" className="group inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-semibold text-white/70 transition duration-300 hover:text-white">
-                View Work
-                <span className="ml-3 h-px w-8 bg-gradient-to-r from-white/20 to-white/70 transition-all duration-300 group-hover:w-12" />
-              </a>
-            </div>
-
-            <div className="mt-10 grid grid-cols-3 gap-3 text-center lg:max-w-md lg:text-left">
-              {["Scalable", "Secure", "Modern"].map((item) => (
-                <div key={item} className="border-t border-white/10 pt-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">{item}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative mx-auto flex w-full max-w-[660px] items-center justify-center lg:max-w-none">
-            <div className={`hero-aura-flow-${id} pointer-events-none absolute h-[78%] w-[78%] rounded-full bg-sky-300/12 blur-[95px]`} />
-            <div className="pointer-events-none absolute h-[92%] w-[92%] rounded-full bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.14),transparent_58%)] blur-2xl" />
-
-            <div className="relative aspect-square w-[86%] max-w-[600px]">
-              <div className={`hero-orbit-${id} absolute inset-0 rounded-full border border-dashed border-white/[0.08]`} />
-              <div className="absolute inset-[9%] rounded-full border border-white/[0.06]" />
-              <div className="absolute inset-[18%] rounded-full border border-white/[0.04]" />
-
-              <div className="absolute left-0 top-1/2 h-px w-full overflow-hidden">
-                <div className={`hero-shine-${id} h-full w-2/3 bg-gradient-to-r from-transparent via-white/45 to-transparent`} />
-              </div>
-
-              <img
-                src="/image/hero/image.webp"
-                alt="Full stack developer visual"
-                className={`hero-visual-float-${id} relative z-10 h-full w-full object-contain drop-shadow-[0_42px_120px_rgba(0,0,0,0.58)]`}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-};
-
-export const ChromaticBackground = () => {
-  return (
-    <div className="framer-15o9q9d relative h-full w-full" data-framer-name="Background Chromatic">
-      <div className="framer-1l2isai absolute inset-0" data-framer-name="Backdrop Blur" />
-
-      <div className="ssr-variant hidden-19ecmci">
-        <div className="framer-zjg9f7" data-framer-name="Chromatic">
-          <div>
-            <img
-              decoding="async"
-              sizes="calc(100vw + 673px)"
-              srcSet="https://framerusercontent.com/images/XlDDCnoxKwc5TnuyQk6NW4BHuI.png?scale-down-to=512 512w,https://framerusercontent.com/images/XlDDCnoxKwc5TnuyQk6NW4BHuI.png?scale-down-to=1024 1024w,https://framerusercontent.com/images/XlDDCnoxKwc5TnuyQk6NW4BHuI.png?scale-down-to=2048 2048w,https://framerusercontent.com/images/XlDDCnoxKwc5TnuyQk6NW4BHuI.png 2200w"
-              src="https://framerusercontent.com/images/XlDDCnoxKwc5TnuyQk6NW4BHuI.png"
-              alt="Chromatic"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_8%,rgba(255,255,255,0.08),transparent_34%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.24))]" />
+      <div className="hero-launch__preview"><PortfolioWorkspace /></div>
+      <div className="hero-launch__footnote"><span>Illustrated portfolio workflow</span><a href="/contact">Have a project in mind? Let’s talk <FiArrowRight /></a></div>
     </div>
-  );
+  </section>;
 };
 
 export const WhyToSelect = () => {
   return (
-    <section className="relative z-10 overflow-hidden py-20 sm:py-24 lg:py-32">
+    <section className="home-services relative z-10 overflow-hidden py-20 sm:py-24 lg:py-32">
       <div className="pointer-events-none absolute left-1/2 top-10 h-80 w-80 -translate-x-1/2 rounded-full bg-white/[0.055] blur-[110px]" />
 
       <div className="container">
         <div className="heading relative z-10 mx-auto mb-12 max-w-3xl text-center">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.35em] text-white/45">Why choose me</p>
-
-          <h1 className="blog-detail-title text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">Clean builds. Smooth performance. Real results.</h1>
+          <h2 className="blog-detail-title text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">Clean builds. Smooth performance. Real results.</h2>
 
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 textColor opacity-70 sm:text-base">
             I combine hands-on experience with a problem-solving mindset to build fast, functional, and future-ready web solutions tailored to your goals.
@@ -194,14 +65,14 @@ export const WhyToSelect = () => {
 
 export const Welcome = () => {
   return (
-    <section className="relative z-10 overflow-hidden py-8 sm:py-12">
+    <section className="welcome-home relative z-10 overflow-hidden py-8 sm:py-12">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.12),transparent_32%)]" />
 
       <div className="relative min-h-[58vh] sm:min-h-[68vh] lg:min-h-[82vh]">
         <div className="heading absolute left-1/2 top-1/2 z-20 w-[90%] max-w-4xl -translate-x-1/2 -translate-y-1/2 text-center">
           <p className="mb-4 text-sm font-medium textColor opacity-80 sm:text-base">We welcome you to join us.</p>
 
-          <h1 className="mb-7 text-4xl font-semibold leading-none tracking-[-0.03em] text-white sm:text-6xl lg:text-8xl">Start your journey</h1>
+          <h2 className="mb-7 text-4xl font-semibold leading-none tracking-[-0.03em] text-white sm:text-6xl lg:text-8xl">Start your journey</h2>
 
           <TertiaryButton>Join Now</TertiaryButton>
         </div>

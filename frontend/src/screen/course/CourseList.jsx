@@ -122,17 +122,36 @@ export const CourseList = () => {
     <>
       <CourseHero courseCount={courseItems.length} />
 
-      <section id="courses" className="course-list relative min-h-screen overflow-hidden bg-[#0B1117] pb-24 pt-12">
-        <div className="pointer-events-none absolute inset-0 -z-30 bg-[linear-gradient(180deg,#0B1117_0%,#101820_60%,#0C1319_100%)]"></div>
+      <section id="courses" className="course-list relative isolate min-h-screen overflow-hidden bg-[#050a0b] pb-24 pt-8 sm:pt-10">
+        <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,#050a0b_0%,#081116_32%,#0b131a_64%,#080e13_100%)]"></div>
 
-        <div className="pointer-events-none absolute -left-[220px] top-[150px] -z-20 h-[720px] w-[720px] rounded-full bg-[radial-gradient(circle,rgba(168,255,92,0.04)_0%,transparent_72%)] blur-[150px]"></div>
+        <div className="pointer-events-none absolute -left-[220px] top-[80px] z-0 h-[720px] w-[720px] rounded-full bg-[radial-gradient(circle,rgba(70,255,160,0.055)_0%,transparent_70%)] blur-[150px]"></div>
 
-        <div className="pointer-events-none absolute -right-[260px] top-[700px] -z-20 h-[800px] w-[800px] rounded-full bg-[radial-gradient(circle,rgba(94,234,212,0.04)_0%,transparent_72%)] blur-[170px]"></div>
+        <div className="pointer-events-none absolute -right-[260px] top-[620px] z-0 h-[800px] w-[800px] rounded-full bg-[radial-gradient(circle,rgba(53,202,196,0.05)_0%,transparent_72%)] blur-[170px]"></div>
 
         <div className="container relative z-20">
+          <div className="course-list_intro">
+            <div className="course-list_intro-copy">
+              <span className="course-list_intro-kicker">Learning library</span>
+              <h2>Choose a path. Build real capability.</h2>
+              <p>Explore structured courses designed to turn technical concepts into practical, career-ready skills.</p>
+            </div>
+
+            <div className="course-list_intro-meta" aria-label="Course library details">
+              <div>
+                <strong>{courseItems.length}</strong>
+                <span>Available paths</span>
+              </div>
+              <div>
+                <strong>Self-paced</strong>
+                <span>Learn your way</span>
+              </div>
+            </div>
+          </div>
+
           {courseItems.length === 0 && <CourseListEmpty title="No courses found" description="There are no courses available right now." />}
 
-          <div className="space-y-10 sm:space-y-12">
+          <div className="course-list_catalog space-y-10 sm:space-y-12">
             {courseItems.map((course, index) => (
               <CourseCardList course={course} index={index} key={course?._id || course?.slug} />
             ))}
@@ -202,24 +221,26 @@ export const CourseChpaterLists = ({ course, gradientIndex = 0, previewItems = [
   const lessons = previewItems.length > 0 ? previewItems : getCourseTopicPreviewItems(course);
 
   return (
-    <div className="right ml-8 min-w-0 flex-1 self-start">
+    <div className="course-list_right right ml-8 min-w-0 flex-1 self-start">
       <div className="course-list_content_list min-h-0 w-full">
         <ContentCardBg gradientIndex={gradientIndex + 1} />
 
-        <div className="relative z-10 p-5 pb-3 sm:p-6 sm:pb-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="relative z-10 p-5 sm:p-6">
+          <div className="course-list_panel-header mb-4 flex items-center justify-between gap-4">
             <div>
-              <span className="block text-sm">{lessons.length} TUTORIALS</span>
+              <span className="course-list_panel-kicker">Course curriculum</span>
 
-              <p className="textColor mt-1 text-[10px]">Topics from course chapters</p>
+              <h3 className="course-list_panel-title mt-1 text-[18px] font-semibold tracking-[-0.025em] text-white sm:text-[20px]">{course?.name || "Course learning path"}</h3>
+
+              <p className="mt-1 text-[10px] text-white/38">{lessons.length} guided tutorials arranged across {chapters.length} chapters</p>
             </div>
 
-            <span className="hidden rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[8px] font-semibold uppercase tracking-[0.12em] text-white/45 sm:inline-flex">
-              {chapters.length} chapters
+            <span className="course-list_panel-count hidden sm:inline-flex">
+              Structured path
             </span>
           </div>
 
-          <div className="items grid max-h-[23rem] auto-rows-[5.75rem] grid-cols-1 gap-2 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
+          <div className="items course-list_lessons grid max-h-[25rem] auto-rows-[6.1rem] grid-cols-1 gap-2.5 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
             {lessons.length > 0 ? (
               lessons.map((lesson, index) => <ContentChapter lesson={lesson} key={lesson?.id || index} count={index + 1} slug={course?.slug} />)
             ) : (
@@ -240,7 +261,7 @@ export const CourseChpaterLists = ({ course, gradientIndex = 0, previewItems = [
       </div>
 
       <NavLink to={`/course/${course?.slug}`} className="inline-flex">
-        <TertiaryButton className="flexC mt-2 gap-2">
+        <TertiaryButton className="course-list_read-more flexC mt-3 gap-2">
           <span>Read More</span>
 
           <BsArrowRight size={15} />
@@ -328,7 +349,7 @@ const CourseListFooter = ({ course, isPaid = false, onAddToCart }) => {
   };
 
   return (
-    <div className="course-list_footer mt-3 flex flex-wrap items-center justify-between gap-2 lg:flex-nowrap">
+    <div className="course-list_footer mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.065] pt-4 lg:flex-nowrap">
       <div className="course-list_footer-row flex min-w-0 flex-1 flex-wrap items-center gap-2">
         <CourseFooterChip variant="muted" icon={<FaFileAlt />} label={courseType} />
 
@@ -380,24 +401,24 @@ const CourseFooterChip = ({ as = "span", variant = "stat", icon, label, active =
 
 export const ContentChapter = ({ lesson, count, slug }) => {
   return (
-    <div className="h-[5.75rem] rounded-2xl border border-transparent p-2.5 transition duration-300 ease-in-out hover:cursor-pointer hover:border-[rgba(255,255,255,0.16)] hover:bg-[rgba(255,255,255,0.08)]">
-      <div className="top grid h-full grid-cols-[3rem_minmax(0,1fr)] items-start gap-4">
+    <div className="course-list_lesson h-[6.1rem] rounded-2xl border border-transparent p-3 transition duration-300 ease-in-out hover:cursor-pointer">
+      <div className="top grid h-full grid-cols-[2.6rem_minmax(0,1fr)] items-start gap-3">
         <div className="flex justify-center">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(68,66,178,0.1)] text-sm tabular-nums dark:bg-[rgba(0,0,0,0.2)]">{count}</span>
+          <span className="course-list_lesson-number">{String(count).padStart(2, "0")}</span>
         </div>
 
         <div className="min-w-0">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <h5 className="min-w-0 pr-2 font-semibold text-white">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <h5 className="course-list_lesson-title min-w-0 pr-2 font-semibold text-white">
               <NavLink to={`/course/${slug}`} className="line-clamp-1">
                 {truncateText(lesson?.title, 28)}
               </NavLink>
             </h5>
 
-            <span className="shrink-0 rounded-lg bg-[rgba(68,66,178,0.1)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] dark:bg-[rgba(0,0,0,0.2)]">{lesson?.level || "Topic"}</span>
+            <span className="course-list_lesson-badge">{lesson?.level || "Topic"}</span>
           </div>
 
-          <p className="line-clamp-2 text-sm leading-5">{truncateText(lesson?.description || lesson?.parentTitle, 70)}</p>
+          <p className="course-list_lesson-description line-clamp-2">{truncateText(lesson?.description || lesson?.parentTitle, 70)}</p>
         </div>
       </div>
     </div>
@@ -409,24 +430,17 @@ export const ContentCardBg = ({ gradientIndex = 0 }) => {
   const randomGradient2 = getRandomGradient(gradientIndex + 1);
 
   return (
-    <div className="background pointer-events-none absolute inset-0 overflow-hidden">
+    <div className="course-list_panel-ambient pointer-events-none absolute inset-0 overflow-hidden">
       <div
-        className="pointer-events-none absolute left-[250px] top-[-102px] z-50 h-[248px] w-[800px] rounded-full opacity-[0.11] blur-[100px]"
+        className="absolute -right-[10%] -top-[180px] h-[420px] w-[72%] rounded-full opacity-[0.10] blur-[115px]"
         style={{ background: randomGradient1 }}
         aria-hidden="true"
-      ></div>
+      />
 
-      <div className="pointer-events-none absolute right-[25%] top-[-52px] h-[248px] w-[490px] rounded-full opacity-[0.25] blur-[100px]" style={{ background: randomGradient2 }}></div>
+      <div className="absolute -left-[15%] bottom-[-230px] h-[380px] w-[58%] rounded-full opacity-[0.07] blur-[120px]" style={{ background: randomGradient2 }} />
 
-      <div className="pointer-events-none absolute right-[25%] top-0 z-20 h-px w-[524px] bg-[linear-gradient(90deg,rgba(255,255,255,0)_10%,#FFFFFF_42.53%,rgba(255,255,255,0)_100%)] mix-blend-plus-lighter"></div>
-
-      <div className="pointer-events-none absolute right-[25%] top-0 z-20 h-px w-[524px] bg-[linear-gradient(90deg,rgba(255,255,255,0)_10%,#FFFFFF_42.53%,rgba(255,255,255,0)_100%)] mix-blend-plus-lighter blur-[1px]"></div>
-
-      <div className="pointer-events-none absolute right-[25%] top-0 z-20 h-px w-[524px] bg-[linear-gradient(90deg,rgba(255,255,255,0)_10%,#BAFFFF_42.53%,rgba(255,255,255,0)_100%)] mix-blend-plus-lighter blur-[5px]"></div>
-
-      <div className="pointer-events-none absolute right-[35%] top-[-11px] h-[23px] w-[400px] rounded-[50%] bg-[#E6FCFF] opacity-20 mix-blend-plus-lighter blur-[25px]"></div>
-
-      <div className="pointer-events-none absolute right-[35%] top-[-16px] h-[32px] w-[448px] rounded-[50%] bg-[#67DBFF] opacity-25 mix-blend-plus-lighter blur-[50px]"></div>
+      <div className="course-list_panel-grid absolute inset-0" />
+      <div className="absolute inset-x-[12%] top-0 h-px bg-gradient-to-r from-transparent via-[#c8fff0]/45 to-transparent shadow-[0_0_20px_rgba(92,255,211,0.26)]" />
     </div>
   );
 };

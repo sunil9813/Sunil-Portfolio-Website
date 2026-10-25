@@ -1,0 +1,11 @@
+# Conversation / Bloom connection
+
+Current refinement supersedes this anchor: see .impeccable/button-bloom.md. Visible caption removed entirely; stem now starts below the CTA's left side and follows the mobile outer gutter.
+
+Mode: Experience, within the inherited homepage. User requests connecting the tree root to the preceding ProjectConversation and removing GORKcoder and Full-stack developer below the portraits. The main implementation anchors the source stem below the oval's lower-left tangent; Sunil B.K remains. Original dark canvas, portrait layout, contact action, and Bloom wording are preserved.
+
+The source sequence enters near (70, 0) in its 1280×720 frames and extends to about x1060. A shared isolated, clipped wrapper lets the existing screen-blended artwork span the seam without a black rectangle or an invented connector. A stable section ref and ResizeObserver measure the stationary portrait figure, not the animated perspective bounds. The source is uniformly scaled to keep the visible flower extent within a viewport gutter and positioned with a 12px overlap behind the portrait edge. Both poster and canvas use the same plane. The connected section uses responsive minimum heights of 320px mobile and 480px desktop; text stays clear of the artwork. Scroll progress starts at the connected root rather than the old section top.
+
+Only new layout utilities and dynamic geometry are added; existing Bloom SCSS and sequence loading/cache/cleanup remain. No new image, dependency, background palette or global design token. Existing asset provenance is .impeccable/project-bloom.md. Standalone ProjectBloom without connectionRef retains its original presentation. Backups: /Users/gorkcoder/Documents/Codex/2026-10-06/ple/work/before-project-bloom-connection/.
+
+Finish review: ship, no UI fixes. Production build, targeted ESLint, two Node geometry tests and diff check pass; scoped layout detector returned `[]` before and after. All five captures were opened: .impeccable/review/project-bloom-connection/{desktop.png,desktop-bloom.png,mobile.png,mobile-bloom.png,wide.png}, covering 1280×720, 390×844 and 1920×1080. Runtime root errors were below .01px, with no horizontal overflow, canvas ready and console errors `[]`. Touch, reduced-motion and standalone fallback paths were source-reviewed only, not runtime-tested.

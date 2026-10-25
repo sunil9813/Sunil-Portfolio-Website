@@ -1,10 +1,11 @@
+import { BsArrowDownRight } from "react-icons/bs";
 import { DotBackground } from "@/components/customeUI/DotBackground";
 import { ProjectCard } from "./ProjectCard";
 
 export const ProjectList = () => {
   return (
     <>
-      <DotBackground />
+      <div className="project-ambient" aria-hidden="true"><DotBackground /></div>
 
       <section className="project-list relative isolate overflow-hidden bg-[#10151C] pb-20">
         {/* ==================================================== */}
@@ -94,7 +95,7 @@ export const ProjectList = () => {
           {/* PROJECT HERO                                       */}
           {/* ================================================== */}
 
-          <div className="mx-auto mb-20 w-full max-w-[1320px]">
+          <div className="project-intro mx-auto mb-20 w-full max-w-[1320px]">
             {/* TOP META */}
 
             <div className="mb-9 ml-12 flex flex-wrap items-center justify-between gap-5">
@@ -117,20 +118,20 @@ export const ProjectList = () => {
               {/* LEFT */}
 
               <div className="relative">
-                <h1 className="max-w-[920px] text-[46px] font-medium leading-[0.9] tracking-[-0.068em] text-white sm:text-[60px] md:text-[76px] lg:text-[88px] xl:text-[96px]">
+                <h1 className="max-w-[920px] text-[46px] font-medium leading-[1.02] tracking-[-0.04em] text-white sm:text-[60px] md:text-[68px] lg:text-[72px] xl:text-[80px]">
                   Ideas that move
-                  <span className="block text-white/30">
+                  <span className="block text-white/60">
                     beyond{" "}
                     <span className="relative inline-flex text-white">
                       <span className="pointer-events-none absolute -inset-x-3 bottom-[5px] h-[32%] rounded-full bg-teal-300/[0.07] blur-[14px]"></span>
 
-                      <span className="relative bg-gradient-to-r from-[#C9FFF8] via-[#D8C8FF] to-[#FFC29F] bg-clip-text text-transparent">the prototype.</span>
+                      <span className="project-headline-accent relative bg-gradient-to-r from-[#C9FFF8] via-[#D8C8FF] to-[#FFC29F] bg-clip-text text-transparent">the prototype.</span>
                     </span>
                   </span>
                 </h1>
 
                 <div className="mt-8 flex max-w-[760px] items-start gap-4">
-                  <p className="text-[13px] leading-7 text-white/45 sm:text-[14px] md:text-[15px] md:leading-8">
+                  <p className="text-[13px] leading-7 text-white/70 sm:text-[15px] md:text-[16px] md:leading-8">
                     A collection of digital products built around real workflows, thoughtful interfaces, scalable architecture and the kind of details that turn working software into a finished
                     product.
                   </p>
@@ -141,16 +142,16 @@ export const ProjectList = () => {
 
               <div className="lg:pb-2">
                 <div className="border-l border-white/[0.07] pl-6">
-                  <span className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/20">The work</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/65">The work</span>
 
-                  <p className="mt-4 max-w-[400px] text-[11px] leading-6 text-white/34 sm:text-[12px]">
+                  <p className="mt-4 max-w-[400px] text-[13px] leading-7 text-white/65 sm:text-[14px]">
                     From frontend experiences and admin dashboards to backend APIs, authentication, payments and complete MERN systems.
                   </p>
 
                   <div className="mt-6 flex items-center gap-3">
                     <span className="h-1.5 w-1.5 rounded-full bg-teal-300/70 shadow-[0_0_10px_rgba(94,234,212,0.35)]"></span>
 
-                    <span className="text-[8px] font-medium uppercase tracking-[0.18em] text-white/25">Built for real use</span>
+                    <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/65">Built for real use</span>
                   </div>
                 </div>
               </div>
@@ -160,7 +161,7 @@ export const ProjectList = () => {
             {/* FINAL INTRO                                       */}
             {/* ================================================= */}
 
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="project-intro__footer mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <span className="relative flex h-5 w-5 items-center justify-center">
                   <span className="absolute inset-0 rounded-full border border-white/[0.07]"></span>
@@ -168,11 +169,14 @@ export const ProjectList = () => {
                   <span className="h-1 w-1 rounded-full bg-teal-300/60"></span>
                 </span>
 
-                <span className="text-[8px] font-medium uppercase tracking-[0.20em] text-white/24">Scroll through selected work</span>
+                <a className="project-intro__explore" href="#project-collection" onClick={(event) => {
+                  event.preventDefault();
+                  document.getElementById("project-collection")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+                }}>Explore selected work <BsArrowDownRight aria-hidden="true" /></a>
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-[7px] font-medium uppercase tracking-[0.16em] text-white/14">Frontend · Backend · Product systems</span>
+                <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/60">Frontend · Backend · Product systems</span>
 
                 <span className="h-px w-10 bg-gradient-to-r from-white/[0.08] to-transparent"></span>
               </div>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { IoMdStar, IoMdStarHalf, IoMdStarOutline } from "react-icons/io";
 import MasonryLayout from "react-layout-masonry";
 import { useDispatch, useSelector } from "react-redux";
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
 
 const getAssetUrl = (asset) => {
   if (!asset) return "";
@@ -51,6 +51,7 @@ const RatingStars = ({ rating = 0 }) => {
 
 export const Testimonials = () => {
   const dispatch = useDispatch();
+  const { hash } = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
@@ -62,8 +63,15 @@ export const Testimonials = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [testimonialList.length]);
+    const targetIndex = testimonialList.findIndex(item => `#review-${item._id}` === hash);
+    setCurrentPage(targetIndex >= 0 ? Math.floor(targetIndex / itemsPerPage) + 1 : 1);
+  }, [testimonialList, hash, itemsPerPage]);
+
+  useEffect(() => {
+    if (!hash || isLoading) return;
+    const frame = requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" }));
+    return () => cancelAnimationFrame(frame);
+  }, [hash, currentPage, isLoading, testimonialList]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -96,7 +104,8 @@ export const Testimonials = () => {
                   const position = [item?.position, item?.company].filter(Boolean).join(" at ") || item?.location || "";
 
                   return (
-                    <div key={item._id} className="relative rounded-2xl black-custome-box p-3">
+                    <div key={item._id} id={`review-${item._id}`} className="relative rounded-2xl black-custome-box p-3 scroll-mt-28">
+                      {item.isDemo && <p className="mb-4 text-xs text-cyan-200">Demo review · fictional preview</p>}
                       <div className=" absolute top-0 left-0 -z-10">
                         <img src="../image/tesbg.avif" alt="tesbg" className=" invert opacity-10" />
                       </div>

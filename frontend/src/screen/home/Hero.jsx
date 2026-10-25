@@ -1,46 +1,57 @@
-import { TertiaryButton } from "@/components/customeUI/Button";
+import { Link } from "react-router-dom";
 import { ServiceCard } from "../about/Service";
-import { useInView, useReducedMotion } from "motion/react";
 import { useRef } from "react";
-import { FiArrowRight, FiBookOpen, FiCode, FiFileText, FiFolder, FiGrid, FiLayers, FiSearch, FiCheckCircle } from "react-icons/fi";
+import { motion as Motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
+import { FiArrowRight, FiArrowDown } from "react-icons/fi";
+import { ProjectBloom } from "./ProjectBloom";
+import { HeroGalleryBackdrop } from "./HeroGalleryBackdrop";
+import { HeroBloomTimeline } from "./HeroBloomTimeline";
+import { heroScrollState } from "./heroScrollState";
 import "./HeroLaunch.scss";
 
-const projectColumns = [
-  { title: "Interface", tone: "cyan", tasks: [["Responsive layouts", "React · Tailwind"], ["Reusable components", "Design systems"], ["Accessible interactions", "Keyboard & focus"]] },
-  { title: "Application", tone: "violet", tasks: [["Connected experiences", "MERN stack"], ["Content & learning", "Courses · Notes"], ["Clear user journeys", "Frontend development"]] },
-  { title: "Foundation", tone: "peach", tasks: [["API architecture", "Node.js · Express"], ["Structured data", "MongoDB"], ["Ready for the next step", "Testing · Deployment"]] },
-];
-
-function PortfolioWorkspace() {
-  return <div className="launch-workspace" aria-hidden="true">
-    <aside className="launch-workspace__rail"><span className="launch-workspace__monogram">G</span><FiGrid /><FiFolder /><FiBookOpen /><FiFileText /><FiCode /></aside>
-    <aside className="launch-workspace__sidebar"><strong>GORKcoder</strong><div className="launch-workspace__search"><FiSearch /> Search my work</div><span className="is-selected"><FiGrid /> Overview</span><span><FiFolder /> Projects</span><span><FiBookOpen /> Courses</span><span><FiFileText /> Notes</span><small>MY TOOLKIT</small><span>React</span><span>Node.js</span><span>MongoDB</span></aside>
-    <div className="launch-workspace__board"><div className="launch-workspace__breadcrumb">Portfolio <span>/</span> Full-stack development</div><header><h3>Ideas into experiences.</h3><span className="launch-workspace__avatar">SBK</span></header><div className="launch-workspace__tabs"><span><FiGrid /> The build</span><span><FiLayers /> Every layer</span></div><div className="launch-workspace__columns">{projectColumns.map(column => <div className={`launch-workspace__column launch-workspace__column--${column.tone}`} key={column.title}><h4><i />{column.title}<span>···</span></h4>{column.tasks.map(([title, label], i) => <div className="launch-workspace__task" key={title}><p>{title}</p><small>{label}</small>{i === 1 && <div className="launch-workspace__lines"><i /><i /><i /></div>}<footer><FiCode /><span>GORKcoder</span><FiCheckCircle /></footer></div>)}</div>)}</div></div>
-    <aside className="launch-workspace__activity"><strong>Build. Learn. Share.</strong><span className="launch-workspace__activity-tab">Inside my portfolio</span>{[["Projects","Ideas brought to life with full-stack development."],["Courses","IT subjects, made easier to explore."],["Notes","Practical lessons from the work along the way."]].map(([title, copy]) => <div key={title}><i /><p><b>{title}</b>{copy}</p></div>)}</aside>
-  </div>;
-}
-
 export const Hero = () => {
-  const section = useRef(null);
-  const inView = useInView(section);
-  const reduced = useReducedMotion();
-  return <section ref={section} className={`hero-launch${inView && !reduced ? " is-animated" : ""}`} aria-labelledby="home-hero-title">
-    <div className="hero-launch__atmosphere" aria-hidden="true"><div className="hero-launch__mist hero-launch__mist--one" /><div className="hero-launch__mist hero-launch__mist--two" /></div>
-    <div className="container hero-launch__inner">
-      <div className="hero-launch__opening">
-        <div className="hero-launch__copy"><h1 id="home-hero-title">Bringing ideas<br />to full-stack life.</h1><p>Crafting scalable, secure, and modern web applications with thoughtful interfaces and dependable backend architecture.</p><a className="hero-launch__button" href="/project"><span>Explore my work</span><FiArrowRight /></a></div>
-        <svg className="hero-launch__beam" viewBox="0 0 1240 720" preserveAspectRatio="none" aria-hidden="true">
-          <defs><filter id="launch-bloom" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="24" /></filter><filter id="launch-soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6" /></filter><linearGradient id="launch-beam-color" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#777dff" /><stop offset=".7" stopColor="#b1b2ff" /><stop offset="1" stopColor="#ffffff" /></linearGradient></defs>
-          <g className="hero-launch__beam-glow" fill="none" stroke="#738dff" strokeWidth="60" filter="url(#launch-bloom)"><path d="M760 -80 V460 Q760 714 555 714 H15" /><path d="M760 -80 V460 Q760 714 940 714 H1210" /></g>
-          <g fill="none" stroke="url(#launch-beam-color)" strokeWidth="15" filter="url(#launch-soft)"><path d="M760 -80 V460 Q760 714 555 714 H15" /><path d="M760 -80 V460 Q760 714 940 714 H1210" /></g>
-          <path d="M760 400 C760 670 700 714 555 714 H940 C810 714 760 665 760 400Z" fill="#f5f2ff" filter="url(#launch-soft)" opacity=".9" />
-          <g fill="none" stroke="#f5f2ff" strokeWidth="3"><path d="M760 -80 V460 Q760 714 555 714 H15" /><path d="M760 -80 V460 Q760 714 940 714 H1210" /></g>
-        </svg>
+  const reducedMotion = useReducedMotion();
+  const sectionRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 32, restDelta: .001 });
+  const galleryOpacity = useTransform(progress, value => heroScrollState(value).galleryOpacity);
+  const flowerOpacity = useTransform(progress, value => heroScrollState(value).flowerOpacity);
+  const growth = useTransform(progress, value => heroScrollState(value).flowerProgress);
+  const copyY = useTransform(progress, value => heroScrollState(value).copyY);
+  const copyOpacity = useTransform(progress, value => heroScrollState(value).copyOpacity);
+  const copyVisibility = useTransform(progress, value => value >= .44 ? "hidden" : "visible");
+  const flowerScale = useTransform(progress, value => heroScrollState(value).flowerScale);
+  const flowerOffset = useTransform(progress, [0, .44, .72, 1], ["60vh", "4vh", "0vh", "0vh"]);
+
+  return (
+    <section ref={sectionRef} className={"hero-bloom relative bg-[var(--home-canvas)] text-[#fafafa] [font-family:ui-sans-serif,system-ui,sans-serif] selection:bg-white selection:text-black " + (reducedMotion ? "" : "h-[210svh]")} aria-labelledby="home-hero-title">
+      <div className={"hero-bloom__stage isolate overflow-hidden " + (reducedMotion ? "relative px-5 pb-10 pt-16" : "sticky top-16 h-[calc(100svh-64px)] min-h-[620px]")}>
+        <HeroGalleryBackdrop progress={progress} opacity={galleryOpacity} reduced={reducedMotion} />
+        <div className={"z-20 " + (reducedMotion ? "relative" : "absolute inset-x-0 top-[max(100px,calc(50svh-222px))] px-5 max-[699px]:top-[18%]")}>
+        <Motion.div className="mx-auto w-full max-w-[1000px] text-center" style={{ y: reducedMotion ? 0 : copyY, opacity: reducedMotion ? 1 : copyOpacity, visibility: reducedMotion ? "visible" : copyVisibility }}>
+        <h1 id="home-hero-title" className="relative z-10 mx-auto mb-0 mt-0 max-w-[840px] text-center text-[clamp(42px,5.84vw,84px)] font-medium leading-[1.02] tracking-[-.025em]">
+          <Motion.span className="block" initial={reducedMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7, ease: [.16, 1, .3, 1] }}>Built with care.</Motion.span>
+          <Motion.span className="block text-[#c4c4c4]" initial={reducedMotion ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7, delay: .1, ease: [.16, 1, .3, 1] }}>Made for people.</Motion.span>
+        </h1>
+            <p className="mx-auto mb-0 mt-6 max-w-[448px] text-[16px] font-normal leading-[26px] text-[#a1a1a1]">I’m Sunil B.K, a MERN stack developer building thoughtful interfaces and dependable web applications.</p>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              <Link to="/project" className="group inline-flex h-11 items-center justify-center gap-3 rounded-full bg-[#fafafa] px-6 text-[13px] font-medium text-[#0a0a0a] transition-colors hover:bg-[#dedede] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">Explore projects <FiArrowRight aria-hidden="true" className="size-4 transition-transform duration-300 motion-safe:group-hover:translate-x-0.5" /></Link>
+              <Link to="/contact" className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-transparent px-6 text-[13px] font-medium text-[#fafafa] transition-colors hover:border-white/40 hover:bg-white/[.05] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">Let’s build together</Link>
+            </div>
+        </Motion.div>
+        </div>
+        <Motion.div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-[72px] z-20 flex items-center justify-center gap-2 text-[12px] text-white/80 max-[699px]:bottom-[40px]" style={{ opacity: reducedMotion ? 0 : copyOpacity }}>
+          <FiArrowDown className="size-3.5" /> Scroll to see ideas bloom
+        </Motion.div>
+        <Motion.div aria-hidden="true" className={"pointer-events-none z-10 origin-top mix-blend-screen [mask-image:linear-gradient(to_bottom,transparent,black_12%,black_92%,transparent)] " + (reducedMotion ? "relative mx-auto mt-8 aspect-[16/9] w-full max-w-[1100px]" : "absolute inset-x-0 top-[14%] mx-auto h-[36%] min-[900px]:inset-x-[20%] min-[900px]:top-[25%] min-[900px]:h-[64%] max-w-[1400px]")} style={{ opacity: reducedMotion ? 1 : flowerOpacity, y: reducedMotion ? 0 : flowerOffset, scale: reducedMotion ? 1 : flowerScale }}>
+          <div className="absolute inset-0 grayscale brightness-[1.45]">
+            <ProjectBloom artOnly progress={growth} />
+          </div>
+        </Motion.div>
+        <HeroBloomTimeline progress={progress} reduced={reducedMotion} />
       </div>
-      <div className="hero-launch__preview"><PortfolioWorkspace /></div>
-      <div className="hero-launch__footnote"><span>Illustrated portfolio workflow</span><a href="/contact">Have a project in mind? Let’s talk <FiArrowRight /></a></div>
-    </div>
-  </section>;
+    </section>
+  );
 };
 
 export const WhyToSelect = () => {
@@ -74,7 +85,7 @@ export const Welcome = () => {
 
           <h2 className="mb-7 text-4xl font-semibold leading-none tracking-[-0.03em] text-white sm:text-6xl lg:text-8xl">Start your journey</h2>
 
-          <TertiaryButton>Join Now</TertiaryButton>
+          <Link to="/contact" className="welcome-home__action">Let’s build together <FiArrowRight aria-hidden="true" /></Link>
         </div>
 
         <video autoPlay muted loop playsInline className="relative z-10 min-h-[58vh] w-full object-contain opacity-95 sm:min-h-[68vh] lg:min-h-[82vh]">

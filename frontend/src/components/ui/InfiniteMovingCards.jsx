@@ -1,7 +1,8 @@
 ("use client");
 import { cn } from "@/utils/lib/utils";
 import React, { useEffect, useRef, useState } from "react";
-import { HeadingThree } from "../customeUI/Title";
+import { useReducedMotion } from "framer-motion";
+import { RiDoubleQuotesL } from "react-icons/ri";
 
 export const InfiniteMovingCards = ({ items, direction = "left", speed = "fast", pauseOnHover = true, className }) => {
   const containerRef = useRef(null);
@@ -9,50 +10,24 @@ export const InfiniteMovingCards = ({ items, direction = "left", speed = "fast",
   const [start, setStart] = useState(false);
 
   useEffect(() => {
-    function addAnimation() {
-      if (!containerRef.current || !scrollerRef.current) return;
+    if (!containerRef.current || !scrollerRef.current) return undefined;
 
-      const scrollerContent = Array.from(scrollerRef.current.children);
+    const duration = speed === "fast" ? "40s" : speed === "normal" ? "80s" : "120s";
+    const originalItems = Array.from(scrollerRef.current.children).filter((item) => !item.dataset.clone);
+    const duplicatedItems = originalItems.map((item) => {
+      const duplicate = item.cloneNode(true);
+      duplicate.dataset.clone = "true";
+      duplicate.setAttribute("aria-hidden", "true");
+      scrollerRef.current.appendChild(duplicate);
+      return duplicate;
+    });
 
-      // Double the items for seamless looping
-      scrollerContent.forEach((item) => {
-        const duplicatedItem = item.cloneNode(true);
-        scrollerRef.current.appendChild(duplicatedItem);
-      });
+    containerRef.current.style.setProperty("--animation-direction", direction === "left" ? "forwards" : "reverse");
+    containerRef.current.style.setProperty("--animation-duration", duration);
+    setStart(true);
 
-      getDirection();
-      getSpeed();
-      setStart(true);
-    }
-
-    addAnimation();
-  }, []);
-
-  const getDirection = () => {
-    if (containerRef.current) {
-      containerRef.current.style.setProperty("--animation-direction", direction === "left" ? "forwards" : "reverse");
-    }
-  };
-
-  const getSpeed = () => {
-    if (containerRef.current) {
-      let duration;
-      switch (speed) {
-        case "fast":
-          duration = "40s";
-          break;
-        case "normal":
-          duration = "80s";
-          break;
-        case "slow":
-          duration = "120s";
-          break;
-        default:
-          duration = "80s";
-      }
-      containerRef.current.style.setProperty("--animation-duration", duration);
-    }
-  };
+    return () => duplicatedItems.forEach((item) => item.remove());
+  }, [direction, speed]);
 
   return (
     <div ref={containerRef} className={cn("scroller relative z-20 w-full overflow-hidden", "[mask-image:linear-gradient(to_right,transparent,white_5%,white_95%,transparent)]", className)}>
@@ -83,78 +58,54 @@ export const InfiniteMovingCards = ({ items, direction = "left", speed = "fast",
 };
 
 export const TestimonialCards = ({ items, direction = "left", speed = "fast", pauseOnHover = true, className }) => {
-  const containerRef = React.useRef(null);
-  const scrollerRef = React.useRef(null);
+  const reducedMotion = useReducedMotion();
+  const duration = speed === "fast" ? "28s" : speed === "normal" ? "48s" : "76s";
+  const visibleItems = reducedMotion ? items : [...items, ...items];
 
-  useEffect(() => {
-    addAnimation();
-  }, []);
-  const [start, setStart] = useState(false);
-  function addAnimation() {
-    if (containerRef.current && scrollerRef.current) {
-      const scrollerContent = Array.from(scrollerRef.current.children);
-
-      scrollerContent.forEach((item) => {
-        const duplicatedItem = item.cloneNode(true);
-        if (scrollerRef.current) {
-          scrollerRef.current.appendChild(duplicatedItem);
-        }
-      });
-
-      getDirection();
-      getSpeed();
-      setStart(true);
-    }
-  }
-  const getDirection = () => {
-    if (containerRef.current) {
-      if (direction === "left") {
-        containerRef.current.style.setProperty("--animation-direction", "forwards");
-      } else {
-        containerRef.current.style.setProperty("--animation-direction", "reverse");
-      }
-    }
-  };
-  const getSpeed = () => {
-    if (containerRef.current) {
-      if (speed === "fast") {
-        containerRef.current.style.setProperty("--animation-duration", "20s");
-      } else if (speed === "normal") {
-        containerRef.current.style.setProperty("--animation-duration", "40s");
-      } else {
-        containerRef.current.style.setProperty("--animation-duration", "80s");
-      }
-    }
-  };
   return (
-    <div ref={containerRef} className={cn("scroller relative z-20 container overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]", className)}>
-      <ul ref={scrollerRef} className={cn("flex w-max min-w-full shrink-0 flex-nowrap gap-4 py-2", start && "animate-scroll", pauseOnHover && "hover:[animation-play-state:paused]")}>
-        {items.map((item) => (
-          <li className="relative w-[350px] max-w-full shrink-0 rounded-2xl black-custome-box px-8 py-6" key={item.name}>
-            <div className=" absolute top-0 left-0 -z-10">
-              <img src="../image/tesbg.avif" alt="tesbg" className=" invert opacity-10" />
-            </div>
-            <blockquote>
-              <div aria-hidden="true" className="user-select-none pointer-events-none absolute -top-0.5 -left-0.5 -z-1 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"></div>
-              <div className="flex flex-col gap-6">
-                <div className="avatar size-16 rounded-full">
-                  <img src="https://images.ui8.net/uploads/softselect_wrappixel_logo_560x560_1722510701565.jpg" alt="" className="w-full h-full rounded-full" />
+    <div
+      className={cn("testimonial-marquee scroller", className)}
+      tabIndex={reducedMotion ? 0 : undefined}
+      role={reducedMotion ? "region" : undefined}
+      aria-label={reducedMotion ? "Scrollable testimonials" : undefined}
+      style={{
+        "--animation-direction": direction === "left" ? "forwards" : "reverse",
+        "--animation-duration": duration,
+      }}
+    >
+      <ul
+        className={cn("testimonial-marquee__track", !reducedMotion && "animate-scroll", pauseOnHover && "hover:[animation-play-state:paused]")}
+      >
+        {visibleItems.map((item, index) => {
+          const itemIndex = index % items.length;
+          const isDuplicate = index >= items.length;
+          const initials = item.name
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
+            .slice(0, 2);
+
+          return (
+            <li className="testimonial-card" key={`${item.name}-${index}`} aria-hidden={isDuplicate || undefined}>
+              <blockquote className="testimonial-card__quote">
+                <div className="testimonial-card__topline">
+                  <span className="testimonial-card__mark" aria-hidden="true"><RiDoubleQuotesL /></span>
+                  <span className="testimonial-card__number" aria-hidden="true">{String(itemIndex + 1).padStart(2, "0")}</span>
                 </div>
-                <div className="">
-                  <HeadingThree>{item.name}</HeadingThree>
-                  <span className="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400">{item.title}</span>
-                </div>
-              </div>
-              <p className="relative z-20 text-sm leading-[1.6] font-normal text-neutral-800 dark:text-gray-100 my-5">"{item.quote}"</p>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="avatar size-8 rounded-full">
-                  <img src="https://images.ui8.net/uploads/softselect_wrappixel_logo_560x560_1722510701565.jpg" alt="" className="w-full h-full rounded-full" />
-                </div>
-                <span className="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400">{item.name}</span>
-              </div>
-            </blockquote>
-          </li>
-        ))}
+
+                <p>“{item.quote}”</p>
+
+                <footer className="testimonial-card__author">
+                  <span className="testimonial-card__avatar" aria-hidden="true">{initials}</span>
+                  <span>
+                    <strong>{item.name}</strong>
+                    <small>{item.title}</small>
+                  </span>
+                </footer>
+              </blockquote>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

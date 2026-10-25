@@ -1,11 +1,11 @@
 import { HeadingThree, InputLabel, InputTitle } from "@/components/customeUI/Title";
 import { getAllProject } from "@/redux/slices/projectSlice";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { generateGradientBackground, generateItemColor, getIconUrls, getRandomGradient, truncateText } from "../../utils";
 import { NavLink } from "react-router";
 import { Pagination } from "@/components/Pagination";
-import { BsArrowRight } from "react-icons/bs";
+import { BsArrowRight, BsSearch, BsSliders, BsArrowCounterclockwise } from "react-icons/bs";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
 
 export const ProjectCard = () => {
@@ -19,7 +19,7 @@ export const ProjectCard = () => {
 
   const { projects, isLoading } = useSelector((state) => state.project);
   const { posts = [] } = projects || {};
-  const projectPosts = Array.isArray(posts) ? posts : [];
+  const projectPosts = useMemo(() => Array.isArray(posts) ? posts : [], [posts]);
 
   useEffect(() => {
     dispatch(getAllProject());
@@ -80,7 +80,7 @@ export const ProjectCard = () => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
 
   return (
@@ -96,6 +96,8 @@ export const ProjectCard = () => {
         setSortBy={setSortBy}
         categoryOptions={categoryOptions}
         onReset={resetFilters}
+        resultCount={filteredPosts.length}
+        isLoading={isLoading}
       />
 
       {isLoading ? (
@@ -145,7 +147,7 @@ const getBentoClass = (index = 0) => {
   return pattern[index % pattern.length];
 };
 
-const ProjectFilters = ({ searchTerm, setSearchTerm, categoryFilter, setCategoryFilter, accessFilter, setAccessFilter, sortBy, setSortBy, categoryOptions, onReset }) => {
+const ProjectFilters = ({ searchTerm, setSearchTerm, categoryFilter, setCategoryFilter, accessFilter, setAccessFilter, sortBy, setSortBy, categoryOptions, onReset, resultCount, isLoading }) => {
   const categoryOptionsList = [{ value: "all", label: "All categories" }, ...categoryOptions.map((category) => ({ value: category, label: category }))];
   const accessOptions = [
     { value: "all", label: "All access" },
@@ -161,37 +163,53 @@ const ProjectFilters = ({ searchTerm, setSearchTerm, categoryFilter, setCategory
     { value: "price-high", label: "Price high" },
   ];
 
-  return (
-    <div className="relative z-[90] mb-10 rounded-[1.7rem] bg-[#121820]/66 p-2.5 shadow-[0_22px_70px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,.035)] backdrop-blur-[28px]">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="min-w-0 flex-1">
-          <input
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search projects, stacks, layouts..."
-            autoComplete="off"
-            className="h-12 w-full rounded-full px-5 text-sm font-normal text-white/75 outline-none bg-white/10 backdrop-blur-2xl transition placeholder:text-white/35 focus:text-white"
-          />
-        </div>
+  const hasFilters = Boolean(searchTerm || categoryFilter !== "all" || accessFilter !== "all" || sortBy !== "newest");
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(150px,1fr)_minmax(130px,1fr)_minmax(120px,1fr)_auto] lg:w-auto">
-          <CustomDropdown value={categoryFilter} onChange={setCategoryFilter} options={categoryOptionsList} />
-          <CustomDropdown value={accessFilter} onChange={setAccessFilter} options={accessOptions} />
-          <CustomDropdown value={sortBy} onChange={setSortBy} options={sortOptions} />
-          <button
-            type="button"
-            onClick={onReset}
-            className="flex h-12 items-center justify-center rounded-full bg-[linear-gradient(180deg,#FFFFFF_0%,#E8E8E8_100%)] px-12 text-[10px] font-semibold uppercase tracking-[0.16em] text-black shadow-[inset_0_1px_0_rgba(255,255,255,.8),inset_0_-10px_18px_rgba(0,0,0,.12),0_16px_36px_rgba(255,255,255,.10)] transition hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,.9),inset_0_-10px_18px_rgba(0,0,0,.14),0_22px_46px_rgba(255,255,255,.16)]"
-          >
-            Reset
-          </button>
+  return (
+    <div id="project-collection" className="project-filters" role="region" aria-label="Filter and sort projects">
+      <div className="project-filters__top">
+        <div className="project-filters__heading"><BsSliders aria-hidden="true" /><h2>Find your next project</h2></div>
+        <span className="project-filters__count" role="status">{isLoading ? "Loading…" : `${resultCount} ${resultCount === 1 ? "project" : "projects"}`}</span>
+      </div>
+      <div className="project-filters__controls">
+        <label className="project-filters__field project-filters__search">
+          <span>Search</span>
+          <div className="project-filters__input-wrap">
+            <BsSearch aria-hidden="true" />
+            <input aria-label="Search projects" type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search projects or stacks…" autoComplete="off" />
+          </div>
+        </label>
+        <div className="project-filters__field" role="group" aria-label="Project category">
+          <span>Category</span>
+          <CustomDropdown className="project-filters__dropdown" value={categoryFilter} onChange={setCategoryFilter} options={categoryOptionsList} align="left" />
         </div>
+        <div className="project-filters__field" role="group" aria-label="Project access">
+          <span>Access</span>
+          <CustomDropdown className="project-filters__dropdown" value={accessFilter} onChange={setAccessFilter} options={accessOptions} align="left" />
+        </div>
+        <div className="project-filters__field project-filters__sort" role="group" aria-label="Project sort order">
+          <span>Sort by</span>
+          <CustomDropdown className="project-filters__dropdown" value={sortBy} onChange={setSortBy} options={sortOptions} />
+        </div>
+        <button type="button" onClick={onReset} disabled={!hasFilters} className="project-filters__reset"><BsArrowCounterclockwise aria-hidden="true" /><span>Reset</span></button>
       </div>
     </div>
   );
 };
 
 export const ProjectCardDesignFrist = ({ project, index = 0 }) => {
+  const cardRef = useRef(null);
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      card.classList.add("project-tile--revealed");
+      observer.disconnect();
+    }, { threshold: 0.12 });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
   const price = Number(project?.price || 0);
   const hasDiscount = Number(project?.discount || 0) > 0;
   const formatCount = project?.formats?.length || 0;
@@ -203,11 +221,11 @@ export const ProjectCardDesignFrist = ({ project, index = 0 }) => {
   const isWideCard = bentoClass.includes("xl:col-span-4") || bentoClass.includes("xl:col-span-3");
 
   return (
-    <div className={`group relative z-10 h-full ${bentoClass}`} key={project?._id}>
+    <div ref={cardRef} className={`project-tile ${isFeatureCard ? "project-tile--feature" : ""} group relative z-10 h-full ${bentoClass}`} key={project?._id}>
       <div className="absolute inset-x-10 -bottom-5 h-16 rounded-full bg-[#335240]/20 opacity-0 blur-3xl transition duration-500 group-hover:opacity-100"></div>
 
       <article
-        className={`relative flex h-full flex-col overflow-hidden rounded-[1.8rem] bg-[#11171d]/78 p-3 shadow-[0_22px_70px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,.025)] backdrop-blur-2xl transition duration-500 group-hover:-translate-y-1 group-hover:bg-[#121b20]/88 group-hover:shadow-[0_32px_95px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,.035)] ${
+        className={`project-tile__surface relative flex h-full flex-col overflow-hidden rounded-[1.8rem] bg-[#11171d]/78 p-3 shadow-[0_22px_70px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,.025)] backdrop-blur-2xl transition duration-500 group-hover:-translate-y-1 group-hover:bg-[#121b20]/88 group-hover:shadow-[0_32px_95px_rgba(0,0,0,0.42),inset_0_1px_0_rgba(255,255,255,.035)] ${
           isFeatureCard ? "min-h-[430px]" : "min-h-[462px]"
         }`}
       >
@@ -218,21 +236,24 @@ export const ProjectCardDesignFrist = ({ project, index = 0 }) => {
         ></div>
 
         <div className="relative flex h-full flex-col">
-          <NavLink to={`/project-details/${project?.slug}`} className="block">
+          <NavLink to={`/project-details/${project?.slug}`} className="project-tile__image-link block">
             <div
-              className={`relative overflow-hidden rounded-[1.38rem] bg-[#0c1418] shadow-[inset_0_1px_0_rgba(255,255,255,.045),0_16px_42px_rgba(0,0,0,.26)] ${
+              className={`project-tile__preview relative overflow-hidden rounded-[1.38rem] bg-[#0c1418] shadow-[inset_0_1px_0_rgba(255,255,255,.045),0_16px_42px_rgba(0,0,0,.26)] ${
                 isWideCard ? "h-60 lg:h-[270px]" : "h-56 lg:h-[238px]"
               }`}
             >
               <img
+                loading={index < 2 ? "eager" : "lazy"}
+                decoding="async"
                 src={coverImage}
-                alt={project?.thumbnail?.publicId || project?.title || "Project preview"}
-                className="h-full w-full object-cover opacity-[0.82] transition duration-700 group-hover:scale-[1.04] group-hover:opacity-[0.96]"
+                alt={project?.title || "Project preview"}
+                className="h-full w-full object-cover opacity-[0.95] transition duration-700 group-hover:scale-[1.035] group-hover:opacity-100"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#081117] via-[#081117]/30 to-black/10"></div>
-              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#081117] to-transparent"></div>
+              <span className="project-tile__preview-action" aria-hidden="true">Explore project <BsArrowRight /></span>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#081117]/70 via-transparent to-transparent"></div>
+              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#081117] to-transparent"></div>
               <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-3">
-                <InputLabel className="flex h-8 max-w-[62%] items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-[#071018]/72 px-4 text-center text-[9px] capitalize text-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_8px_24px_rgba(0,0,0,.18)] backdrop-blur-xl">
+                <InputLabel className="flex h-8 max-w-[62%] items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-[#071018]/72 px-4 text-center text-[11px] capitalize text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.065),0_8px_24px_rgba(0,0,0,.18)] backdrop-blur-xl">
                   {project?.category?.title || "Project"}
                 </InputLabel>
                 {hasDiscount ? (
@@ -248,36 +269,38 @@ export const ProjectCardDesignFrist = ({ project, index = 0 }) => {
             </div>
           </NavLink>
 
-          <div className="flex flex-1 flex-col px-3 pb-3 pt-5">
+          <div className="project-tile__body flex flex-1 flex-col px-3 pb-3 pt-5">
             <div className="flex items-start justify-between gap-3">
               <NavLink to={`/project-details/${project?.slug}`} className="min-w-0">
                 <HeadingThree
-                  className={`line-clamp-2 min-h-[46px] font-semibold leading-6 tracking-[-0.02em] text-white/92 transition group-hover:text-white ${isWideCard ? "text-[19px]" : "text-[17px]"}`}
+                  className={`line-clamp-2 min-h-[52px] font-semibold leading-7 tracking-[-0.02em] text-white/92 transition group-hover:text-white ${isWideCard ? "text-[22px]" : "text-[19px]"}`}
                 >
-                  {truncateText(project?.title, isWideCard ? 78 : 58)}
+                  {project?.title}
                 </HeadingThree>
               </NavLink>
               <NavLink
                 to={`/project-details/${project?.slug}`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] textColor shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition duration-300 group-hover:bg-white/90 group-hover:text-[#101923]"
+                aria-label={`View ${project?.title || "project"}`}
+                className="project-tile__open flex size-11 shrink-0 items-center justify-center rounded-full bg-white/[0.06] textColor shadow-[inset_0_1px_0_rgba(255,255,255,.05)] transition duration-300 group-hover:bg-white/90 group-hover:text-[#101923]"
               >
                 <BsArrowRight size={15} />
               </NavLink>
             </div>
 
-            <p className="mt-3 line-clamp-3 min-h-[56px] text-[11.5px] leading-6 textColor opacity-60">
+            <p className="mt-3 line-clamp-3 min-h-[56px] text-[14px] leading-7 text-white/70">
               {project?.metaDescription || "Explore this project with full details, preview, resources, and implementation notes."}
             </p>
 
-            <div className="mt-auto pt-5">
-              <div className="flex items-center justify-between gap-3">
+            <div className="project-tile__footer mt-auto pt-5">
+              <div className="project-tile__tools flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center pl-3">
                   {project?.formats?.slice(0, 6).map((format, index) => {
                     const iconName = format?.format?.toLowerCase() || "unknown";
                     const label = format?.format || "Unknown";
                     return (
                       <div
-                        className="img size-6 flexC -ml-2.5 rounded-full bg-[#17222d]/92 shadow-[0_8px_18px_rgba(0,0,0,0.22)] backdrop-blur-xl transition duration-300 hover:z-10 hover:scale-110"
+                        className="img size-8 flexC -ml-2 rounded-full bg-[#17222d]/92 shadow-[0_8px_18px_rgba(0,0,0,0.22)] backdrop-blur-xl transition duration-300 hover:z-10 hover:scale-110"
+                        title={label}
                         key={format?._id || `${label}-${index}`}
                       >
                         {iconName && <IconWithFallback value={iconName} alt={`${label} icon`} className="h-full w-full object-contain p-1.5 hover:cursor-pointer" />}
@@ -287,7 +310,7 @@ export const ProjectCardDesignFrist = ({ project, index = 0 }) => {
                   {formatCount > 6 && <span className="ml-1 text-[10px] textColor opacity-50">+{formatCount - 6}</span>}
                 </div>
 
-                <InputLabel className="flex h-7 max-w-[48%] shrink-0 items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-white/[0.045] px-3.5 text-center text-[9px] capitalize tracking-normal textColor opacity-76 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] backdrop-blur-xl">
+                <InputLabel className="flex h-7 max-w-[48%] shrink-0 items-center justify-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-white/[0.045] px-3.5 text-center text-[11px] capitalize tracking-normal textColor opacity-76 shadow-[inset_0_1px_0_rgba(255,255,255,.04)] backdrop-blur-xl">
                   {project?.layout || "Custom"} Layout
                 </InputLabel>
               </div>

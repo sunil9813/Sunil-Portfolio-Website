@@ -1,0 +1,7 @@
+# Automatic flowering hero
+
+Mode: Persuade. User requests enhanced hero design/animation with no play/pause controls. Remove replay entirely. Preserve previously removed extras, dark canvas, tree, main introduction, two compact links and lower homepage. No new claims or assets.
+
+Desktop composition: quiet first sentence, “Built to” and a large lavender “grow.” on separate lines, branch sharing its visual scale on the right. Mobile retains a compact two-line heading. The lavender word has a brief horizontal reveal; supporting copy settles over 650ms from an already-readable state. Existing bloom plays once over 3.8s, freezes fully open, stops when offscreen, and uses a static poster for reduced motion. Mouse-only springs remain ±6px/4px and settle on leave/cancel. No autoplay loop, controls, new backgrounds or dependencies. Tailwind-first. Existing assets/provenance and global design files unchanged.
+
+Finish review: ship, no material fixes. Four captures opened in .impeccable/review/hero-auto-bloom/: 1280×720, 390×844, 900×800, 1440×900. Hero has zero buttons and two 40px links; mobile/wide canvases ready, no horizontal overflow, errors `[]`. Production build (5.01s), targeted ESLint, diff check and detector `[]` pass. Replay state/icon removed. Source confirms 1.1s word reveal, 650ms copy entrance and 3.8s bloom; mouse/reduced-motion paths source-reviewed only. No new assets, dependencies or global design changes.

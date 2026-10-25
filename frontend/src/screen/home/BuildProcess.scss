@@ -1,0 +1,105 @@
+.home-page .build-process--final.process-garden {
+  --garden-accent: #eee;
+  position: relative; min-height: 380svh;
+  color: #f3f3f3; font-family: ui-sans-serif, system-ui, sans-serif;
+  .build-process__sticky {
+    top: 72px; height: calc(100svh - 72px); min-height: 600px;
+    display: flex; flex-direction: column; justify-content: center;
+    padding-block: 24px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 48%, #20202055, transparent 60%), #141619;
+    &::before { background: linear-gradient(#141619, transparent 15%, transparent 85%, #141619); }
+  }
+  .process-garden__intro { position: relative; z-index: 1; flex: none; padding-inline: 24px; }
+  .process-garden__intro h2 { max-width: 1050px; margin-inline: auto; }
+  .process-garden__stage {
+    position: relative;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, .8fr) minmax(0, 1fr);
+    align-items: center; width: min(90%, 1320px); min-height: 250px; margin: 20px auto 0;
+  }
+  // One new generated plant, six aligned growth states, behind the original score.
+  .process-flower { position: absolute; z-index: 0; pointer-events: none; width: min(32vw, 430px); aspect-ratio: 1; left: 50%; bottom: -12px; transform: translateX(-50%); mix-blend-mode: screen; filter: grayscale(1); opacity: .85; }
+  .process-flower__plant { position: absolute; inset: 0; transform-origin: 50% 78%; }
+  .process-flower__frame { position: absolute; inset: 0; background-repeat: no-repeat; background-size: 300% 200%; transform-origin: 50% 65%; }
+  .process-garden__copy, .process-garden__diagram { min-width: 0; position: relative; z-index: 1; }
+  .process-garden__copy { grid-column: 1; }
+  .process-garden__diagram { grid-column: 3; }
+  .process-garden__copy-window { display: grid; }
+  .process-garden__copy-window > * { grid-area: 1 / 1; }
+  .process-garden__measure { display: grid; visibility: hidden; pointer-events: none; }
+  .process-garden__measure > * { grid-area: 1 / 1; }
+  .process-garden__chapter { padding: 0; margin: 0; }
+  .process-garden__chapter h3 { margin: 0 0 14px; font-size: clamp(24px, 2.3vw, 32px); font-weight: 500; letter-spacing: -.035em; line-height: 1.16; color: #fff; }
+  .process-garden__chapter p { margin: 0; color: #b7b7b7; font-size: 13px; line-height: 1.8; }
+  .process-garden__chapter .process-garden__outcome { font-size: 11px; margin-top: 14px; color: #999; }
+  .process-garden__controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+  .process-garden__counter { font-size: 11px; color: #888; font-variant-numeric: tabular-nums; }
+  .process-garden__counter strong { color: #eee; font-weight: 500; }
+  .process-garden__growth-status { margin-left: 10px; color: #bbb; }
+  .process-garden__controls button { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #ffffff30; border-radius: 50%; background: #141619; color: #eee; transition: background-color .2s, color .2s; }
+  .process-garden__controls button:hover:not(:disabled) { background: #eee; color: #151515; }
+  .process-garden__controls button:disabled { opacity: .25; cursor: default; }
+  .process-garden__controls svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  button:focus-visible { outline: 2px solid #fff; outline-offset: 5px; }
+  .process-score { position: relative; z-index: 1; flex: none; height: 170px; margin-top: 24px; }
+  .process-score__window { position: absolute; inset: 0; overflow: clip; mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
+  .process-score__track { position: relative; display: flex; width: max-content; height: 100%; gap: 28px; margin: 0; padding: 0; list-style: none; }
+  .process-score__phase { position: relative; width: clamp(360px, 37vw, 520px); flex: 0 0 clamp(360px, 37vw, 520px); padding-top: 19px; opacity: .56; transition: opacity .35s ease; }
+  .process-score__phase.is-active, .process-score__phase:hover, .process-score__phase:focus-within { opacity: 1; }
+  .process-score__ruler { position: absolute; inset: 0 -28px auto 0; height: 10px; display: flex; justify-content: space-between; border-top: 1px solid #ffffff24; }
+  .process-score__ruler i { height: 4px; width: 1px; background: #ffffff35; }
+  .process-score__ruler i:nth-child(4n + 1) { height: 8px; background: var(--step-accent); }
+  .process-score__phase > button { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 32px; padding: 0 2px; text-align: left; font-size: 12px; color: #eee; background: transparent; border: 0; border-radius: 3px; }
+  .process-score__phase > button small { font-size: 10px; color: var(--step-accent); font-variant-numeric: tabular-nums; }
+  .process-score__growth { margin-left: auto; color: var(--step-accent); font-size: 10px; padding-right: 4px; }
+  .process-score__tasks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .process-score__task { position: relative; isolation: isolate; display: flex; align-items: center; overflow: hidden; min-height: 34px; padding: 7px 12px; border-radius: 5px; color: #f1f1f1; background: color-mix(in srgb, var(--step-accent) 13%, #171a20); font-size: 12px; line-height: 1.4; }
+  .process-score__task:last-child { grid-column: 1 / 3; width: 65%; justify-self: end; }
+  .process-score__task > i { position: absolute; inset: 0; z-index: -1; transform-origin: left; background: color-mix(in srgb, var(--step-accent) 38%, #171a20); }
+  .process-score__playhead { position: absolute; inset: 0 auto 0 50%; width: 1px; pointer-events: none; color: var(--garden-accent); }
+  .process-score__playhead svg { position: absolute; left: -7px; top: -1px; width: 14px; height: 10px; fill: currentColor; }
+  .process-score__playhead > span { display: block; width: 1px; height: 100%; background: linear-gradient(currentColor, #ffffff18); }
+  .process-garden__hint { position: relative; z-index: 1; text-align: center; font-size: 10px; letter-spacing: .04em; color: #888; margin: 19px 0 0; }
+  .phase-visual { display: grid; min-width: 0; padding: 12px 10px 0; margin: 0; background: #17181ae8; border: 1px solid #ffffff14; border-radius: 12px; filter: grayscale(1); }
+  .phase-visual > svg { grid-area: 1 / 1; width: 100%; height: auto; aspect-ratio: 520 / 236; overflow: visible; }
+  .phase-visual > figcaption { grid-area: 2 / 1; display: flex; gap: 6px; align-items: center; justify-content: center; padding: 12px 0; border: 0; color: #aaa; font-size: 10px; line-height: 1.5; }
+  .phase-visual figcaption svg { width: 13px; height: 13px; flex: none; color: var(--visual-accent); }
+  .phase-visual text { fill: #eee; font-family: inherit; font-size: 17px; }
+  .phase-visual .phase-visual__title { font-size: 18px !important; font-weight: 500; fill: var(--visual-accent) !important; }
+  .phase-visual .phase-visual__secondary { font-size: 14px; fill: #b5b5b5; }
+  .phase-visual .phase-visual__node-label { font-size: 16px; }
+  .phase-visual .phase-visual__surface { fill: #252525; stroke: #6a6a6a; stroke-width: 1; }
+  .phase-visual .phase-visual__accent-surface { fill: var(--visual-tint); stroke: var(--visual-accent); stroke-width: 1; }
+  .phase-visual .phase-visual__rule { stroke: #555; fill: none; stroke-width: 1; }
+  .phase-visual .phase-visual__icon { color: var(--visual-accent); stroke-width: 1.6; }
+  @media (min-width: 761px) and (max-height: 820px) {
+    .build-process__sticky { min-height: 0; padding-block: 14px; }
+    .process-garden__intro h2 { font-size: 42px; }
+    .process-garden__intro p { margin-top: 12px; }
+    .process-score { height: 150px; margin-top: 18px; }
+    .process-garden__stage { min-height: 220px; margin-block: 16px 0; }
+    .process-garden__controls { margin-top: 12px; }
+    .process-garden__chapter p { font-size: 12px; }
+  }
+  @media (max-width: 760px), (max-height: 650px), (prefers-reduced-motion: reduce) {
+    min-height: 0;
+    .build-process__sticky { position: relative; top: auto; height: auto; min-height: 0; padding-block: 48px; }
+  }
+  @media (max-width: 760px) {
+    .process-garden__stage { width: calc(100% - 40px); grid-template-columns: 1fr; gap: 28px; padding-top: 340px; margin-top: 10px; }
+    .process-flower { width: 350px; top: 345px; bottom: auto; transform: translateX(-50%); opacity: .85; }
+    .process-score { height: 155px; margin-top: 24px; }
+    .process-score__phase { flex-basis: 82vw; width: 82vw; }
+    .process-score__task { font-size: 11px; }
+    .process-score__growth { font-size: 9px; }
+    .process-garden__copy, .process-garden__diagram { grid-column: 1; }
+    .process-garden__diagram { padding: 0; }
+    .process-garden__chapter p { font-size: 14px; }
+    .process-garden__chapter .process-garden__outcome { font-size: 12px; }
+    .process-garden__measure { display: none; }
+    .process-garden__copy-window { min-height: 195px; }
+    .process-garden__controls { margin-top: 12px; }
+    .phase-visual { padding-inline: 12px; }
+    .phase-visual figcaption { font-size: 11px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+}

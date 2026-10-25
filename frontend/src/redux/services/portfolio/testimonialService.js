@@ -3,8 +3,8 @@ import axios from "axios";
 
 export const API_URL = `${REACT_APP_BACKEND_URL}/portfolio/testimonial`;
 
-const getAllTestimonial = async () => {
-  const response = await axios.get(API_URL + "/");
+const getAllTestimonial = async (requestOptions = {}) => {
+  const response = await axios.get(API_URL + "/", requestOptions);
   return response.data;
 };
 const getMyTestimonials = async () => {

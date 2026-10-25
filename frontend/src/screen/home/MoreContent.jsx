@@ -1,4 +1,3 @@
-import { HeadingThree, InputLabel } from "@/components/customeUI/Title";
 import { FaRegHandPointRight, FaRegLightbulb } from "react-icons/fa";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { IoSpeedometerOutline } from "react-icons/io5";
@@ -6,11 +5,12 @@ import { MdOutlineCreditScore } from "react-icons/md";
 import { TbUsersGroup } from "react-icons/tb";
 import { GrUser } from "react-icons/gr";
 import { useState, useEffect } from "react";
-import { motion as Motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 export const MoreContent = () => {
   const [activeCard, setActiveCard] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   // Detect if device is mobile/tablet
   useEffect(() => {
@@ -31,20 +31,21 @@ export const MoreContent = () => {
   };
 
   return (
-    <section className="home-more py-10">
-      <div className="container text-center">
-        <div className="flexC">
-          <span className="text-xl md:text-3xl lg:text-6xl font-semibold line-through opacity-50">One</span>
-          <h2 className="text-xl md:text-3xl lg:text-6xl font-semibold blog-detail-title">&nbsp;a few more things.</h2>
+    <section className="home-more" aria-labelledby="home-more-title">
+      <div className="container">
+        <div className="home-more__heading">
+          <h2 id="home-more-title">A few more things<br /><span>behind the work.</span></h2>
+          <p>Seven principles that shape how I think, collaborate, and turn ambitious ideas into dependable digital products.</p>
         </div>
-        <p>Explore a set of advanced utilities and features designed to streamline development, optimize performance, and elevate your workflow.</p>
 
-        <div className="content flex flex-wrap mt-10 gap-4 justify-center">
-          {cardData.map((card) => (
+        <div className="content">
+          {cardData.map((card, index) => (
             <Motion.div
               key={card.id}
-              className={`hnZxpu relative h-[474px] overflow-hidden cursor-pointer${activeCard === card.id ? " is-active" : ""}`}
+              className={`hnZxpu${activeCard === card.id ? " is-active" : ""}`}
               role="button"
+              aria-roledescription="expandable principle"
+              aria-controls={`home-more-panel-${card.id}`}
               tabIndex={0}
               aria-label={card.title}
               aria-expanded={activeCard === card.id}
@@ -56,54 +57,44 @@ export const MoreContent = () => {
                 }
               }}
               onHoverStart={() => !isMobile && setActiveCard(card.id)}
-              onClick={() => isMobile && handleCardInteraction(card.id)}
+              onClick={() => handleCardInteraction(card.id)}
               initial={false}
               animate={{
                 flexGrow: activeCard === card.id ? 4 : 1,
                 transition: {
-                  duration: 0.5,
+                  duration: reducedMotion ? 0 : 0.55,
                   ease: [0.16, 1, 0.3, 1],
                 },
               }}
               whileTap={isMobile ? { scale: 0.98 } : {}}
             >
               <Motion.div
-                className="isiSZ absolute top-0 h-[474px]"
+                className="isiSZ"
                 animate={{
-                  scale: activeCard === card.id ? 1 : 1.2,
-                  transition: { duration: 0.6 },
+                  scale: activeCard === card.id ? 1.015 : 1.12,
+                  transition: { duration: reducedMotion ? 0 : 0.7, ease: [0.16, 1, 0.3, 1] },
                 }}
               >
-                <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                <img src={card.image} alt="" width="948" height="948" loading="lazy" decoding="async" />
               </Motion.div>
 
-              <Motion.div
-                className="iLpqQ absolute"
-                initial={{ left: 62, top: 42 }}
-                animate={{
-                  left: activeCard === card.id ? 62 : 62,
-                  opacity: activeCard === card.id ? 1 : 0.7,
-                  transition: { duration: 0.3 },
-                }}
-              >
-                <HeadingThree>{card.title}</HeadingThree>
-              </Motion.div>
+              <span className="home-more__number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <div className="iLpqQ"><span className="home-more__collapsed-icon" aria-hidden="true">{card.icon}</span><h3>{card.title}</h3></div>
 
               <AnimatePresence>
                 {activeCard === card.id && (
                   <Motion.div
-                    className="w-full h-full flex flex-col text-left justify-end relative z-20 p-8 pb-12"
-                    initial={{ opacity: 0, x: -20 }}
+                    id={`home-more-panel-${card.id}`}
+                    className="home-more__card-content"
+                    initial={{ opacity: 0, x: -14 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: reducedMotion ? 0 : 0.34, ease: "easeOut" }}
                   >
+                    <span className="home-more__active-icon" aria-hidden="true">{card.icon}</span>
                     <h3 className="home-more__active-title">{card.title}</h3>
                     <p>{card.content}</p>
-                    <div className="flex items-center gap-2 mt-3">
-                      {card.icon}
-                      <InputLabel>{card.label}</InputLabel>
-                    </div>
+                    <span className="home-more__label">{card.label}</span>
                   </Motion.div>
                 )}
               </AnimatePresence>
@@ -138,16 +129,16 @@ const cardData = [
   {
     id: 3,
     image: "../image/home/m3.jpg",
-    title: "Think Smart",
+    title: "Think smart",
     content:
       "I approach challenges with efficiency in mind — choosing the right tools, simplifying logic, and writing code that balances performance, clarity, and future scalability across every project.",
     icon: <FaRegLightbulb size={20} />,
-    label: "Logic. thinking. Smart.",
+    label: "Clear thinking. Smarter decisions.",
   },
   {
     id: 4,
     image: "../image/home/m4.jpg",
-    title: "Grow Together",
+    title: "Grow together",
     content:
       "Collaboration fuels innovation. I value open communication, shared knowledge, and teamwork to build stronger projects that grow with input from all stakeholders and deliver lasting impact.",
     icon: <TbUsersGroup size={20} />,
@@ -156,7 +147,7 @@ const cardData = [
   {
     id: 5,
     image: "../image/home/m5.jpg",
-    title: "Act Fast",
+    title: "Act fast",
     content:
       "Speed matters in development. I deliver timely solutions without sacrificing quality, ensuring quick iterations, fast feedback, and the ability to adapt rapidly to changing project needs.",
     icon: <IoSpeedometerOutline size={20} />,
@@ -165,7 +156,7 @@ const cardData = [
   {
     id: 6,
     image: "../image/home/m6.jpg",
-    title: "Customer First",
+    title: "Customer first",
     content:
       "Understanding client needs drives every decision I make. I focus on delivering tailored solutions that exceed expectations, ensuring satisfaction, clear communication, and long-term success for every project.",
     icon: <GrUser size={20} />,
@@ -174,7 +165,7 @@ const cardData = [
   {
     id: 7,
     image: "../image/home/m7.jpg",
-    title: "Be You",
+    title: "Be you",
     content:
       "Authenticity matters. I bring my unique perspective and creativity to every project, encouraging innovation and honest collaboration to create solutions that truly reflect your vision and goals.",
     icon: <FaRegHandPointRight size={20} />,

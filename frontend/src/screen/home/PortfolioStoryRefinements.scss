@@ -1,0 +1,104 @@
+// Keep the scrapbook composition; refine only its finish and reading rhythm.
+.home-page .portfolio-story--collage {
+  scroll-margin-top: 88px;
+
+  .portfolio-story__heading {
+    padding-bottom: 40px;
+    h2 span { color: var(--home-accent); }
+    p { font-size: 15px; max-width: 40ch; }
+  }
+
+  .portfolio-story__note h3 {
+    font-size: clamp(23px, 2.1vw, 32px);
+    font-weight: 600;
+    letter-spacing: -.025em;
+    line-height: 1.24;
+    margin-bottom: 12px;
+  }
+  .portfolio-story__note p { max-width: 34ch; line-height: 1.7; }
+  .portfolio-story__chapter .portfolio-story__picture {
+    padding: 4px;
+    background: color-mix(in srgb, var(--home-ink) 9%, var(--home-panel));
+    box-shadow: 0 20px 36px -20px #000c;
+  }
+  .portfolio-story__chapter .portfolio-story__picture img {
+    object-position: var(--art-focus, 50% 100%);
+    transform: scale(var(--art-zoom, 1));
+    transform-origin: var(--art-focus, 50% 100%);
+  }
+  .portfolio-story__study-label {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    z-index: 1;
+    max-width: calc(100% - 28px);
+    padding: 6px 9px;
+    border: 1px solid var(--home-line);
+    border-radius: 5px;
+    background: var(--home-canvas);
+    color: var(--home-ink);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    pointer-events: none;
+  }
+  .portfolio-story__ribbon { opacity: .38; }
+  @media (hover: hover) and (pointer: fine) {
+    .portfolio-story__chapter .portfolio-story__picture:hover img {
+      transform: scale(calc(var(--art-zoom, 1) * 1.025));
+    }
+  }
+  .portfolio-story__footer { font-size: 12px; }
+  .portfolio-story__footer a, .portfolio-story__mobile-credit a {
+    color: var(--home-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--home-line);
+    text-underline-offset: 4px;
+    transition: color 180ms ease, text-decoration-color 180ms ease;
+    &:hover { color: var(--home-accent); text-decoration-color: currentColor; }
+  }
+  .portfolio-story__chapter-nav button:active { scale: .94; }
+  .portfolio-story__chapter-nav button { transition: color 180ms ease, scale 180ms var(--home-ease); }
+  .portfolio-story__mobile-credit { display: none; }
+
+  .portfolio-story__values { padding-top: clamp(64px, 6vw, 96px); }
+  .portfolio-story__intro h2 { line-height: 1.2; letter-spacing: -.03em; }
+  .portfolio-story__value-copy p { line-height: 1.75; }
+  .portfolio-story__value-title { color: var(--home-muted); font-weight: 500; }
+  .portfolio-story__value.is-active .portfolio-story__value-title { color: var(--home-accent); }
+  .portfolio-story__value-toggle {
+    display: grid; place-items: center; width: 26px; height: 26px;
+    border-radius: 50%; background: var(--home-line); font-size: 16px;
+    svg { width: 16px; height: 16px; }
+  }
+  .portfolio-story__value button { border-radius: 8px; }
+  .portfolio-story__value button:hover .portfolio-story__value-title { color: var(--home-ink); }
+  .portfolio-story__principle a svg { transition: transform 200ms var(--home-ease); }
+  .portfolio-story__principle a:hover svg { transform: translate(2px, -2px); }
+
+  @media (max-width: 760px) {
+    .portfolio-story__heading { padding-bottom: 40px; gap: 20px; }
+    .portfolio-story__heading p { font-size: 14px; }
+    .portfolio-story__chapter { margin-bottom: 72px; }
+    .portfolio-story__note h3 { font-size: 27px; max-width: 22ch; }
+    .portfolio-story__note p { font-size: 14px; }
+    .portfolio-story__pictures { margin-top: 24px; }
+    // The compact collage needs room for the imagery, not miniature text chips.
+    .portfolio-story__study-label { display: none; }
+    .portfolio-story__mobile-credit {
+      display: block; width: calc(100% - 40px); margin: -24px auto 0;
+      font-size: 12px; color: var(--home-muted); line-height: 1.7;
+    }
+    .portfolio-story__values { padding-top: 56px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .portfolio-story__chapter-nav button:active { scale: 1; }
+    .portfolio-story__principle a:hover svg { transform: none; }
+    .portfolio-story__chapter .portfolio-story__picture img,
+    .portfolio-story__chapter .portfolio-story__picture:hover img {
+      transform: scale(var(--art-zoom, 1));
+      transition: none;
+    }
+  }
+  &.portfolio-story--reduced .portfolio-story__mobile-credit { display: block; margin: 24px 6% 0; font-size: 12px; color: var(--home-muted); }
+}

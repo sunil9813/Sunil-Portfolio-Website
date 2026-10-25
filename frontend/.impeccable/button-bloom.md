@@ -1,0 +1,9 @@
+# Button to Bloom refinement
+
+Current: restored after the user rejected the editorial refinement. The design below applies, except the connecting line remains removed by user request. The portrait name also remains absent. Inline icons, centered text and direct 68% scroll mapping are restored.
+
+Mode: Experience. Preserve Conversation's text-left/paired-portrait-right layout and original dark canvas. Remove the remaining visible portrait name. Connect the tree beneath the CTA's left side rather than the oval.
+
+The measured CTA anchors a thin decorative stem 16px from its left edge and 4px beneath its bottom. At widths below 900px the stem follows the outer left gutter, clearing the portraits, and curves into the existing source sequence below Conversation. Desktop retains a straight descending connection. Both branches meet the uniform source plane at x70. The static poster and live canvas share geometry. Bloom's text sits in the desktop left negative space and below the flowers on mobile, with a muted introduction, off-white core phrase and lavender conclusion. Inline icons are unboxed. The existing 90-frame sequence reaches full bloom at 68% of section scroll progress; cache, cleanup and reduced-motion fallback remain. No new assets or dependencies.
+
+Build, targeted ESLint and two geometry tests pass. Layout scans returned no findings. Desktop 1280×720 and mobile 390×844 captures are in .impeccable/review/button-bloom/: desktop.png, desktop-bloom.png, mobile.png, mobile-bloom.png. Mobile runtime has no horizontal overflow, canvas ready and no console errors. Reduced-motion and touch paths are source-reviewed, not runtime-emulated. Existing image provenance remains in project-bloom.md. Finish review: ship, no UI fixes. All four desktop/mobile captures were opened; diff check and pre/post layout scans pass. This supersedes the oval anchor and caption statements in prior local briefs; global DESIGN.md remains unchanged.

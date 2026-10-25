@@ -28,7 +28,6 @@ for color pikcer => https://uicolors.app/generate/335240
 for todo list home page design => https://ui8-bento-landing.vercel.app/
 show for feature that pro editor have access => https://bento.ui8.net/02/ and  https://memorable-illuminate-950162.framer.app/
 
-take refe for card and lighting effect or bento card = > https://limelight.framer.website/
 
 
 take refrence for main project => https://ui8.net/?rel=tmtt20

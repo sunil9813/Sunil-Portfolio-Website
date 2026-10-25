@@ -1,31 +1,39 @@
-import { BeyondJustCode } from "@/screen/home/BeyondJustCode";
+import { useRef } from "react";
 import { Expertise } from "@/screen/home/Expertise";
+// import { BeyondJustCode } from "@/screen/home/BeyondJustCode";
 import { Feature } from "@/screen/home/Feature";
 import { Hero } from "@/screen/home/Hero";
 import { MoreContent } from "@/screen/home/MoreContent";
-import { Testimonial } from "@/screen/home/Testimonial";
+// Previous version retained unchanged; uncomment this import and its render to restore it.
+// import { Testimonial } from "@/screen/home/Testimonial";
+import { TestimonialSpotlight } from "@/screen/home/TestimonialSpotlight";
 import { BuildProcess } from "@/screen/home/BuildProcess";
 import { ProjectConversation } from "@/screen/home/ProjectConversation";
+import { ProjectBloom } from "@/screen/home/ProjectBloom";
 import { PortfolioStory } from "@/screen/home/PortfolioStory";
 import { NextSteps } from "@/screen/home/NextSteps";
 import { Welcome, WhyToSelect } from "@/screen/home/Hero";
 import "./Home.scss";
 
 export const Home = () => {
+  const conversationRef = useRef(null);
   return (
     <div className="home-page">
       <Hero />
-      <WhyToSelect />
       <Expertise />
-      <BeyondJustCode />
+      {/* <BeyondJustCode /> */}
       <BuildProcess />
-      <ProjectConversation />
       <PortfolioStory />
       <NextSteps />
       <Feature />
-      <Testimonial />
+      {/* <Testimonial /> */}
+      <TestimonialSpotlight />
+      <div className="project-connection relative isolate overflow-clip bg-[var(--home-canvas)]">
+        <ProjectConversation sectionRef={conversationRef} />
+        <ProjectBloom connectionRef={conversationRef} />
+      </div>
       <MoreContent />
-      <Welcome />
+      {/* <Welcome /> */}
 
       {/*  <div className="container">
          <img src="https://framerusercontent.com/images/UXcY8391iq9o8qOfVyOrEUv0dU.png" alt="" />

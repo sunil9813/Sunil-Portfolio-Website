@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T04:07:49.838Z",
+  "title": "Design System: Sunil B.K / GORKcoder homepage",
+  "extensions": {
+    "colorMeta": {
+      "home-accent": {
+        "role": "primary",
+        "displayName": "Homepage cyan"
+      },
+      "home-canvas": {
+        "role": "neutral",
+        "displayName": "Dark canvas"
+      },
+      "home-panel": {
+        "role": "neutral",
+        "displayName": "Tonal panel"
+      },
+      "home-panel-hover": {
+        "role": "neutral",
+        "displayName": "Panel hover"
+      },
+      "home-ink": {
+        "role": "neutral",
+        "displayName": "Primary ink"
+      },
+      "home-muted": {
+        "role": "neutral",
+        "displayName": "Muted ink"
+      },
+      "home-line": {
+        "role": "neutral",
+        "displayName": "Quiet divider"
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Shared section heading",
+        "purpose": "Inspected homepage section headings; individual section overrides remain local."
+      },
+      "body": {
+        "displayName": "Introductory copy",
+        "purpose": "Shared homepage introductory paragraphs."
+      }
+    },
+    "motion": [
+      {
+        "name": "home-ease",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Inherited homepage easing."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "home-mobile",
+        "value": "680px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Spotlight full-review link",
+      "kind": "button",
+      "description": "Actual carousel-local 40px link with a dark arrow disc, replacing arrows on hover/focus and a .98 press scale; mobile keeps compact sizing.",
+      "html": "<a class=\"ds-spotlight-full\" style=\"--review-accent:hsl(270 68% 77%)\" href=\"/customer-feedback\" aria-label=\"Read the full customer review\"><span>Full review</span><span class=\"ds-spotlight-full-arrow\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14M12 5l7 7-7 7\"/></svg><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14M12 5l7 7-7 7\"/></svg></span></a>",
+      "css": ".ds-spotlight-full{display:inline-flex;align-items:center;justify-content:space-between;gap:14px;width:100%;max-width:200px;min-height:40px;margin-top:auto;padding:8px 10px 8px 20px;border-radius:99px;background:#f3f2ef;color:#171a20;font-family:Poppins,sans-serif;font-size:12px;font-weight:500;text-decoration:none;transition:background-color 180ms ease,transform 180ms ease}.ds-spotlight-full-arrow{position:relative;display:block;width:24px;height:24px;flex:0 0 24px;overflow:hidden;border-radius:50%;background:#171a20;color:var(--review-accent)}.ds-spotlight-full-arrow svg{position:absolute;inset:5px;width:14px;height:14px;transition:transform 350ms cubic-bezier(.16,1,.3,1)}.ds-spotlight-full-arrow svg+svg{transform:translateX(-24px)}.ds-spotlight-full:hover{background:#fff}.ds-spotlight-full:is(:hover,:focus-visible) .ds-spotlight-full-arrow svg:first-child{transform:translateX(24px)}.ds-spotlight-full:is(:hover,:focus-visible) .ds-spotlight-full-arrow svg+svg{transform:translateX(0)}.ds-spotlight-full:active{transform:scale(.98)}.ds-spotlight-full:focus-visible{outline:2px solid var(--review-accent,var(--home-accent,#92d8df));outline-offset:4px}@media(max-width:760px){.ds-spotlight-full{min-height:40px;padding:8px 3px 8px 5px;gap:3px;font-size:10px;white-space:nowrap}.ds-spotlight-full-arrow{width:18px;height:18px;flex-basis:18px}.ds-spotlight-full-arrow svg{inset:3px;width:12px;height:12px}}@media(max-width:350px){.ds-spotlight-full{flex-direction:column;gap:1px;min-height:48px;font-size:10px}}@media(prefers-reduced-motion:reduce){.ds-spotlight-full,.ds-spotlight-full-arrow svg{transition-duration:.01ms!important}.ds-spotlight-full:is(:hover,:focus-visible) .ds-spotlight-full-arrow svg:first-child{transform:none}.ds-spotlight-full .ds-spotlight-full-arrow svg+svg{display:none}.ds-spotlight-full:active{transform:none}}"
+    },
+    {
+      "name": "Spotlight next arrow",
+      "kind": "nav",
+      "description": "Actual carousel-local 44px navigation button; current-review accent on hover/focus, .94 press scale, disabled for fewer than two records.",
+      "html": "<button class=\"ds-spotlight-next\" style=\"--review-accent:hsl(270 68% 77%)\" type=\"button\" aria-label=\"Next testimonial\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
+      "css": ".ds-spotlight-next{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--home-line,rgba(243,242,239,.1));border-radius:50%;background:transparent;color:var(--home-ink,#f3f2ef);cursor:pointer;transition:background-color 180ms ease,border-color 180ms ease,transform 180ms ease}.ds-spotlight-next svg{width:17px;height:17px}.ds-spotlight-next:disabled{opacity:.35;cursor:default}.ds-spotlight-next:not(:disabled):hover{background:var(--home-panel-hover,#202731);border-color:var(--review-accent);color:var(--review-accent)}.ds-spotlight-next:not(:disabled):active{transform:scale(.94)}.ds-spotlight-next:focus-visible{outline:2px solid var(--review-accent,var(--home-accent,#92d8df));outline-offset:4px}@media(prefers-reduced-motion:reduce){.ds-spotlight-next{transition-duration:.01ms!important}.ds-spotlight-next:active{transform:none}}"
+    },
+    {
+      "name": "Project conversation contact link",
+      "kind": "button",
+      "description": "Actual local 40px lavender-filled contact link with 12px semibold text, inset lighting and a white 20% one-pass hover/focus sweep; dark 28px arrow disc, diagonal arrow exchange, .98 press scale, visible lavender focus and static spatial states for reduced motion.",
+      "html": "<a class=\"ds-project-conversation-cta\" href=\"/contact\"><span class=\"ds-project-conversation-label\">Start a conversation</span><span class=\"ds-project-conversation-arrow\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></span></a>",
+      "css": ".ds-project-conversation-cta{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:20px;height:40px;margin-top:28px;padding:0 6px 0 20px;overflow:hidden;border-radius:9999px;background:#c9b9ee;color:var(--home-canvas,#13161c);font-family:Poppins,sans-serif;font-size:12px;font-weight:600;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.7),inset 0 -3px 8px rgba(19,22,28,.12);transition:background-color 200ms cubic-bezier(.4,0,.2,1),transform 200ms cubic-bezier(.4,0,.2,1)}.ds-project-conversation-cta::before{content:\"\";pointer-events:none;position:absolute;inset:0 auto 0 0;width:33.333333%;transform:translateX(-160%) skewX(-12deg);background:rgba(255,255,255,.2);transition:transform 700ms cubic-bezier(.16,1,.3,1)}.ds-project-conversation-cta:is(:hover,:focus-visible)::before{transform:translateX(400%) skewX(-12deg)}.ds-project-conversation-label{position:relative}.ds-project-conversation-arrow{position:relative;display:grid;place-items:center;width:28px;height:28px;flex:0 0 28px;overflow:hidden;border-radius:9999px;background:var(--home-canvas,#13161c);color:#c9b9ee;transition:color 200ms cubic-bezier(.4,0,.2,1)}.ds-project-conversation-arrow svg{width:15px;height:15px;transition:transform 300ms cubic-bezier(.16,1,.3,1)}.ds-project-conversation-arrow svg+svg{position:absolute;transform:translate(-28px,28px)}.ds-project-conversation-cta:hover{background:#ddd1f6}.ds-project-conversation-cta:hover .ds-project-conversation-arrow{color:#ddd1f6}.ds-project-conversation-cta:is(:hover,:focus-visible) .ds-project-conversation-arrow svg:first-child{transform:translate(28px,-28px)}.ds-project-conversation-cta:is(:hover,:focus-visible) .ds-project-conversation-arrow svg+svg{transform:translate(0,0)}.ds-project-conversation-cta:active{transform:scale(.98)}.ds-project-conversation-cta:focus-visible{outline:2px solid #c9b9ee;outline-offset:5px}@media(prefers-reduced-motion:reduce){.ds-project-conversation-cta::before{display:none}.ds-project-conversation-cta{transform:none!important}.ds-project-conversation-cta .ds-project-conversation-arrow svg:first-child{transform:none!important}.ds-project-conversation-arrow svg+svg{display:none}}"
+    }
+  ],
+  "narrative": {
+    "overview": "This captures the inspected homepage system in `src/pages/home/Home.scss` and the Poppins body family in `src/styles/base/_reset.scss`. It preserves the original dark canvas, existing typography and cyan shared accent confirmed in PRODUCT.md. It does not define a new brand identity or claim to catalogue every route.",
+    "keyCharacteristics": [
+      "Dark canvas with restrained tonal panels and muted supporting text.",
+      "Poppins headings and body copy with fluid section spacing.",
+      "Shared cyan actions and focus cues; section-specific compositions remain local."
+    ],
+    "rules": [
+      {
+        "name": "The Scope Rule",
+        "body": "Per-review hues belong to the testimonial spotlight and do not replace shared homepage colors.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do preserve the original homepage canvas, Poppins and shared cyan tokens.",
+      "Do keep section-specific geometry and accents scoped to their component.",
+      "Do retain visible focus states and reduced-motion alternatives."
+    ],
+    "donts": [
+      "Don't make the spotlight's per-review colors global theme defaults.",
+      "Don't replace existing homepage sections or typography as a side effect of carousel work."
+    ]
+  }
+}

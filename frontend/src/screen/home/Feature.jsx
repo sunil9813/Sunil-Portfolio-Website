@@ -1,8 +1,8 @@
-import { motion as Motion, useReducedMotion } from "motion/react";
-import { createElement } from "react";
+import { motion as Motion, useInView, useReducedMotion } from "motion/react";
+import { createElement, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   FiBox,
-  FiCloud,
   FiCode,
   FiDatabase,
   FiFileText,
@@ -10,189 +10,194 @@ import {
   FiLayers,
   FiLock,
   FiMonitor,
-  FiSearch,
+  FiArrowUpRight,
+  FiCheck,
   FiServer,
+  FiRotateCw,
 } from "react-icons/fi";
-
-const reveal = {
-  hidden: { opacity: 0, y: 34, filter: "blur(7px)" },
-  visible: (delay = 0) => ({
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.72, delay, ease: [0.16, 1, 0.3, 1] },
-  }),
-};
+import "./Feature.scss";
 
 const FeatureTag = ({ icon, children }) => (
   <span className="feature-pro__tag">{createElement(icon, { "aria-hidden": true })}{children}</span>
 );
 
+const FeaturePanel = ({ children, className, reducedMotion, pageVisible }) => {
+  const panelRef = useRef(null);
+  const inView = useInView(panelRef, { amount: 0.2 });
+  return (
+    <article
+      ref={panelRef}
+      className={className}
+      data-active={inView && pageVisible && !reducedMotion}
+    >{children}</article>
+  );
+};
+
 const ProductSystemVisual = () => (
-  <div className="feature-pro__system" aria-hidden="true">
-    <span className="feature-pro__beam feature-pro__beam--one" />
-    <span className="feature-pro__beam feature-pro__beam--two" />
-    <span className="feature-pro__beam feature-pro__beam--three" />
-    <div className="feature-pro__window">
-      <div className="feature-pro__window-bar">
-        <span /><span /><span />
-        <small>gorkcoder / product</small>
-        <b>Live preview</b>
-      </div>
-      <div className="feature-pro__layers">
-        <div><FiMonitor /><small>INTERFACE</small><strong>React UI</strong><i>Responsive screens</i></div>
-        <span className="feature-pro__flow"><i /><i /><i /></span>
-        <div><FiServer /><small>APPLICATION</small><strong>Node API</strong><i>Protected services</i></div>
-        <span className="feature-pro__flow"><i /><i /><i /></span>
-        <div><FiDatabase /><small>DATA</small><strong>MongoDB</strong><i>Structured content</i></div>
-      </div>
+  <div className="feature-art feature-art--system" aria-hidden="true">
+    <div className="feature-art__toolbar"><span><FiCode /> gorkcoder / product</span><small>Connected system</small></div>
+    <div className="feature-system">
+      <div className="feature-system__node"><FiMonitor /><strong>React UI</strong><span>Interface</span><div className="feature-system__screen"><i /><div><i /><i /><i /></div><b /></div></div>
+      <div className="feature-system__connection"><span /><i /></div>
+      <div className="feature-system__node"><FiServer /><strong>Node API</strong><span>Application</span><div className="feature-system__code"><b>GET</b><code>/api/projects</code><i /><i /></div></div>
+      <div className="feature-system__connection"><span /><i /></div>
+      <div className="feature-system__node"><FiDatabase /><strong>MongoDB</strong><span>Data</span><div className="feature-system__records"><i /><i /><i /></div></div>
     </div>
+    <div className="feature-art__footnote"><FiLayers /> Three layers. One connected experience.</div>
   </div>
 );
 
 const ArchitectureVisual = () => (
-  <div className="feature-pro__architecture" aria-hidden="true">
-    <div className="feature-pro__arch-root"><FiLayers /> MERN CORE</div>
-    <span className="feature-pro__arch-line feature-pro__arch-line--left" />
-    <span className="feature-pro__arch-line feature-pro__arch-line--right" />
-    <div className="feature-pro__arch-node feature-pro__arch-node--left">
-      <FiMonitor />
-      {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => <i key={item} />)}
-    </div>
-    <div className="feature-pro__arch-node feature-pro__arch-node--right">
-      <FiServer />
-      {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => <i key={item} />)}
+  <div className="feature-art feature-art--architecture" aria-hidden="true">
+    <div className="feature-architecture">
+      <div className="feature-architecture__root"><FiLayers /><span>Application core</span><code>src/</code></div>
+      <svg className="feature-architecture__lines" viewBox="0 0 360 56" preserveAspectRatio="none"><path pathLength="1" d="M180 0 V20 M60 56 V20 H300 V56 M180 20 V56" /></svg>
+      <div className="feature-architecture__modules">
+        <span><FiLock />Auth<small>Access</small></span><span><FiBox />Projects<small>Features</small></span><span><FiFileText />Content<small>Publishing</small></span>
+      </div>
+      <div className="feature-architecture__shared"><FiCode /> Shared components <span>Reusable by design</span></div>
     </div>
   </div>
 );
 
 const DeliveryVisual = () => (
-  <div className="feature-pro__delivery" aria-hidden="true">
-    <div className="feature-pro__months"><span>PLAN</span><span>BUILD</span><span>TEST</span><span>SHIP</span></div>
-    <div className="feature-pro__heatmap">
-      {Array.from({ length: 96 }, (_, index) => (
-        <i className={`feature-pro__heat-${(index * 7 + Math.floor(index / 12)) % 5}`} key={index} />
-      ))}
+  <div className="feature-art feature-art--delivery" aria-hidden="true">
+    <div className="feature-delivery">
+      <div className="feature-delivery__branch"><FiGitBranch /><code>feature / product</code><span>main</span></div>
+      <svg className="feature-delivery__path" viewBox="0 0 400 68" fill="none">
+        <path d="M20 20 H105 C140 20 140 48 176 48 H232 C268 48 268 20 304 20 H380" />
+        <path className="feature-delivery__signal" d="M20 20 H105 C140 20 140 48 176 48 H232 C268 48 268 20 304 20 H380" />
+        <circle cx="20" cy="20" r="5" /><circle cx="145" cy="38" r="5" /><circle cx="255" cy="38" r="5" /><circle cx="380" cy="20" r="5" />
+      </svg>
+      <div className="feature-delivery__steps"><span>Plan</span><span>Build</span><span>Test</span><span>Ship</span></div>
+      <div className="feature-delivery__release"><FiCheck /><div><strong>Ready for the next milestone</strong><span>Review. Refine. Release.</span></div></div>
     </div>
-    <div className="feature-pro__delivery-status"><FiGitBranch /> Continuous delivery</div>
   </div>
 );
 
+const InterfacePreview = () => <div className="feature-device__ui"><i /><div><b /><b /><b /></div><span /><span /></div>;
 const ResponsiveVisual = () => (
-  <div className="feature-pro__responsive" aria-hidden="true">
-    <div className="feature-pro__device feature-pro__device--desktop"><span /><span /><span /></div>
-    <div className="feature-pro__device feature-pro__device--tablet"><span /><span /><span /></div>
-    <div className="feature-pro__device feature-pro__device--phone"><span /><span /><span /></div>
-    <div className="feature-pro__responsive-dots">
-      {Array.from({ length: 35 }, (_, index) => <i key={index} />)}
+  <div className="feature-art feature-art--responsive" aria-hidden="true">
+    <div className="feature-devices">
+      <div className="feature-device feature-device--desktop"><div className="feature-device__bar"><i /><i /><i /></div><InterfacePreview /></div>
+      <div className="feature-device feature-device--tablet"><InterfacePreview /></div>
+      <div className="feature-device feature-device--phone"><span className="feature-device__notch" /><InterfacePreview /></div>
     </div>
+    <div className="feature-art__footnote">One interface. Every viewport.</div>
   </div>
 );
 
 const ContentVisual = () => (
-  <div className="feature-pro__content-visual" aria-hidden="true">
-    {["ROUTE /courses", "QUERY lessons", "RENDER content", "READY 200"].map((label, index) => (
-      <div className={`feature-pro__code-sheet feature-pro__code-sheet--${index + 1}`} key={label}>
-        <small>{label}</small>
-        <span /><span /><span />
+  <div className="feature-art feature-art--content" aria-hidden="true">
+    <div className="feature-content">
+      <div className="feature-content__tabs"><span><FiFileText /> courses.tsx</span><span>Preview</span></div>
+      <div className="feature-content__body">
+        <div className="feature-content__code"><code><em>const</em> lessons = [<br />&nbsp; <b>&apos;Learn&apos;</b>,<br />&nbsp; <b>&apos;Build&apos;</b>,<br />&nbsp; <b>&apos;Share&apos;</b><br />];<span className="feature-content__cursor" /></code></div>
+        <div className="feature-content__preview"><FiFileText /><strong>Keep learning.</strong><span>Courses & resources</span><i /><i /><b>Explore lessons <FiArrowUpRight /></b></div>
       </div>
-    ))}
+      <div className="feature-content__footer"><FiCheck /> From structured content to useful experiences.</div>
+    </div>
   </div>
 );
 
-const ProjectLibraryVisual = () => {
-  const projects = [
-    ["/image/home/project-collage/ui8-card-01.avif", "Dashboard"],
-    ["/image/home/project-collage/ui8-card-03.avif", "Learning"],
-    ["/image/home/project-collage/ui8-card-05.avif", "Commerce"],
-    ["/image/home/project-collage/ui8-card-07.avif", "Portfolio"],
-  ];
-
-  return (
-    <div className="feature-pro__library" aria-hidden="true">
-      <div className="feature-pro__search"><FiSearch /> Search project systems...</div>
-      <small>SELECTED PRODUCT WORK</small>
-      <div className="feature-pro__project-row">
-        {projects.map(([image, title]) => (
-          <div className="feature-pro__project" key={title}>
-            <img src={image} alt="" />
-            <strong>{title}</strong>
-            <span>Full-stack build</span>
-          </div>
-        ))}
+const ProjectLibraryVisual = () => (
+  <div className="feature-studies" aria-hidden="true">
+    {[
+      ["/image/home/project-collage/ui8-card-01.avif", "Dashboard"],
+      ["/image/home/project-collage/ui8-card-03.avif", "Learning"],
+      ["/image/home/project-collage/ui8-card-05.avif", "Commerce"],
+      ["/image/home/project-collage/ui8-card-07.avif", "Portfolio"],
+    ].map(([image, title]) => (
+      <div className="feature-studies__item" key={title}>
+        <img src={image} alt="" loading="lazy" decoding="async" width="360" height="240" />
+        <span>{title}</span>
       </div>
-      <div className="feature-pro__controls">
-        <label>Accent<span><i /></span></label>
-        <label>Depth<span><i /></span></label>
-        <small>#92d8df</small>
-      </div>
-    </div>
-  );
-};
+    ))}
+    <small>Interface inspiration · UI8</small>
+  </div>
+);
 
 export const Feature = () => {
   const reduceMotion = useReducedMotion();
-  const motionProps = (delay = 0) => reduceMotion
-    ? { initial: false }
-    : { variants: reveal, initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.14 }, custom: delay };
+  const [pageVisible, setPageVisible] = useState(true);
+  const [animationRun, setAnimationRun] = useState(0);
+  useEffect(() => {
+    const updateVisibility = () => setPageVisible(!document.hidden);
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
+  const panelProps = { reducedMotion: reduceMotion, pageVisible };
 
   return (
-    <section className="feature-pro" aria-labelledby="feature-pro-title">
+    <section id="features" className="feature-pro" aria-labelledby="feature-pro-title">
       <div className="feature-pro__inner container">
-        <Motion.header className="feature-pro__heading" {...motionProps(0)}>
-          <h2 id="feature-pro-title">Built for the full product journey.</h2>
-          <p>From the first interface decision to the final deployment, every layer is shaped to work together as one dependable product.</p>
-        </Motion.header>
+        <header className="feature-pro__heading">
+          <h2 id="feature-pro-title">Built for the full <span>product journey.</span></h2>
+          <div className="feature-pro__intro"><p>From the first interface decision to the final deployment, every layer is shaped to work together as one dependable product.</p>
+            <button className="feature-pro__replay" type="button" disabled={!!reduceMotion} onClick={() => setAnimationRun(value => value + 1)}>
+              <Motion.span animate={{ rotate: reduceMotion ? 0 : animationRun * 360 }} transition={{ duration: .5, ease: [.16, 1, .3, 1] }}><FiRotateCw aria-hidden="true" /></Motion.span>
+              {reduceMotion ? "Reduced motion enabled" : "Replay diagrams"}
+            </button>
+          </div>
+        </header>
 
-        <Motion.article className="feature-pro__wide feature-pro__wide--system" {...motionProps(0.06)}>
-          <ProductSystemVisual />
+        <FeaturePanel key={"system-" + animationRun} className="feature-pro__wide feature-pro__wide--system" {...panelProps}>
           <div className="feature-pro__copy feature-pro__copy--wide">
-            <h3>One product, end to end. <span>I connect interface, backend, and data into one dependable experience.</span></h3>
+            <h3>One product, end to end.</h3>
+            <p>I connect interface, backend, and data into one dependable experience.</p>
             <FeatureTag icon={FiCode}>Full-stack systems</FeatureTag>
           </div>
-        </Motion.article>
+          <ProductSystemVisual />
+        </FeaturePanel>
 
         <div className="feature-pro__grid">
-          <Motion.article className="feature-pro__card" {...motionProps(0.04)}>
-            <ArchitectureVisual />
+          <FeaturePanel key={"architecture-" + animationRun} className="feature-pro__card" {...panelProps}>
             <div className="feature-pro__copy">
-              <h3>Stay maintainable. <span>Reusable architecture keeps features clear as your product grows.</span></h3>
+              <h3>Stay maintainable.</h3>
+              <p>Reusable architecture keeps features clear as your product grows.</p>
               <FeatureTag icon={FiBox}>Modular architecture</FeatureTag>
             </div>
-          </Motion.article>
+            <ArchitectureVisual />
+          </FeaturePanel>
 
-          <Motion.article className="feature-pro__card" {...motionProps(0.1)}>
-            <DeliveryVisual />
+          <FeaturePanel key={"delivery-" + animationRun} className="feature-pro__card" {...panelProps}>
             <div className="feature-pro__copy">
-              <h3>Ship with confidence. <span>Focused milestones turn complex work into visible progress.</span></h3>
+              <h3>Ship with confidence.</h3>
+              <p>Focused milestones turn complex work into visible progress.</p>
               <FeatureTag icon={FiGitBranch}>Product delivery</FeatureTag>
             </div>
-          </Motion.article>
+            <DeliveryVisual />
+          </FeaturePanel>
 
-          <Motion.article className="feature-pro__card" {...motionProps(0.04)}>
-            <ResponsiveVisual />
+          <FeaturePanel key={"responsive-" + animationRun} className="feature-pro__card" {...panelProps}>
             <div className="feature-pro__copy">
-              <h3>Fit every screen. <span>Responsive interfaces stay clear, accessible, and useful everywhere.</span></h3>
+              <h3>Fit every screen.</h3>
+              <p>Responsive interfaces stay clear, accessible, and useful everywhere.</p>
               <FeatureTag icon={FiMonitor}>Responsive UI</FeatureTag>
             </div>
-          </Motion.article>
+            <ResponsiveVisual />
+          </FeaturePanel>
 
-          <Motion.article className="feature-pro__card" {...motionProps(0.1)}>
-            <ContentVisual />
+          <FeaturePanel key={"content-" + animationRun} className="feature-pro__card" {...panelProps}>
             <div className="feature-pro__copy">
-              <h3>Content without friction. <span>Courses, notes, and resources move through a clean publishing flow.</span></h3>
+              <h3>Content without friction.</h3>
+              <p>Courses, notes, and resources move through a clean publishing flow.</p>
               <FeatureTag icon={FiFileText}>Content platform</FeatureTag>
             </div>
-          </Motion.article>
+            <ContentVisual />
+          </FeaturePanel>
         </div>
 
-        <Motion.article className="feature-pro__wide feature-pro__wide--library" {...motionProps(0.06)}>
+        <FeaturePanel key={"library-" + animationRun} className="feature-pro__wide feature-pro__wide--library" {...panelProps}>
           <div className="feature-pro__copy feature-pro__copy--wide">
-            <h3>Built around your idea. <span>I shape the interface and technical system to match the product—not a template.</span></h3>
+            <h3>Built around your idea.</h3>
+            <p>I shape the interface and technical system to match the product—not a template.</p>
             <FeatureTag icon={FiLock}>Purpose-built projects</FeatureTag>
+            <Link className="feature-pro__link" to="/project">Explore my projects <FiArrowUpRight aria-hidden="true" /></Link>
           </div>
           <ProjectLibraryVisual />
-        </Motion.article>
+        </FeaturePanel>
       </div>
     </section>
   );

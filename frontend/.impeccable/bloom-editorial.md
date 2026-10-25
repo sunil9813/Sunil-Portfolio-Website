@@ -1,0 +1,9 @@
+# ProjectBloom editorial refinement
+
+Reverted at the user's request. The pre-editorial ProjectBloom design is restored: centered three-line text, inline icons, original word timing, direct 68% scroll mapping and previous spacing. The connecting line and portrait name remain removed. This document records a rejected refinement, not current design guidance.
+
+Mode: Experience. Refine the existing flowers, not a new homepage identity. Keep the original dark canvas, exact heading copy and image sequence. The user removed the connector; it must stay absent. No visible portrait caption.
+
+The desktop composition places a left-aligned three-level heading in the branch's negative space: muted introduction, off-white full-stack phrase, lavender conclusion. Mobile centers the same hierarchy below the flowers. No decorative icons, cards or additional copy. The artwork has a soft top/bottom edge mask so its stem disappears into the inherited canvas rather than ending abruptly. Existing scroll scrubbing now uses a critically damped-style spring (110 stiffness/30 damping), with full bloom targeted at 64% progress. Words become fully readable earlier. Reduced-motion keeps the full-bloom static poster and stationary text; cache/request bounds and cleanup are unchanged. No new assets, dependencies or global token changes.
+
+Evidence: desktop1280×720, mobile390×844, intermediate900×800, wide1920×1080 captures in .impeccable/review/bloom-editorial/. Build, targeted ESLint, two geometry tests and diff check pass; detector returned `[]`. Runtime intermediate/wide overflow absent, canvas ready, connector absent, console errors[]. Reduced motion and touch source-reviewed only. Original image provenance remains in project-bloom.md. Finish review: ship, no material fixes. All four current captures opened. This brief supersedes previous button-stem and Bloom typography notes, including the former 68% bloom target. Global design files are unchanged.
